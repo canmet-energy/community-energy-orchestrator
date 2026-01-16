@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+"""
+Change weather location in H2K files using regex-based replacement
+"""
+import os
+import glob
+import argparse
+import re
+
+def load_csv_data(filename):
+    """Load CSV file and return dictionary"""
+    data = {}
+    with open(filename, 'r', encoding='latin-1') as f:
+        for line in f:
+            key, value = line.strip().split(',')
+            data[key.upper()] = value
+    return data
+
+def get_region_for_location(location):
+    """Get the region code and English/French names for a location"""
+    # Map locations to regions
+    location_map = {
+        # British Columbia
+        'BONILLA ISLAND': ('1', 'BRITISH COLUMBIA', 'COLOMBIE-BRITANNIQUE'),
+        
+        # Northwest Territories
+        'FORT SMITH': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'FORT SIMPSON': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'LAC LA MARTRE': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'LITTLE CHICAGO': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'NORMAN WELLS': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        
+        # Yukon
+        'WATSON LAKE': ('11', 'YUKON', 'YUKON'),
+        'OLD CROW': ('11', 'YUKON', 'YUKON'),
+        'BURWASH': ('11', 'YUKON', 'YUKON'),
+        
+        # Quebec
+        'INUKJUAK': ('6', 'QUEBEC', 'QUÉBEC'),
+        'KUUJJUAQ': ('6', 'QUEBEC', 'QUÉBEC'),
+        'CHAMOUCHOUANE': ('6', 'QUEBEC', 'QUÉBEC'),
+        
+        # Nunavut
+        'ARCTIC BAY': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'CAMBRIDGE BAY': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'RANKIN INLET': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'HALL BEACH': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'POND INLET': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'RESOLUTE BAY': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'EUREKA': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'IQALUIT': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'KUGAARUK CLIMATE': ('13', 'NUNAVUT', 'NUNAVUT'),
+        
+        # Ontario
+        'LANSDOWNE HOUSE': ('7', 'ONTARIO', 'ONTARIO'),
+        
+        # Newfoundland and Labrador
+        "MARY'S HARBOUR": ('5', 'NEWFOUNDLAND AND LABRADOR', 'TERRE-NEUVE-ET-LABRADOR')
+    }
+    
+    return location_map.get(location, (None, None, None))
+
+def change_weather_code(file_path, location="FORT SIMPSON", validate=True, debug=False):
+    """
+    Changes the weather information in an H2K file using regex.
+    
+    Args:
+        file_path: Path to the .H2K file to modify
+        location: The name of the location to change to (e.g., "FORT SIMPSON")
+        validate: Whether to validate the XML after modification
+        debug: Whether to print debug information
+    
+    Returns:
+        bool: True if changes were made, False otherwise
+    """
+    try:
+        location = location.upper()
+        
+        # Always use latin-1 (iso-8859-1) encoding for H2K files
+        with open(file_path, 'r', encoding='latin-1') as file:
+            content = file.read()
+
+        # First check if this is a properly formatted XML file
+        if not content.strip().startswith('<?xml') and not content.strip().startswith('<HouseFile'):
+            if debug:
+                print(f"File {file_path} does not appear to be valid XML")
+            return False
+
+        # Load location codes and weather details
+        location_codes = load_csv_data('location_code.csv')
+        
+        weather_details = {}
+        with open('weather_details.csv', 'r', encoding='latin-1') as csvfile:
+            next(csvfile)  # Skip header
+            for line in csvfile:
+                loc, hdd, lib = line.strip().split(',')
+                weather_details[loc.upper()] = {'hdd': hdd, 'library': lib}
+
+        # Validate location exists
+        if location not in weather_details:
+            print(f"Error: Location '{location}' not found in weather_details.csv")
+            return False
+            
+        if location not in location_codes:
+            print(f"Error: Location '{location}' not found in location_code.csv")
+            return False
+
+        # Get region information
+        region_code, region_en, region_fr = get_region_for_location(location)
+        if not region_code:
+            print(f"Error: Could not determine region for location '{location}'")
+            return False
+
+        if debug:
+            print(f"Found location {location}")
+            print(f"Region: {region_en} (code: {region_code})")
+            print(f"HDD: {weather_details[location]['hdd']}")
+            print(f"Location code: {location_codes[location]}")
+
+        # Pattern to match the exact Weather section structure
+        pattern = (
+            r'<Weather\s+depthOfFrost="[^"]*"\s+heatingDegreeDay="[^"]*"\s+'
+            r'library="[^"]*">\s*<Region\s+code="[^"]*">\s*<English>[^<]*</English>\s*'
+            r'<French>[^<]*</French>\s*</Region>\s*<Location\s+code="[^"]*">\s*'
+            r'<English>[^<]*</English>\s*<French>[^<]*</French>\s*</Location>\s*</Weather>'
+        )
+        
+        # Create replacement with exact XML structure and indentation
+        replacement = (
+            f'<Weather depthOfFrost="1.2192" heatingDegreeDay="{weather_details[location]["hdd"]}" '
+            f'library="{weather_details[location]["library"]}">\n'
+            f'            <Region code="{region_code}">\n'
+            f'                <English>{region_en}</English>\n'
+            f'                <French>{region_fr}</French>\n'
+            f'            </Region>\n'
+            f'            <Location code="{location_codes[location]}">\n'
+            f'                <English>{location}</English>\n'
+            f'                <French>{location}</French>\n'
+            f'            </Location>\n'
+            f'        </Weather>'
+        )
+
+        # Make the replacement
+        new_content = re.sub(pattern, replacement, content)
+        
+        if new_content == content:
+            if debug:
+                print(f"No changes were needed in {file_path}")
+            return False
+
+        # Write the modified content back to the file
+        with open(file_path, 'w', encoding='latin-1') as file:
+            file.write(new_content)
+            
+        if debug:
+            print(f"Successfully updated {file_path}")
+        return True
+
+    except Exception as e:
+        print(f"Error processing {file_path}: {str(e)}")
+        return False
+
+def main():
+    parser = argparse.ArgumentParser(description='Change weather location in H2K files')
+    parser.add_argument('path', help='Path to H2K file or directory')
+    parser.add_argument('--location', default="FORT SIMPSON", help='Weather location to change to')
+    parser.add_argument('--debug', action='store_true', help='Print debug information')
+    args = parser.parse_args()
+
+    if os.path.isfile(args.path):
+        change_weather_code(args.path, args.location, debug=args.debug)
+    else:
+        for file_path in glob.glob(os.path.join(args.path, "**", "*.H2K"), recursive=True):
+            change_weather_code(file_path, args.location, debug=args.debug)
+
+if __name__ == "__main__":
+    main()

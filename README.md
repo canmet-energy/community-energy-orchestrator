@@ -7,15 +7,19 @@ Changing the weather reference drives downstream model behavior because heating 
 
 ### **Approach**
 
-⦁	**This repository:** Retrieve archetype `.h2k` models, update their weather reference to match the target community, then pass the modified models to the converter.
-⦁	**Converter repository:** Convert the weather-updated `.h2k` files to HPXML format and run EnergyPlus simulations to produce hourly energy usage data.
-⦁	**This repository (post-conversion):** Collect and organize converter outputs into the desired structure for downstream use.
-⦁	Treat "community" as a weather selection: if the input `.h2k` already encodes the intended Region/Location, keep it; otherwise, apply the repository's convention to set the weather reference.
+**This repository:** Retrieve archetype `.h2k` models, update their weather reference to match the target community, then pass the modified models to the converter.
+
+**Converter repository:** Convert the weather-updated `.h2k` files to HPXML format and run EnergyPlus simulations to produce hourly energy usage data.
+
+**This repository (post-conversion):** Collect and organize converter outputs into the desired structure for downstream use.
+
+⦁   Treat "community" as a weather selection: if the input `.h2k` already encodes the intended Region/Location, keep it; otherwise, apply the repository's convention to set the weather reference.
 
 
 ### **Testing Plan**
 
 ⦁	Run the CLI on a small directory of `.h2k` files with different Region/Location values; confirm HPXML is produced and EnergyPlus artifacts (e.g., `eplusout.sql`) appear when simulation is enabled.
+
 ⦁	Verify that summary artifacts (e.g., run summaries and database) reflect success/failure per case, aligned with current tests.
 
 

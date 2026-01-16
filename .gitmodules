@@ -1,0 +1,5 @@
+[submodule "src/h2k-hpxml"]
+	path = src/h2k-hpxml
+	url = https://github.com/canmet-energy/h2k-hpxml.git
+[submodule "src/housing-archetypes"]
+	path = src/housing-archetypes

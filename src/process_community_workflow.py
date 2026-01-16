@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 def duplicate_missing_timeseries(timeseries_dir, building_type, required_count):
     # Guarantee at least the required count (not just N+20%)
     target_count = max(int(required_count * 1.2), required_count) if required_count > 0 else 0
@@ -115,7 +116,7 @@ from pathlib import Path
 import subprocess
 import re
 import random
-from debug_timeseries_outputs import debug_timeseries_outputs
+from src.debug_timeseries_outputs import debug_timeseries_outputs
 
 # Define building type patterns
 BUILDING_TYPES = {
@@ -206,7 +207,8 @@ def copy_archetype_files(community_name, requirements):
     Copy required archetype files with 20% additional
     If not enough files, implement duplication process
     """
-    archetypes_source = Path('examples/archetypes')
+    # FIXME: Adjust source path as needed
+    archetypes_source = Path('src/housing-archetypes')
     base_path = Path(f'communities/{community_name}/archetypes')
     if not base_path.exists():
         base_path.mkdir(parents=True, exist_ok=True)
@@ -360,7 +362,7 @@ def run_hpxml_conversion(community_name):
     print(f"[HPXML] Running h2k2hpxml.py with hourly output...")
     subprocess.run([
         'python',
-        'bin/h2k2hpxml.py',
+        'converter/bin/h2k2hpxml.py',
         'run',
         '-i',
         str(base_path),

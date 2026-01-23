@@ -6,6 +6,8 @@ import glob
 import argparse
 import sys
 import os
+import traceback
+import random
 
 # Conversion factor from kBtu to GJ
 KBTU_TO_GJ = 0.001055056
@@ -239,7 +241,6 @@ def select_and_sum_timeseries(community_name):
 
     # Only process the exact number required for each type
     selected_files = []
-    import random
     for building_type, required_count in requirements.items():
         available_files = files_by_type[building_type]
         if len(available_files) < required_count:
@@ -474,5 +475,4 @@ if __name__ == '__main__':
         print(f"Error: {e}")
     except Exception as e:
         print(f"Unexpected error: {e}")
-        import traceback
         traceback.print_exc()

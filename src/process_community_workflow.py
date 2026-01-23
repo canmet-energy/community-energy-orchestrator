@@ -1,7 +1,20 @@
 #!/usr/bin/env python3
+
+import math
+import os
+import csv
+import re
+import shutil
+import subprocess
+import random
+import pandas as pd
+from pathlib import Path
+import sys
+from src.debug_timeseries_outputs import debug_timeseries_outputs
+
 def duplicate_missing_timeseries(timeseries_dir, building_type, required_count):
     # Guarantee at least the required count (not just N+20%)
-    target_count = max(int(required_count * 1.2), required_count) if required_count > 0 else 0
+    target_count = math.ceil(required_count * 1.2) if required_count > 0 else 0
     files = [f for f in os.listdir(timeseries_dir) if f.startswith(building_type) and f.endswith("-results_timeseries.csv")]
     if not files:
         print(f"No source files found for {building_type}")
@@ -30,7 +43,6 @@ def duplicate_missing_timeseries(timeseries_dir, building_type, required_count):
 
 def process_community_energy(community_name):
     # Collect timeseries files from archetypes/output
-    import shutil
     base_dir = Path(f'communities/{community_name}')
     output_dir = base_dir / 'archetypes' / 'output'
     timeseries_dir = base_dir / 'timeseries'
@@ -62,14 +74,6 @@ def process_community_energy(community_name):
         'calculate_community_analysis.py',
         community_name
     ], check=True)
-import os
-import csv
-import re
-import shutil
-import subprocess
-import random
-import pandas as pd
-from pathlib import Path
 ARCHETYPE_TYPE_PATTERNS = {
     'pre-2000-single': [r'pre-2000-single_.*\.H2K$'],
     '2001-2015-single': [r'2001-2015-single_.*\.H2K$'],
@@ -105,18 +109,6 @@ def get_weather_location(community_name):
                 if row['Community'].strip().upper() == comm_upper:
                     return row['WEATHER'].strip()
     return community_name.replace('-', ' ')
-#!/usr/bin/env python3
-
-
-import os
-import shutil
-import sys
-import pandas as pd
-from pathlib import Path
-import subprocess
-import re
-import random
-from src.debug_timeseries_outputs import debug_timeseries_outputs
 
 # Define building type patterns
 BUILDING_TYPES = {
@@ -222,7 +214,7 @@ def copy_archetype_files(community_name, requirements):
             if count == 0:
                 continue
             # Enforce N+20% rule (always round up for safety)
-            num_to_copy = int(count * 1.2 + 0.9999) if count > 0 else 0
+            num_to_copy = math.ceil(count * 1.2) if count > 0 else 0
             patterns = ARCHETYPE_TYPE_PATTERNS.get(req_type, [fr'{req_type}_.*\.H2K$'])
             matched_files = []
             for pat in patterns:
@@ -373,7 +365,6 @@ def run_hpxml_conversion(community_name):
 
     # Collect timeseries files from archetypes/output
     print(f"[HPXML] Collecting timeseries files from output directories...")
-    import shutil
     base_dir = Path(f'communities/{community_name}')
     output_dir = base_dir / 'archetypes' / 'output'
     timeseries_dir = base_dir / 'timeseries'
@@ -398,14 +389,15 @@ def run_hpxml_conversion(community_name):
     for building_type, required_count in requirements.items():
         duplicate_missing_timeseries(timeseries_dir_path, building_type, required_count)
 
+    # FIXME: I am commenting this out to avoid double analysis runs, this is already called in main()
     # Run community analysis with correct arguments
-    analysis_dir = base_dir / 'analysis'
-    analysis_dir.mkdir(parents=True, exist_ok=True)
-    subprocess.run([
-        sys.executable,
-        'calculate_community_analysis.py',
-        community_name
-    ], check=True)
+    # analysis_dir = base_dir / 'analysis'
+    # analysis_dir.mkdir(parents=True, exist_ok=True)
+    # subprocess.run([
+    #     sys.executable,
+    #     'calculate_community_analysis.py',
+    #     community_name
+    # ], check=True)
 
 def main(community_name):
     """
@@ -445,7 +437,6 @@ def main(community_name):
         print(f"  - {f.name}")
 
     # Delegate aggregation and output to calculate_community_analysis.py
-    import subprocess
     print("\nDelegating aggregation and output to calculate_community_analysis.py...")
     result = subprocess.run([
         sys.executable,
@@ -465,7 +456,6 @@ def main(community_name):
     # 10. Remove archetypes/output directory after successful analysis
     output_dir = Path(f"communities/{community_name}/archetypes/output")
     if output_dir.exists() and output_dir.is_dir():
-        import shutil
         shutil.rmtree(output_dir)
         print(f"Removed directory: {output_dir}")
     return 0

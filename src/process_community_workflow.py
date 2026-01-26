@@ -43,7 +43,7 @@ def duplicate_missing_timeseries(timeseries_dir, building_type, required_count):
 
 def process_community_energy(community_name):
     # Collect timeseries files from archetypes/output
-    base_dir = Path(f'communities/{community_name}')
+    base_dir = Path(__file__).resolve().parent.parent / 'communities' / community_name
     output_dir = base_dir / 'archetypes' / 'output'
     timeseries_dir = base_dir / 'timeseries'
     timeseries_dir.mkdir(parents=True, exist_ok=True)
@@ -69,9 +69,10 @@ def process_community_energy(community_name):
     # Run community analysis with correct arguments
     analysis_dir = base_dir / 'analysis'
     analysis_dir.mkdir(parents=True, exist_ok=True)
+    script_path = Path(__file__).resolve().parent / 'calculate_community_analysis.py'
     subprocess.run([
         sys.executable,
-        'calculate_community_analysis.py',
+        str(script_path),
         community_name
     ], check=True)
 ARCHETYPE_TYPE_PATTERNS = {
@@ -94,7 +95,7 @@ def get_weather_location(community_name):
     Look up the weather location for a community from the CSV file.
     Returns the weather location string, or the community name if not found.
     """
-    csv_path = 'train-test-communities hdd and weather locaiton.csv'
+    csv_path = Path(__file__).resolve().parent.parent / 'csv' / 'train-test communities weather locations.csv'
     comm_upper = community_name.upper()
     try:
         with open(csv_path, newline='', encoding='utf-8') as csvfile:
@@ -133,7 +134,8 @@ def get_community_requirements(community_name):
     """
 
     comm_upper = community_name.upper()
-    df = pd.read_csv('train-test communities number of housing types.csv', header=None)
+    csv_path = Path(__file__).resolve().parent.parent / 'csv' / 'train-test communities number of housing types.csv'
+    df = pd.read_csv(csv_path, header=None)
     # Find the row where the first column matches (case-insensitive)
     mask = df[0].str.strip().str.upper() == comm_upper
     if not mask.any():
@@ -186,7 +188,7 @@ def create_community_directories(community_name):
     Create the standard directory structure for a community
     Only create the base path and archetypes folder at the start
     """
-    base_path = Path(f'communities/{community_name}')
+    base_path = Path(__file__).resolve().parent.parent / 'communities' / community_name
     archetypes_path = base_path / 'archetypes'
     timeseries_path = base_path / 'timeseries'
     analysis_path = base_path / 'analysis'
@@ -199,16 +201,16 @@ def copy_archetype_files(community_name, requirements):
     Copy required archetype files with 20% additional
     If not enough files, implement duplication process
     """
-    # FIXME: Adjust source path as needed
-    archetypes_source = Path('src/housing-archetypes')
-    base_path = Path(f'communities/{community_name}/archetypes')
+
+    archetypes_source = Path(__file__).resolve().parent / 'retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities'
+    base_path = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes'
     if not base_path.exists():
         base_path.mkdir(parents=True, exist_ok=True)
     # Find all H2K files in the source directory
     all_files = os.listdir(archetypes_source)
     h2k_files = [f for f in all_files if f.endswith('.H2K')]
 
-    debug_log_path = Path('archetype_copy_debug.log')
+    debug_log_path = Path(__file__).resolve().parent.parent / 'archetype_copy_debug.log'
     with open(debug_log_path, 'a') as debug_log:
         for req_type, count in requirements.items():
             if count == 0:
@@ -283,7 +285,7 @@ def create_manifest(community_name, requirements):
     """
     Create a manifest file documenting the community requirements and simulation status
     """
-    manifest_path = Path(f'communities/{community_name}/archetypes/{community_name}-manifest.md')
+    manifest_path = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes' / f'{community_name}-manifest.md'
     # Ensure parent directory exists
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     # Use weather location from CSV
@@ -334,11 +336,12 @@ def update_weather_location(community_name):
     """
     Update HOT2000 files to use the correct weather location
     """
-    base_path = Path(f'communities/{community_name}/archetypes')
+    base_path = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes'
     weather_location = get_weather_location(community_name)
+    script_path = Path(__file__).resolve().parent / 'change_weather_location_regex.py'
     subprocess.run([
-        'python',
-        'change_weather_location_regex.py',
+        sys.executable,
+        str(script_path),
         str(base_path),
         '--location',
         weather_location
@@ -348,13 +351,14 @@ def run_hpxml_conversion(community_name):
     """
     Convert HOT2000 files to HPXML and run simulations
     """
-    base_path = Path(f'communities/{community_name}/archetypes')
+    base_path = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes'
     print(f"[HPXML] Starting HPXML conversion for files in: {base_path}")
+    convert_path = Path(__file__).resolve().parent / 'h2k-hpxml' / 'src' / 'h2k-hpxml' / 'cli' / 'convert.py'
     # Run h2k2hpxml conversion with hourly data
     print(f"[HPXML] Running h2k2hpxml.py with hourly output...")
     subprocess.run([
-        'python',
-        'converter/bin/h2k2hpxml.py',
+        sys.executable,
+        str(convert_path),
         'run',
         '-i',
         str(base_path),
@@ -365,7 +369,7 @@ def run_hpxml_conversion(community_name):
 
     # Collect timeseries files from archetypes/output
     print(f"[HPXML] Collecting timeseries files from output directories...")
-    base_dir = Path(f'communities/{community_name}')
+    base_dir = Path(__file__).resolve().parent.parent / 'communities' / community_name
     output_dir = base_dir / 'archetypes' / 'output'
     timeseries_dir = base_dir / 'timeseries'
     timeseries_dir.mkdir(parents=True, exist_ok=True)
@@ -388,16 +392,6 @@ def run_hpxml_conversion(community_name):
     timeseries_dir_path = str(timeseries_dir)
     for building_type, required_count in requirements.items():
         duplicate_missing_timeseries(timeseries_dir_path, building_type, required_count)
-
-    # FIXME: I am commenting this out to avoid double analysis runs, this is already called in main()
-    # Run community analysis with correct arguments
-    # analysis_dir = base_dir / 'analysis'
-    # analysis_dir.mkdir(parents=True, exist_ok=True)
-    # subprocess.run([
-    #     sys.executable,
-    #     'calculate_community_analysis.py',
-    #     community_name
-    # ], check=True)
 
 def main(community_name):
     """
@@ -431,16 +425,17 @@ def main(community_name):
     print(f"[WORKFLOW] Step 5 complete.")
 
     # Print contents of the timeseries directory for debugging
-    timeseries_dir = Path(f'communities/{community_name}/timeseries')
+    timeseries_dir = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'timeseries'
     print(f"\nContents of {timeseries_dir} just before analysis:")
     for f in sorted(timeseries_dir.glob('*')):
         print(f"  - {f.name}")
 
     # Delegate aggregation and output to calculate_community_analysis.py
     print("\nDelegating aggregation and output to calculate_community_analysis.py...")
+    script_path = Path(__file__).resolve().parent / 'calculate_community_analysis.py'
     result = subprocess.run([
         sys.executable,
-        "calculate_community_analysis.py",
+        str(script_path),
         community_name
     ], capture_output=True, text=True)
     print(result.stdout)
@@ -454,7 +449,7 @@ def main(community_name):
     print(f"Timeseries output debug log: {debug_log_path}")
 
     # 10. Remove archetypes/output directory after successful analysis
-    output_dir = Path(f"communities/{community_name}/archetypes/output")
+    output_dir = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes' / 'output'
     if output_dir.exists() and output_dir.is_dir():
         shutil.rmtree(output_dir)
         print(f"Removed directory: {output_dir}")

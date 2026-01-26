@@ -58,7 +58,7 @@ def read_timeseries(file_path):
     return df
 
 # Default requirements file
-REQUIREMENTS_FILE = 'train-test communities number of housing types.csv'
+REQUIREMENTS_FILE = Path(__file__).resolve().parent.parent / 'csv' / 'train-test communities number of housing types.csv'
 
 def load_community_requirements(community_name):
     """
@@ -123,19 +123,19 @@ def select_and_sum_timeseries(community_name):
         prefix = k.split('-')[0]
         archetype_prefixes.add(prefix)
     timeseries_dirs = [
-        Path(f'{community_hyphen}-all_timeseries'),
-        Path(f'{community_name}-all_timeseries'),
-        Path(f'{community_upper}-all_timeseries'),
-        Path(f'{community_upper_hyphen}-all_timeseries'),
-        Path('communities') / community_name / 'timeseries',
-        Path('communities') / community_hyphen / 'timeseries',
-        Path('communities') / community_upper / 'timeseries',
-        Path('communities') / community_upper_hyphen / 'timeseries',
+        Path(__file__).resolve().parent.parent / 'communities' /  f'{community_hyphen}-all_timeseries',
+        Path(__file__).resolve().parent.parent / 'communities' /  f'{community_name}-all_timeseries',
+        Path(__file__).resolve().parent.parent / 'communities' /  f'{community_upper}-all_timeseries',
+        Path(__file__).resolve().parent.parent / 'communities' /  f'{community_upper_hyphen}-all_timeseries',
+        Path(__file__).resolve().parent.parent / 'communities' / community_name / 'timeseries',
+        Path(__file__).resolve().parent.parent / 'communities' / community_hyphen / 'timeseries',
+        Path(__file__).resolve().parent.parent / 'communities' / community_upper / 'timeseries',
+        Path(__file__).resolve().parent.parent / 'communities' / community_upper_hyphen / 'timeseries',
     ]
     # Add archetype prefix variants
     for prefix in archetype_prefixes:
-        timeseries_dirs.append(Path(f'{prefix}-all_timeseries'))
-        timeseries_dirs.append(Path('communities') / prefix / 'timeseries')
+        timeseries_dirs.append(Path(__file__).resolve().parent.parent / f'{prefix}-all_timeseries')
+        timeseries_dirs.append(Path(__file__).resolve().parent.parent / 'communities' / prefix / 'timeseries')
 
     # Find the directory that exists
     timeseries_dir = None
@@ -146,7 +146,7 @@ def select_and_sum_timeseries(community_name):
 
     if timeseries_dir is None:
         # If still not found, try to find by partial match
-        all_dirs = [d for d in Path('.').iterdir() if d.is_dir()]
+        all_dirs = [d for d in Path(__file__).resolve().parent.parent.iterdir() if d.is_dir()]
         for d in all_dirs:
             if 'all_timeseries' in d.name and any(variant in d.name.upper() for variant in 
                                               [community_name.upper(), community_hyphen.upper()]):
@@ -159,7 +159,7 @@ def select_and_sum_timeseries(community_name):
     print(f"Using timeseries directory: {timeseries_dir}")
 
     # Archetype source directory for fallback
-    archetype_source_dir = Path('/workspaces/h2k_hpxml/examples/archetypes')
+    archetype_source_dir = Path(__file__).resolve().parent / 'retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities'
         
     # If no requirements, use all available files
     if not requirements:
@@ -258,6 +258,7 @@ def select_and_sum_timeseries(community_name):
         selected_files.extend(selected)
     
     # Create a mapping between requirement keys and file patterns
+    #TODO: Make sure to remove this duplication logic if not needed anymore
     type_mapping = {
         # Map all prefixes to common search patterns
         key: [pattern.replace("OLD-CROW-", "").replace("RANKIN-INLET-", "")] 
@@ -391,7 +392,7 @@ def select_and_sum_timeseries(community_name):
         community_total = community_total[expected_columns]
 
         # Save the results
-        community_folder = Path('communities') / community_name.replace('-', '_')
+        community_folder = Path(__file__).resolve().parent.parent / 'communities' / community_name.replace('-', '_')
         community_folder.mkdir(parents=True, exist_ok=True)
         output_file = community_folder / f'{community_name}-community_total.csv'
         community_total.to_csv(output_file, index=False)
@@ -453,9 +454,10 @@ def select_and_sum_timeseries(community_name):
         
 if __name__ == '__main__':
     try:
+        custom_rq_file_path = Path(__file__).resolve().parent.parent / 'csv' / 'train-test communities number of housing types.csv'
         parser = argparse.ArgumentParser(description='Calculate community total energy use.')
         parser.add_argument('community_name', type=str, help='Name of the community (e.g., BONILLA-ISLAND)')
-        parser.add_argument('--requirements', type=str, help='Path to custom requirements file', default='train-test communities number of housing types.csv')
+        parser.add_argument('--requirements', type=str, help='Path to custom requirements file', default=str(custom_rq_file_path))
         
         args = parser.parse_args()
         print(f"Starting analysis for {args.community_name}...")

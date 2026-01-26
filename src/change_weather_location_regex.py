@@ -6,6 +6,7 @@ import os
 import glob
 import argparse
 import re
+from pathlib import Path
 
 def load_csv_data(filename):
     """Load CSV file and return dictionary"""
@@ -87,10 +88,12 @@ def change_weather_code(file_path, location="FORT SIMPSON", validate=True, debug
             return False
 
         # Load location codes and weather details
-        location_codes = load_csv_data('location_code.csv')
+        location_codes_path = Path(__file__).resolve().parent.parent / 'csv' / 'location_code.csv'
+        location_codes = load_csv_data(location_codes_path)
         
         weather_details = {}
-        with open('weather_details.csv', 'r', encoding='latin-1') as csvfile:
+        weather_details_path = Path(__file__).resolve().parent.parent / 'csv' / 'weather_details.csv'
+        with open(weather_details_path, 'r', encoding='latin-1') as csvfile:
             next(csvfile)  # Skip header
             for line in csvfile:
                 loc, hdd, lib = line.strip().split(',')

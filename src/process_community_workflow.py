@@ -10,7 +10,7 @@ import random
 import pandas as pd
 from pathlib import Path
 import sys
-from src.debug_timeseries_outputs import debug_timeseries_outputs
+from debug_timeseries_outputs import debug_timeseries_outputs
 
 def duplicate_missing_timeseries(timeseries_dir, building_type, required_count):
     # Guarantee at least the required count (not just N+20%)
@@ -95,7 +95,7 @@ def get_weather_location(community_name):
     Look up the weather location for a community from the CSV file.
     Returns the weather location string, or the community name if not found.
     """
-    csv_path = Path(__file__).resolve().parent.parent / 'csv' / 'train-test communities weather locations.csv'
+    csv_path = Path(__file__).resolve().parent.parent / 'csv' / 'train-test communities hdd and weather locations.csv'
     comm_upper = community_name.upper()
     try:
         with open(csv_path, newline='', encoding='utf-8') as csvfile:
@@ -179,7 +179,8 @@ def get_community_requirements(community_name):
                         count = 0
                     requirements[f"{era}-{btype}"] = count
     # Write requirements to debug log for inspection
-    with open('archetype_copy_debug.log', 'a') as debug_log:
+    debug_log_path = Path(__file__).resolve().parent.parent / 'archetype_copy_debug.log'
+    with open(debug_log_path, 'a') as debug_log:
         debug_log.write(f"[DEBUG] Extracted requirements for {community_name}: {requirements}\n")
     return requirements
 
@@ -353,18 +354,28 @@ def run_hpxml_conversion(community_name):
     """
     base_path = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes'
     print(f"[HPXML] Starting HPXML conversion for files in: {base_path}")
-    convert_path = Path(__file__).resolve().parent / 'h2k-hpxml' / 'src' / 'h2k-hpxml' / 'cli' / 'convert.py'
     # Run h2k2hpxml conversion with hourly data
-    print(f"[HPXML] Running h2k2hpxml.py with hourly output...")
-    subprocess.run([
-        sys.executable,
-        str(convert_path),
-        'run',
-        '-i',
-        str(base_path),
-        '--hourly',
-        'ALL'
-    ], check=True)
+    if shutil.which('h2k-hpxml'):
+        # Using CLI (recommended)
+        print(f"[HPXML] Running h2k-hpxml CLI with hourly output...")
+        subprocess.run([
+            'h2k-hpxml', 
+            str(base_path), 
+            '--hourly', 
+            'ALL'
+            ], check=True)
+    else:
+        # Fallback to direct script if CLI not installed
+        print(f"[HPXML] Running convert.py directly with hourly output...")
+        convert_path = Path(__file__).resolve().parent / 'h2k-hpxml' / 'src' / 'h2k_hpxml' / 'cli' / 'convert.py'
+        subprocess.run([
+            sys.executable,
+            str(convert_path),
+            str(base_path),
+            '--hourly',
+            'ALL'
+        ], check=True)
+    
     print(f"[HPXML] Conversion complete.")
 
     # Collect timeseries files from archetypes/output

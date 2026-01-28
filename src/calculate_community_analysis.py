@@ -122,15 +122,16 @@ def select_and_sum_timeseries(community_name):
     for k in requirements.keys():
         prefix = k.split('-')[0]
         archetype_prefixes.add(prefix)
+    base_path = Path(__file__).resolve().parent.parent / 'communities'
     timeseries_dirs = [
-        Path(__file__).resolve().parent.parent / 'communities' /  f'{community_hyphen}-all_timeseries',
-        Path(__file__).resolve().parent.parent / 'communities' /  f'{community_name}-all_timeseries',
-        Path(__file__).resolve().parent.parent / 'communities' /  f'{community_upper}-all_timeseries',
-        Path(__file__).resolve().parent.parent / 'communities' /  f'{community_upper_hyphen}-all_timeseries',
-        Path(__file__).resolve().parent.parent / 'communities' / community_name / 'timeseries',
-        Path(__file__).resolve().parent.parent / 'communities' / community_hyphen / 'timeseries',
-        Path(__file__).resolve().parent.parent / 'communities' / community_upper / 'timeseries',
-        Path(__file__).resolve().parent.parent / 'communities' / community_upper_hyphen / 'timeseries',
+        base_path /  f'{community_hyphen}-all_timeseries',
+        base_path /  f'{community_name}-all_timeseries',
+        base_path /  f'{community_upper}-all_timeseries',
+        base_path /  f'{community_upper_hyphen}-all_timeseries',
+        base_path / community_name / 'timeseries',
+        base_path / community_hyphen / 'timeseries',
+        base_path / community_upper / 'timeseries',
+        base_path / community_upper_hyphen / 'timeseries',
     ]
     # Add archetype prefix variants
     for prefix in archetype_prefixes:
@@ -255,73 +256,6 @@ def select_and_sum_timeseries(community_name):
                 continue
         else:
             selected = available_files[:required_count]
-        selected_files.extend(selected)
-    
-    # Create a mapping between requirement keys and file patterns
-    #TODO: Make sure to remove this duplication logic if not needed anymore
-    type_mapping = {
-        # Map all prefixes to common search patterns
-        key: [pattern.replace("OLD-CROW-", "").replace("RANKIN-INLET-", "")] 
-        for key, pattern in {
-            "RANKIN-INLET-pre-2000-single": "pre-2000-single",
-            "RANKIN-INLET-2001-2015-single": "2001-2015-single",
-            "RANKIN-INLET-pre-2000-semi": "pre-2000-double",
-            "RANKIN-INLET-2001-2015-semi": "2001-2015-double",
-            "RANKIN-INLET-pre-2000-row-mid": "pre-2000-row-end",  # Using row-end files for mid
-            "RANKIN-INLET-2001-2015-row-mid": "2001-2015-row-mid",
-            "RANKIN-INLET-post-2016-row-mid": "post-2016-row-mid",
-            "RANKIN-INLET-pre-2000-row-end": "pre-2000-row-end",
-            "RANKIN-INLET-2001-2015-row-end": "2001-2015-row-end",
-            "RANKIN-INLET-post-2016-row-end": "post-2016-row-end"
-        }.items()
-    }    
-    # Find all available files
-    for file_path in glob.glob(str(timeseries_dir / '*-results_timeseries.csv')):
-        filename = Path(file_path).name
-        print(f"Checking file: {filename}")
-        
-        # Find the best matching pattern for this file
-        matched = False
-        for req_key, patterns in type_mapping.items():
-            if req_key in requirements:  # Only look for types we need
-                for pattern in patterns:
-                    if pattern in filename:
-                        files_by_type[req_key].append(file_path)
-                        print(f"Added to {req_key}")
-                        matched = True
-                        break
-                if matched:
-                    break
-    
-    # Print count of found files
-    for building_type, files in files_by_type.items():
-        print(f"Found {len(files)} {building_type} files")
-        if not files:
-            print("No files found for this type")
-        else:
-            print(f"Example: {files[0]}")
-    
-    # Randomly select and process files for each type
-    selected_files = []
-    for building_type, required_count in requirements.items():
-        available_files = files_by_type[building_type]
-        selected = []
-        if len(available_files) >= required_count:
-            # We have enough files, select without replacement
-            selected = np.random.choice(available_files, size=required_count, replace=False)
-            print(f"Selected {len(selected)} {building_type} files (direct match)")
-        elif len(available_files) > 0:
-            # Not enough, duplicate within type
-            selected = np.random.choice(available_files, size=required_count, replace=True)
-            print(f"Duplicated {building_type} files to reach {required_count}")
-        else:
-            # No files for this type, reuse from other types (with replacement)
-            reuse_candidates = [f for t, fs in files_by_type.items() if t != building_type for f in fs]
-            if reuse_candidates:
-                selected = np.random.choice(reuse_candidates, size=required_count, replace=True)
-                print(f"Reused files from other types for {building_type} to reach {required_count}")
-            else:
-                print(f"ERROR: No files available to fill {building_type}. Filling with empty list.")
         selected_files.extend(selected)
     
     # Aggregation logic with robust error handling

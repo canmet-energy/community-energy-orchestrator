@@ -234,32 +234,46 @@ def copy_archetype_files(community_name, requirements):
             debug_log.write(f"[DEBUG] Looking for files matching: '{req_type}' (need {count}, copying {num_to_copy})\n")
             debug_log.write(f"[DEBUG] Found {len(matched_files)} files for '{req_type}': {matched_files}\n")
             files_to_copy = list(matched_files)
+
+        # OLD CODE: Falls back to other time periods of same base type, this can cause problems with the duplication
+        # process as it gets confused with what files are duplicates, and accidentally creates too many duplicates.
+
             # Fallback: fill shortfall from other time periods of same base type
-            if len(files_to_copy) < num_to_copy:
-                base_type = req_type.split('-')[-1]
-                fallback_types = [t for t in ARCHETYPE_TYPE_PATTERNS.keys() if t != req_type and t.endswith(base_type)]
-                for fallback_type in fallback_types:
-                    fallback_patterns = ARCHETYPE_TYPE_PATTERNS.get(fallback_type, [fr'{fallback_type}_.*\.H2K$'])
-                    for pat in fallback_patterns:
-                        regex = re.compile(pat)
-                        fallback_matches = [f for f in h2k_files if regex.match(f) and f not in files_to_copy]
-                        files_to_copy.extend(fallback_matches)
-                        if len(files_to_copy) >= num_to_copy:
-                            break
-                    if len(files_to_copy) >= num_to_copy:
-                        break
+            # if len(files_to_copy) < num_to_copy:
+            #     base_type = req_type.split('-')[-1]
+            #     fallback_types = [t for t in ARCHETYPE_TYPE_PATTERNS.keys() if t != req_type and t.endswith(base_type)]
+            #     for fallback_type in fallback_types:
+            #         fallback_patterns = ARCHETYPE_TYPE_PATTERNS.get(fallback_type, [fr'{fallback_type}_.*\.H2K$'])
+            #         for pat in fallback_patterns:
+            #             regex = re.compile(pat)
+            #             fallback_matches = [f for f in h2k_files if regex.match(f) and f not in files_to_copy]
+            #             files_to_copy.extend(fallback_matches)
+            #             if len(files_to_copy) >= num_to_copy:
+            #                 break
+            #         if len(files_to_copy) >= num_to_copy:
+            #             break
             # If still not enough, duplicate from selected (guarantee enough unique-named files)
+            
+            #TODO: Use seed for random choice
             if len(files_to_copy) < num_to_copy and files_to_copy:
                 needed = num_to_copy - len(files_to_copy)
                 debug_log.write(f"[DEBUG] Duplicating {needed} archetypes for '{req_type}' to fill shortfall\n")
-                # For each needed duplicate, create a unique name
+                # Keep track of original files only (exclude any existing duplicates)
+                original_files = [f for f in files_to_copy if '_DUPLICATE_' not in f]
+                duplicate_count = 1
+                # For each needed duplicate, copy immediately with unique name
                 for i in range(needed):
-                    src_file = random.choice(files_to_copy)
+                    src_file = random.choice(original_files)  # Randomly choose from original files
                     name_parts = src_file.rsplit('.', 1)
-                    new_name = f"{name_parts[0]}_DUPLICATE_{i+1}.{name_parts[1]}"
+                    new_name = f"{name_parts[0]}_DUPLICATE_{duplicate_count}.{name_parts[1]}"
+                    duplicate_count += 1
+                    # Copy the file immediately with the new name
+                    src_path = archetypes_source / src_file
+                    dst_path = base_path / new_name
+                    shutil.copy2(src_path, dst_path)
+                    debug_log.write(f"[DEBUG] Created duplicate: {src_path} -> {dst_path}\n")
+                    # Add to list (but won't be copied again in the loop below)
                     files_to_copy.append(new_name)
-                    # Actually copy the file with the new name
-                    shutil.copy2(archetypes_source / src_file, base_path / new_name)
             # Always trim to exactly num_to_copy
             files_to_copy = files_to_copy[:num_to_copy]
             debug_log.write(f"[DEBUG] Copying {len(files_to_copy)} files for '{req_type}' to {base_path}\n")
@@ -410,6 +424,22 @@ def main(community_name):
     """
 
     print(f"\n[WORKFLOW] Starting workflow for community: {community_name}")
+    
+    # Clean existing output directories to ensure fresh run
+    print(f"[WORKFLOW] Step 0: Cleaning previous run data...")
+    base_dir = Path(__file__).resolve().parent.parent / 'communities' / community_name
+    for cleanup_dir in ['timeseries', 'archetypes/output']:
+        cleanup_path = base_dir / cleanup_dir
+        if cleanup_path.exists():
+            shutil.rmtree(cleanup_path)
+            print(f"[CLEANUP] Removed existing: {cleanup_path}")
+    
+    # Clean .H2K files in archetypes
+    archetypes_dir = base_dir / 'archetypes'
+    if archetypes_dir.exists():
+        for h2k_file in archetypes_dir.glob('*.H2K'):
+            h2k_file.unlink()
+            print(f"[CLEANUP] Removed: {h2k_file}")
     
     # Ensure all necessary directories exist
     print(f"[WORKFLOW] Step 1: Creating directories...")

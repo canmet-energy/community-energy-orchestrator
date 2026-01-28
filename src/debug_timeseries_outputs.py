@@ -7,8 +7,8 @@ def debug_timeseries_outputs(community_name, requirements):
     Check which archetype types are missing timeseries outputs for the community.
     Writes a debug report to communities/<community>/archetypes/timeseries_debug.log
     """
-    output_base = Path(f'communities/{community_name}/archetypes/output')
-    debug_log_path = Path(f'communities/{community_name}/archetypes/timeseries_debug.log')
+    output_base = Path(__file__).resolve().parent.parent / f'communities/{community_name}/archetypes/output'
+    debug_log_path = Path(__file__).resolve().parent.parent / f'communities/{community_name}/archetypes/timeseries_debug.log'
     found_counts = {k: 0 for k in requirements}
     missing = {}
     for era_type in requirements:

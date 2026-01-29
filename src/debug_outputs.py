@@ -65,6 +65,7 @@ def debug_timeseries_outputs(community_name):
                 f.write(f"{k}: {v} missing\n")
         else:
             f.write("\nAll required timeseries outputs found.\n")
+            f.write(f"\n{community_name}: TODO - # of files actually used in analysis")
     
     return debug_log_path
 

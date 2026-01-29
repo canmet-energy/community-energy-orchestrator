@@ -160,7 +160,7 @@ def select_and_sum_timeseries(community_name):
     print(f"Using timeseries directory: {timeseries_dir}")
 
     # Archetype source directory for fallback
-    archetype_source_dir = Path(__file__).resolve().parent / 'retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities'
+    archetype_source_dir = Path(__file__).resolve().parent / 'source-archetypes'
         
     # If no requirements, use all available files
     if not requirements:
@@ -200,24 +200,19 @@ def select_and_sum_timeseries(community_name):
     def find_files_for_type(directory, req_key):
         # Use the full req_key for matching filenames
         building_type = req_key
-        print(f"[DEBUG] Matching for req_key: '{req_key}' using building_type: '{building_type}' in directory: {directory}")
         found_files = []
         for file_path in glob.glob(str(directory / '*-results_timeseries.csv')):
             filename = Path(file_path).name
-            print(f"[DEBUG] Checking filename: {filename}")
             # For 'semi' requirements, also include 'double' files for the same era
             if building_type.endswith('semi'):
                 era = '-'.join(building_type.split('-')[:2]) if '-' in building_type else building_type
                 semi_prefix = f"{era}-semi_"
                 double_prefix = f"{era}-double_"
                 if (filename.startswith(semi_prefix) or filename.startswith(double_prefix)) and filename.endswith("-results_timeseries.csv"):
-                    print(f"[DEBUG] Matched (semi/double): {filename}")
                     found_files.append(file_path)
             else:
                 if filename.startswith(f"{building_type}_") and filename.endswith("-results_timeseries.csv"):
-                    print(f"[DEBUG] Matched: {filename}")
                     found_files.append(file_path)
-        print(f"[DEBUG] Found {len(found_files)} files for building_type '{building_type}'\n")
         return found_files
 
     # First, find files in the main timeseries directory
@@ -263,7 +258,7 @@ def select_and_sum_timeseries(community_name):
     community_total = None
     first_file = True
     error_files = []
-    expected_rows = 8762
+    expected_rows = 8761
     expected_columns = ["Time", "Heating_Load_GJ", "Heating_Propane_GJ", "Heating_Oil_GJ", "Heating_Electricity_GJ", "Total_Heating_Energy_GJ"]
 
     for file_path in selected_files:

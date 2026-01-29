@@ -1,28 +1,85 @@
-### **Description**
+# Community Energy Orchestrator
 
-This repository orchestrates the workflow for processing community energy models. It retrieves archetype `.h2k` models from a dedicated archetypes repository and updates the weather reference to match the specific community. The updated models are then passed to a converter repository (which remains unchanged) to produce EnergyPlus-ready outputs and hourly energy usage data.
+## Background
+This repository orchestrates the workflow for processing community energy models:
 
-Changing the weather reference drives downstream model behavior because heating and cooling loads depend on climate. As a result, the same archetype produces different hourly loads in different communities even when envelope and internal gains remain constant.
+- Copies Hot2000 archetype models (`.H2K`) into a per-community workspace
+- Updates each copied model’s weather reference to match the target community
+- Converts `.H2K` → HPXML and runs EnergyPlus simulations to produce hourly results
+- Aggregates outputs into community-level summary artifacts
 
+Changing the weather reference drives downstream model behavior because heating/cooling loads depend on climate.
 
-### **Approach**
+## Interface
+The primary interface is a Python workflow script:
 
-**This repository:** Retrieve archetype `.h2k` models, update their weather reference to match the target community, then pass the modified models to the converter.
+```bash
+python src/process_community_workflow.py "Old Crow"
+```
 
-**Converter repository:** Convert the weather-updated `.h2k` files to HPXML format and run EnergyPlus simulations to produce hourly energy usage data.
+## Documentation
+- Installation: [INSTALLATION.md](docs/INSTALLATION.md)
+- User guide: [USER_GUIDE.md](docs/USER_GUIDE.md)
+- Communities list: [COMMUNITIES.md](docs/COMMUNITIES.md)
+## Repository Layout
+- `src/process_community_workflow.py`: end-to-end workflow driver
+- `src/h2k-hpxml/`: converter used to generate HPXML + run simulations (git submodule)
+- `src/source-archetypes/`: Hot2000 `.H2K` archetype library (local/downloaded; not committed)
+- `communities/<Community Name>/`: per-run working directory and outputs (generated locally; not committed)
+- `csv/`: community requirements + weather mapping inputs
 
-**This repository (post-conversion):** Collect and organize converter outputs into the desired structure for downstream use.
+## Quick Start
 
-⦁   Treat "community" as a weather selection: if the input `.h2k` already encodes the intended Region/Location, keep it; otherwise, apply the repository's convention to set the weather reference.
+```bash
+# 1) Clone
+git clone <YOUR_REPO_URL>
+cd community-energy-orchestrator
 
+# 1a) Initialize submodules (required for src/h2k-hpxml)
+git submodule update --init --recursive
 
-### **Testing Plan**
+# (Alternative) clone with submodules:
+# git clone --recurse-submodules <YOUR_REPO_URL>
 
-⦁	Run the CLI on a small directory of `.h2k` files with different Region/Location values; confirm HPXML is produced and EnergyPlus artifacts (e.g., `eplusout.sql`) appear when simulation is enabled.
+# 2) Create + activate venv
+python3 -m venv .venv
+source .venv/bin/activate
 
-⦁	Verify that summary artifacts (e.g., run summaries and database) reflect success/failure per case, aligned with current tests.
+# 3) Install orchestrator dependencies
+pip install -r requirements.txt
 
+# 4) Install converter package (required for HPXML/EnergyPlus runs)
+pip install -e src/h2k-hpxml
 
-### **Waiting On**
+# 4a) Provide the archetype library
+# Ensure src/source-archetypes/ exists and contains .H2K files.
 
-⦁	Orchestrator contract: whether it will call the CLI or API and any batch metadata it expects us to return.
+# 5) Run a community
+python src/process_community_workflow.py "Old Crow"
+```
+
+For first-time setup on a new machine (OpenStudio/EnergyPlus dependencies), follow: [INSTALLATION.md](docs/INSTALLATION.md)
+
+## Workflow Examples
+
+### List available communities
+
+See the full list of communities [here](docs/COMMUNITIES.md).
+
+### Run a community
+
+```bash
+python src/process_community_workflow.py "Rankin Inlet"
+```
+
+### Where outputs go
+After a run, you’ll typically see:
+
+- `communities/<Community Name>/archetypes/`: weather-updated `.H2K` models used for simulation
+- `communities/<Community Name>/timeseries/`: per-building `*-results_timeseries.csv`
+- `communities/<Community Name>/analysis/`: aggregated outputs (community totals, logs, etc.)
+
+Note: the workflow currently deletes the existing `communities/<Community Name>/` directory at the start of each run to ensure a clean rebuild.
+
+## Known Issues
+- First-time converter setup (OpenStudio/EnergyPlus dependencies) can take a while depending on platform.

@@ -27,7 +27,7 @@ share/python-wheels/
 MANIFEST
 
 # Archetypes input
-**/retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities
+**/source-archetypes
 
 # Expected outputs
 **/communities/**

@@ -10,7 +10,6 @@ import random
 import pandas as pd
 from pathlib import Path
 import sys
-from debug_timeseries_outputs import debug_timeseries_outputs
 
 def duplicate_missing_timeseries(timeseries_dir, building_type, required_count):
     # Guarantee at least the required count (not just N+20%)
@@ -179,7 +178,7 @@ def get_community_requirements(community_name):
                         count = 0
                     requirements[f"{era}-{btype}"] = count
     # Write requirements to debug log for inspection
-    debug_log_path = Path(__file__).resolve().parent.parent / 'archetype_copy_debug.log'
+    debug_log_path = Path(__file__).resolve().parent.parent / 'logs' / 'archetype_copy_debug.log'
     with open(debug_log_path, 'a') as debug_log:
         debug_log.write(f"[DEBUG] Extracted requirements for {community_name}: {requirements}\n")
     return requirements
@@ -211,7 +210,7 @@ def copy_archetype_files(community_name, requirements):
     all_files = os.listdir(archetypes_source)
     h2k_files = [f for f in all_files if f.endswith('.H2K')]
 
-    debug_log_path = Path(__file__).resolve().parent.parent / 'archetype_copy_debug.log'
+    debug_log_path = Path(__file__).resolve().parent.parent / 'logs' / 'archetype_copy_debug.log'
     with open(debug_log_path, 'a') as debug_log:
         for req_type, count in requirements.items():
             if count == 0:
@@ -367,14 +366,23 @@ def run_hpxml_conversion(community_name):
     Convert HOT2000 files to HPXML and run simulations
     """
     base_path = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes'
+    output_path = base_path / 'output'
+
+    # Create output directory if not already created
+    output_path.mkdir(parents= True, exist_ok= True)
+
     print(f"[HPXML] Starting HPXML conversion for files in: {base_path}")
+    print(f"[HPXML] Output will be saved to: {output_path}")
+    
     # Run h2k2hpxml conversion with hourly data
     if shutil.which('h2k-hpxml'):
         # Using CLI (recommended)
         print(f"[HPXML] Running h2k-hpxml CLI with hourly output...")
         subprocess.run([
             'h2k-hpxml', 
-            str(base_path), 
+            str(base_path),
+            '--output',
+            str(output_path),
             '--hourly', 
             'ALL'
             ], check=True)
@@ -386,6 +394,8 @@ def run_hpxml_conversion(community_name):
             sys.executable,
             str(convert_path),
             str(base_path),
+            '--output',
+            str(output_path),
             '--hourly',
             'ALL'
         ], check=True)
@@ -484,10 +494,23 @@ def main(community_name):
         print(f"Error running calculate_community_analysis.py: {result.stderr}")
         return 1
 
-    # 9. Debug timeseries outputs
-    debug_log_path = debug_timeseries_outputs(community_name, requirements)
+    # 9. Debug timeseries and H2K files
+    print(f"[WORKFLOW] Running debug validation...")
+    debug_script = Path(__file__).resolve().parent / 'debug_outputs.py'
+    result = subprocess.run([
+        sys.executable,
+        str(debug_script),
+        community_name
+    ], capture_output=True, text=True)
+    
+    if result.returncode == 0:
+        print(f"Debug validation complete. Check: communities/{community_name}/analysis/output_debug.log")
+        if result.stdout:
+            print(result.stdout)
+    else:
+        print(f"Warning: Debug validation had issues: {result.stderr}")
+    
     print(f"Analysis completed successfully for {community_name}")
-    print(f"Timeseries output debug log: {debug_log_path}")
 
     # 10. Remove archetypes/output directory after successful analysis
     output_dir = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes' / 'output'

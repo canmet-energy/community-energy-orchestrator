@@ -328,7 +328,7 @@ def select_and_sum_timeseries(community_name):
         # Save the results
         community_folder = Path(__file__).resolve().parent.parent / 'communities' / community_name.replace('-', '_')
         community_folder.mkdir(parents=True, exist_ok=True)
-        output_file = community_folder / f'{community_name}-community_total.csv'
+        output_file = community_folder / 'analysis' / f'{community_name}-community_total.csv'
         community_total.to_csv(output_file, index=False)
         print(f"\nCommunity total energy use saved to:")
         print(f"  - {output_file} (community folder)")
@@ -346,7 +346,7 @@ def select_and_sum_timeseries(community_name):
         avg_hourly_energy = community_total['Total_Heating_Energy_GJ'].mean()
 
         # Save the analysis results
-        analysis_file = community_folder / f'{community_name}_analysis.md'
+        analysis_file = community_folder / 'analysis' / f'{community_name}_analysis.md'
         with open(analysis_file, 'w') as f:
             f.write(f"# {community_name} Community Analysis\n\n")
             f.write("## Community Heating Load Statistics (what the houses need):\n")

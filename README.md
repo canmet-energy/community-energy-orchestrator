@@ -18,28 +18,26 @@ python src/process_community_workflow.py "Old Crow"
 ```
 
 ## Documentation
-- Installation: [INSTALLATION.md](docs/INSTALLATION.md)
-- User guide: [USER_GUIDE.md](docs/USER_GUIDE.md)
-- Communities list: [COMMUNITIES.md](docs/COMMUNITIES.md)
+- [Installation Guide](docs/INSTALLATION.md) - Complete setup instructions for all platforms
+- [User Guide](docs/USER_GUIDE.md) - Complete guide to using the program
+- [Communities](docs/COMMUNITIES.md) - List of all available communities to test
 ## Repository Layout
 - `src/process_community_workflow.py`: end-to-end workflow driver
 - `src/h2k-hpxml/`: converter used to generate HPXML + run simulations (git submodule)
-- `src/source-archetypes/`: Hot2000 `.H2K` archetype library (local/downloaded; not committed)
-- `communities/<Community Name>/`: per-run working directory and outputs (generated locally; not committed)
+- `src/source-archetypes/`: Hot2000 `.H2K` archetype library (local/downloaded)
+- `communities/<Community Name>/`: per-run working directory and outputs (generated locally)
 - `csv/`: community requirements + weather mapping inputs
 
 ## Quick Start
 
+Choose your OS:
+
+### Linux/macOS
+
 ```bash
-# 1) Clone
-git clone <YOUR_REPO_URL>
+# 1) Clone (includes submodules)
+git clone --recurse-submodules https://github.com/micael-gourde/community-energy-orchestrator.git
 cd community-energy-orchestrator
-
-# 1a) Initialize submodules (required for src/h2k-hpxml)
-git submodule update --init --recursive
-
-# (Alternative) clone with submodules:
-# git clone --recurse-submodules <YOUR_REPO_URL>
 
 # 2) Create + activate venv
 python3 -m venv .venv
@@ -48,17 +46,57 @@ source .venv/bin/activate
 # 3) Install orchestrator dependencies
 pip install -r requirements.txt
 
-# 4) Install converter package (required for HPXML/EnergyPlus runs)
+# 4) Install the converter package (provides h2k-hpxml + os-setup)
 pip install -e src/h2k-hpxml
 
-# 4a) Provide the archetype library
+# 5) Install/verify simulation dependencies (OpenStudio/EnergyPlus)
+os-setup --auto-install
+os-setup --test-installation
+
+# If you hit permission errors, try:
+# sudo os-setup --auto-install
+
+# 6) Provide the archetype library
 # Ensure src/source-archetypes/ exists and contains .H2K files.
 
-# 5) Run a community
+# 7) Run a community
 python src/process_community_workflow.py "Old Crow"
 ```
 
-For first-time setup on a new machine (OpenStudio/EnergyPlus dependencies), follow: [INSTALLATION.md](docs/INSTALLATION.md)
+### Windows (PowerShell)
+
+```powershell
+# 1) Clone (includes submodules)
+git clone --recurse-submodules https://github.com/micael-gourde/community-energy-orchestrator.git
+cd community-energy-orchestrator
+
+# 2) Create + activate venv
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# 3) Install orchestrator dependencies
+pip install -r requirements.txt
+
+# 4) Install the converter package (provides h2k-hpxml + os-setup)
+pip install -e src\h2k-hpxml
+
+# 5) Install/verify simulation dependencies (OpenStudio/EnergyPlus)
+os-setup --auto-install
+os-setup --test-installation
+
+# If 'h2k-hpxml' or 'os-setup' are not found, restart your terminal and confirm the venv is active.
+
+# If commands are still not found on Windows, try:
+# os-setup --add-to-path
+
+# 6) Provide the archetype library
+# Ensure src\source-archetypes\ exists and contains .H2K files.
+
+# 7) Run a community
+python src\process_community_workflow.py "Old Crow"
+```
+
+For first-time setup on a new machine (OpenStudio/EnergyPlus dependencies), follow: [Installation Guide](docs/INSTALLATION.md)
 
 ## Workflow Examples
 
@@ -80,6 +118,3 @@ After a run, you’ll typically see:
 - `communities/<Community Name>/analysis/`: aggregated outputs (community totals, logs, etc.)
 
 Note: the workflow currently deletes the existing `communities/<Community Name>/` directory at the start of each run to ensure a clean rebuild.
-
-## Known Issues
-- First-time converter setup (OpenStudio/EnergyPlus dependencies) can take a while depending on platform.

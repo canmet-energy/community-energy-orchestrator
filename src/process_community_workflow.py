@@ -7,6 +7,7 @@ Processes housing archetypes, runs simulations, and generates community-level en
 import csv
 import math
 import os
+import random
 import re
 import shutil
 import subprocess
@@ -97,18 +98,27 @@ def duplicate_missing_timeseries(timeseries_dir, building_type, required_count):
         building_type: Type prefix to match (e.g., 'pre-2000-single')
         required_count: Exact number of files needed
     """
-    files = [f for f in os.listdir(timeseries_dir) if f.startswith(building_type) and f.endswith("-results_timeseries.csv")]
+    files = sorted(f for f in os.listdir(timeseries_dir) if f.startswith(building_type) and f.endswith("-results_timeseries.csv"))
     if not files:
         print(f"No source files found for {building_type}")
         return
     count = len(files)
+
+    seed_str = os.environ.get('ARCHETYPE_SELECTION_SEED')
+    if seed_str is not None:
+        # Stable per-building-type seed so results don't depend on dict iteration order.
+        rng = random.Random(f"{seed_str}:{building_type}")
+        source_files = [f for f in files if '_DUPLICATE_' not in f] or files
+    else:
+        rng = None
+        source_files = files
     
     if count >= required_count:
         print(f"{building_type}: Already have {count} files (required: {required_count})")
         return
     
     while count < required_count:
-        src_file = files[count % len(files)]
+        src_file = rng.choice(source_files) if rng is not None else source_files[count % len(source_files)]
         src_path = os.path.join(timeseries_dir, src_file)
         new_name = f"{building_type}_DUPLICATE_{count+1}-results_timeseries.csv"
         dst_path = os.path.join(timeseries_dir, new_name)
@@ -248,6 +258,8 @@ def copy_archetype_files(community_name, requirements):
     }
 
     debug_log_path = Path(__file__).resolve().parent.parent / 'logs' / 'archetype_copy_debug.log'
+    seed_str = os.environ.get('ARCHETYPE_SELECTION_SEED')
+    rng = random.Random(int(seed_str)) if seed_str is not None else None
     with open(debug_log_path, 'a') as debug_log:
         for req_type, count in requirements.items():
             if count == 0:
@@ -264,7 +276,9 @@ def copy_archetype_files(community_name, requirements):
                 f for f in h2k_files
                 if any(regex.match(f) for regex in patterns)
             ]
-            matched_files = list(set(matched_files)) # Set will make it unordered, so if it gets capped it will just copy a random subset
+            matched_files = sorted(set(matched_files))  # Canonical order for reproducible shuffling
+            if rng is not None:
+                rng.shuffle(matched_files)
             # Copy up to num_to_copy files (or fewer if we run out of matches).
             files_to_copy = matched_files[:num_to_copy]
 

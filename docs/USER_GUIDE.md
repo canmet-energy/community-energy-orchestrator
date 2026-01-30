@@ -13,7 +13,7 @@ Complete guide for running community workflows and understanding outputs.
 ## Installation
 See the installation guide for full setup instructions:
 
-- [docs/INSTALLATION.md](INSTALLATION.md)
+- [Installation Guide](INSTALLATION.md)
 
 ## Command Reference
 
@@ -40,20 +40,19 @@ These are invoked by the workflow internally:
 
 ### 1) List available communities
 
-See [COMMUNITIES.md](COMMUNITIES.md) for the full list:
+See [Communities](COMMUNITIES.md) for the full list:
 
 Note: `communities/` is generated locally by the workflow (and may not exist until you run a community).
 
 ### 2) Run a community
 
-Choose from [COMMUNITIES.md](COMMUNITIES.md):
 
 ```bash
 python src/process_community_workflow.py "Rankin Inlet"
 ```
 
 ### 3) Re-run a community
-The workflow is designed to be re-runnable; it clears the community directory on each run.
+The workflow is designed to be re-runnable; it clears the specified community directory on each run.
 
 ```bash
 python src/process_community_workflow.py "Old Crow"
@@ -81,31 +80,15 @@ If runs suddenly become much slower, common causes are:
 
 Check `logs/archetype_copy_debug.log` to confirm how many archetypes were copied for each requirement.
 
-### “Weather in source archetypes changed”
-The source archetype library under `src/source-archetypes/` is intended to be treated as read-only.
-
-If you suspect the source is being modified, verify the community archetype directory is not a symlink to the source:
-
-```bash
-COMMUNITY="Old Crow"
-readlink -f "communities/$COMMUNITY/archetypes"
-readlink -f "src/source-archetypes"
-```
-
-If both resolve to the same path, updates to the “community copy” will also edit the source.
-
 ### Converter installation issues
-If you see errors about `h2k-hpxml` or OpenStudio, start with:
+If you see errors about `h2k-hpxml` or OpenStudio, try:
 
 ```bash
 h2k-hpxml --help
 os-setup --help
 ```
 
-Then follow the converter’s docs:
-
-- `src/h2k-hpxml/docs/INSTALLATION.md`
 
 Reminder:
 - `src/h2k-hpxml/` is a git submodule and must be initialized.
-- `src/source-archetypes/` is a local input folder (not committed).
+- `src/source-archetypes/` is a local input folder.

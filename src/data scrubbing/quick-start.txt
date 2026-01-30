@@ -1,0 +1,6 @@
+# Copy to sanitized folder, recurse, set Identification to filename stem
+python scrubbing-h2k-files.py \
+  --origin "D:\input_h2k" \
+  --dest   "D:\output_sanitized" \
+  --recurse \
+  --id-source stem

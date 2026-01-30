@@ -258,6 +258,7 @@ def select_and_sum_timeseries(community_name):
     community_total = None
     first_file = True
     error_files = []
+    successful_files_used = 0
     expected_rows = 8761
     expected_columns = ["Time", "Heating_Load_GJ", "Heating_Propane_GJ", "Heating_Oil_GJ", "Heating_Electricity_GJ", "Total_Heating_Energy_GJ"]
 
@@ -296,6 +297,7 @@ def select_and_sum_timeseries(community_name):
                 community_total['Heating_Oil_GJ'] = community_total['Heating_Oil_GJ'].add(df['Heating_Oil_GJ'], fill_value=0)
                 community_total['Heating_Electricity_GJ'] = community_total['Heating_Electricity_GJ'].add(df['Heating_Electricity_GJ'], fill_value=0)
             print(f"Processed: {Path(file_path).stem}")
+            successful_files_used += 1
         except Exception as e:
             print(f"[ERROR] Exception processing {file_path}: {e}")
             error_files.append(file_path)
@@ -323,6 +325,7 @@ def select_and_sum_timeseries(community_name):
         # Save the results
         community_folder = Path(__file__).resolve().parent.parent / 'communities' / community_name.replace('-', '_')
         community_folder.mkdir(parents=True, exist_ok=True)
+        (community_folder / 'analysis').mkdir(parents=True, exist_ok=True)
         output_file = community_folder / 'analysis' / f'{community_name}-community_total.csv'
         community_total.to_csv(output_file, index=False)
         print(f"\nCommunity total energy use saved to:")
@@ -359,6 +362,8 @@ def select_and_sum_timeseries(community_name):
                 f.write(f"\n## Warnings and Errors Encountered:\n")
                 for ef in error_files:
                     f.write(f"- Issue with file: {ef}\n")
+
+            f.write(f"\nThe number of files that were successfully used in the analysis: {successful_files_used}/{len(selected_files)}\n")
 
         print(f"\nAnalysis results saved to:")
         print(f"  - {analysis_file} (community folder)")

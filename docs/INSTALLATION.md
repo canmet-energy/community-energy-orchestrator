@@ -3,73 +3,125 @@
 
 Complete setup instructions for running the community workflow end-to-end.
 
-## Table of Contents
-- [Requirements](#requirements)
-- [Quick Start](#quick-start)
-- [Detailed Setup](#detailed-setup)
-- [Verification](#verification)
-- [Troubleshooting](#troubleshooting)
+## Detailed Setup
 
-## Requirements
+This repo depends on the `h2k-hpxml` converter working on your machine.
 
-### Core requirements
-- Python 3.10+ (recommended)
-- `pip`
-
-### Simulation requirements
-This project runs simulations via the converter in `src/h2k-hpxml/` (git submodule). That converter depends on OpenStudio/EnergyPlus tooling.
-
-If you are setting up on a new machine, expect the first-time setup to take longer.
-
-## Quick Start
-
-```bash
-# 1) Clone
-git clone https://github.com/micael-gourde/community-energy-orchestrator.git
-cd community-energy-orchestrator
-
-# 1a) Initialize submodules (required for src/h2k-hpxml)
-git submodule update --init --recursive
-
-# (Alternative) You can clone with submodules in one step:
-# git clone --recurse-submodules https://github.com/micael-gourde/community-energy-orchestrator.git
-
-# 2) Create and activate a virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
-
-# 3) Install orchestrator dependencies
-pip install -r requirements.txt
-
-# 4) Install converter package (includes the h2k-hpxml CLI entrypoint)
-pip install -e src/h2k-hpxml
-
-# 5) Provide the archetype library (required)
-# Ensure src/source-archetypes/ exists and contains the .H2K archetypes.
-
-# 6) Run a community
-python src/process_community_workflow.py "Old Crow"
-```
+Note: this orchestrator works with Python 3.10+ and the bundled converter supports Python 3.10–3.13.
 
 Note: `communities/` is generated locally by the workflow and is not committed.
 
-## Detailed Setup
+### Step 1) Clone the repo (with submodules)
 
-### 1) Create and activate a virtual environment
+`src/h2k-hpxml/` is a git submodule and must be initialized.
+
+```bash
+git clone --recurse-submodules https://github.com/micael-gourde/community-energy-orchestrator.git
+cd community-energy-orchestrator
+```
+
+If you already cloned without submodules:
+
+```bash
+git submodule update --init --recursive
+```
+
+### Step 2) Create and activate a Python virtual environment
+
+Linux/macOS:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### 2) Install Python dependencies
+Windows (PowerShell):
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+### Step 3) Install orchestrator dependencies
 
 ```bash
 pip install -r requirements.txt
+```
+
+### Step 4) Install the converter package (provides `h2k-hpxml` and `os-setup`)
+
+Linux/macOS:
+
+```bash
 pip install -e src/h2k-hpxml
 ```
 
-### 3) Provide the archetype library
+Windows:
+
+```powershell
+pip install -e src\h2k-hpxml
+```
+
+Verification:
+
+```bash
+h2k-hpxml --help
+os-setup --help
+```
+
+If `h2k-hpxml` is “command not found”, confirm your venv is active and re-run the install. On Windows, you may need to restart your terminal.
+
+### Step 5) Install and verify OpenStudio/EnergyPlus dependencies
+
+These steps are required for the converter to actually run simulations:
+
+Linux/macOS:
+
+```bash
+os-setup --auto-install
+os-setup --test-installation
+```
+
+If you hit permission errors on Linux, try:
+
+```bash
+sudo os-setup --auto-install
+```
+
+If `h2k-hpxml` is “command not found”, restart your terminal and confirm your venv is active.
+
+Windows (PowerShell):
+
+```powershell
+os-setup --auto-install
+os-setup --test-installation
+```
+
+If commands are still not found on Windows, try:
+
+```powershell
+os-setup --add-to-path
+```
+
+If `os-setup` is not found, re-check Step 4 (the converter package must be installed into your active environment).
+
+Optional deeper verification:
+
+Linux/macOS:
+
+```bash
+os-setup --test-comprehensive
+```
+
+Optional: verify the converter end-to-end without the orchestrator:
+
+Linux/macOS:
+
+```bash
+h2k-demo
+```
+
+### Step 6) Provide the archetype library
 
 This workflow expects a local Hot2000 archetype library at:
 
@@ -77,41 +129,16 @@ This workflow expects a local Hot2000 archetype library at:
 
 This folder is intentionally treated as a local input (it is gitignored). Place/download the archetype library there before running any communities.
 
-### 4) OpenStudio/EnergyPlus setup (if needed)
-If your environment does not already have the simulation dependencies configured, the converter provides helper commands.
+### Step 7) Run a community
 
-After installing the converter package, you can try:
-
-```bash
-os-setup --help
-```
-
-For full details, see the converter’s installation guide.
-
-## Verification
-
-### Confirm the CLI is installed
-
-```bash
-h2k-hpxml --help
-```
-
-### Dry run with a community
-
-Choose one from [COMMUNITIES.md](COMMUNITIES.md):
+Choose one from [Communities](COMMUNITIES.md):
 
 ```bash
 python src/process_community_workflow.py "Old Crow"
 ```
 
-## Troubleshooting
-
-### “Command not found: h2k-hpxml”
-Reinstall the converter into your active venv:
+If a run fails during conversion/simulation, start by re-running:
 
 ```bash
-pip install -e src/h2k-hpxml
+os-setup --test-installation
 ```
-
-### “OpenStudio not found” / simulation errors
-Follow the converter’s setup instructions.

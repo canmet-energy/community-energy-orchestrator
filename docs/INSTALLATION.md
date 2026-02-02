@@ -7,9 +7,12 @@ Complete setup instructions for running the community workflow end-to-end.
 
 This repo depends on the `h2k-hpxml` converter working on your machine.
 
-Note: this orchestrator works with Python 3.10+ and the bundled converter supports Python 3.10–3.13.
+Notes: 
+- This orchestrator uses `pyproject.toml`
 
-Note: `communities/` is generated locally by the workflow and is not committed.
+- The converter submodule declares support for Python 3.10–3.13.
+
+- `communities/` is generated locally by the workflow and is not committed.
 
 ### Step 1) Clone the repo (with submodules)
 
@@ -45,10 +48,15 @@ python -m venv .venv
 ### Step 3) Install orchestrator dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 
-### Step 4) Install the converter package (provides `h2k-hpxml` and `os-setup`)
+### Step 4) (Optional) Install the converter package in editable mode
+
+On supported Python versions, the converter is installed automatically as a
+dependency from the `src/h2k-hpxml/` submodule when you run Step 3.
+
+Only do this step if you're developing the converter itself.
 
 Linux/macOS:
 
@@ -134,11 +142,23 @@ This folder is intentionally treated as a local input (it is gitignored). Place/
 Choose one from [Communities](COMMUNITIES.md):
 
 ```bash
-python src/process_community_workflow.py "Old Crow"
+python3 src/process_community_workflow.py "Old Crow"
 ```
+
+Optional: run the API instead of the CLI workflow:
+
+```bash
+python3 -m uvicorn src.main:app --reload
+```
+
+Then open:
+
+- http://localhost:8000/docs
 
 If a run fails during conversion/simulation, start by re-running:
 
 ```bash
 os-setup --test-installation
 ```
+
+Next: once you're installed, jump straight to the usage and outputs overview in the [User Guide](USER_GUIDE.md).

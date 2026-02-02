@@ -110,7 +110,8 @@ def duplicate_missing_timeseries(timeseries_dir, building_type, required_count):
         rng = random.Random(f"{seed_str}:{building_type}")
         source_files = [f for f in files if '_DUPLICATE_' not in f] or files
     else:
-        rng = None
+        # No seed: truly random duplication each run
+        rng = random.Random()
         source_files = files
     
     if count >= required_count:
@@ -118,7 +119,7 @@ def duplicate_missing_timeseries(timeseries_dir, building_type, required_count):
         return
     
     while count < required_count:
-        src_file = rng.choice(source_files) if rng is not None else source_files[count % len(source_files)]
+        src_file = rng.choice(source_files)
         src_path = os.path.join(timeseries_dir, src_file)
         new_name = f"{building_type}_DUPLICATE_{count+1}-results_timeseries.csv"
         dst_path = os.path.join(timeseries_dir, new_name)
@@ -169,7 +170,7 @@ def get_community_requirements(community_name):
     csv_path = Path(__file__).resolve().parent.parent / 'csv' / 'train-test communities number of housing types.csv'
     df = pd.read_csv(csv_path, header=None)
     # Find the row where the first column matches (case-insensitive)
-    mask = df[0].str.strip().str.upper() == comm_upper
+    mask = df[0].astype(str).str.strip().str.upper() == comm_upper
     if not mask.any():
         raise ValueError(f"Community '{community_name}' not found in CSV file.")
     row = df[mask].iloc[0].tolist()
@@ -212,6 +213,7 @@ def get_community_requirements(community_name):
                     requirements[f"{era}-{btype}"] = count
     # Write requirements to debug log for inspection
     debug_log_path = Path(__file__).resolve().parent.parent / 'logs' / 'archetype_copy_debug.log'
+    debug_log_path.parent.mkdir(parents=True, exist_ok=True)
     with open(debug_log_path, 'a') as debug_log:
         debug_log.write(f"[DEBUG] Extracted requirements for {community_name}: {requirements}\n")
     return requirements
@@ -258,8 +260,9 @@ def copy_archetype_files(community_name, requirements):
     }
 
     debug_log_path = Path(__file__).resolve().parent.parent / 'logs' / 'archetype_copy_debug.log'
+    debug_log_path.parent.mkdir(parents=True, exist_ok=True)
     seed_str = os.environ.get('ARCHETYPE_SELECTION_SEED')
-    rng = random.Random(int(seed_str)) if seed_str is not None else None
+    rng = random.Random(seed_str) if seed_str is not None else random.Random()
     with open(debug_log_path, 'a') as debug_log:
         for req_type, count in requirements.items():
             if count == 0:
@@ -277,8 +280,7 @@ def copy_archetype_files(community_name, requirements):
                 if any(regex.match(f) for regex in patterns)
             ]
             matched_files = sorted(set(matched_files))  # Canonical order for reproducible shuffling
-            if rng is not None:
-                rng.shuffle(matched_files)
+            rng.shuffle(matched_files)
             # Copy up to num_to_copy files (or fewer if we run out of matches).
             files_to_copy = matched_files[:num_to_copy]
 
@@ -316,7 +318,7 @@ def update_weather_location(community_name):
         weather_location
     ], check=True)
 
-def run_hpxml_conversion(community_name):
+def run_hpxml_conversion(community_name, requirements):
     """
     Convert HOT2000 files to HPXML, run simulations, and collect timeseries results.
     Duplicates timeseries files as needed to meet requirements.
@@ -349,6 +351,9 @@ def run_hpxml_conversion(community_name):
         # Fallback to direct script if CLI not installed
         print(f"[HPXML] Running convert.py directly with hourly output...")
         convert_path = Path(__file__).resolve().parent / 'h2k-hpxml' / 'src' / 'h2k_hpxml' / 'cli' / 'convert.py'
+        h2k_hpxml_src = Path(__file__).resolve().parent / 'h2k-hpxml' / 'src'
+        env = os.environ.copy()
+        env["PYTHONPATH"] = f"{h2k_hpxml_src}{os.pathsep}{env.get('PYTHONPATH','')}"
         subprocess.run([
             sys.executable,
             str(convert_path),
@@ -357,7 +362,7 @@ def run_hpxml_conversion(community_name):
             str(output_path),
             '--hourly',
             'ALL'
-        ], check=True)
+        ], check=True, env=env)
     
     print(f"[HPXML] Conversion complete.")
 
@@ -382,7 +387,6 @@ def run_hpxml_conversion(community_name):
     print(f"Collected {collected} timeseries files for {community_name}")
 
     # Ensure each required type has enough files by duplicating as needed
-    requirements = get_community_requirements(community_name)
     timeseries_dir_path = str(timeseries_dir)
     for building_type, required_count in requirements.items():
         duplicate_missing_timeseries(timeseries_dir_path, building_type, required_count)
@@ -429,7 +433,7 @@ def main(community_name):
 
     # 5. Run HPXML conversion and simulation for each archetype
     print(f"[WORKFLOW] Step 5: Running HPXML conversion and simulations...")
-    run_hpxml_conversion(community_name)
+    run_hpxml_conversion(community_name, requirements)
     print(f"[WORKFLOW] Step 5 complete.")
 
     # 6. Delegate aggregation and output to calculate_community_analysis.py

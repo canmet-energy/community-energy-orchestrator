@@ -11,11 +11,39 @@ This repository orchestrates the workflow for processing community energy models
 Changing the weather reference drives downstream model behavior because heating/cooling loads depend on climate.
 
 ## Interface
-The primary interface is a Python workflow script:
+This repo supports two interfaces:
+
+1) **CLI workflow script** (runs one community end-to-end)
+
+Linux/macOS:
 
 ```bash
-python src/process_community_workflow.py "Old Crow"
+python3 src/process_community_workflow.py "Old Crow"
 ```
+
+Windows (PowerShell):
+
+```powershell
+python src\process_community_workflow.py "Old Crow"
+```
+
+2) **REST API** (FastAPI) for starting runs and polling status
+
+Linux/macOS:
+
+```bash
+python3 -m uvicorn src.main:app --reload
+```
+
+Windows (PowerShell):
+
+```powershell
+python -m uvicorn src.main:app --reload
+```
+
+Then open the Swagger UI at:
+
+- http://localhost:8000/docs
 
 ## Documentation
 - [Installation Guide](docs/INSTALLATION.md) - Complete setup instructions for all platforms
@@ -43,24 +71,24 @@ cd community-energy-orchestrator
 python3 -m venv .venv
 source .venv/bin/activate
 
-# 3) Install orchestrator dependencies
-pip install -r requirements.txt
+# 3) Install orchestrator (pyproject.toml)
+pip install -e .
 
-# 4) Install the converter package (provides h2k-hpxml + os-setup)
-pip install -e src/h2k-hpxml
-
-# 5) Install/verify simulation dependencies (OpenStudio/EnergyPlus)
+# 4) Install/verify simulation dependencies (OpenStudio/EnergyPlus)
 os-setup --auto-install
 os-setup --test-installation
 
 # If you hit permission errors, try:
 # sudo os-setup --auto-install
 
-# 6) Provide the archetype library
+# 5) Provide the archetype library
 # Ensure src/source-archetypes/ exists and contains .H2K files.
 
-# 7) Run a community
-python src/process_community_workflow.py "Old Crow"
+# 6) Run a community
+python3 src/process_community_workflow.py "Old Crow"
+
+# Optional: run the API instead
+# python3 -m uvicorn src.main:app --reload
 ```
 
 ### Windows (PowerShell)
@@ -74,13 +102,10 @@ cd community-energy-orchestrator
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
-# 3) Install orchestrator dependencies
-pip install -r requirements.txt
+# 3) Install orchestrator (pyproject.toml)
+pip install -e .
 
-# 4) Install the converter package (provides h2k-hpxml + os-setup)
-pip install -e src\h2k-hpxml
-
-# 5) Install/verify simulation dependencies (OpenStudio/EnergyPlus)
+# 4) Install/verify simulation dependencies (OpenStudio/EnergyPlus)
 os-setup --auto-install
 os-setup --test-installation
 
@@ -89,11 +114,14 @@ os-setup --test-installation
 # If commands are still not found on Windows, try:
 # os-setup --add-to-path
 
-# 6) Provide the archetype library
+# 5) Provide the archetype library
 # Ensure src\source-archetypes\ exists and contains .H2K files.
 
-# 7) Run a community
+# 6) Run a community
 python src\process_community_workflow.py "Old Crow"
+
+# Optional: run the API instead
+# python -m uvicorn src.main:app --reload
 ```
 
 For first-time setup on a new machine (OpenStudio/EnergyPlus dependencies), follow: [Installation Guide](docs/INSTALLATION.md)
@@ -107,7 +135,7 @@ See the full list of communities [here](docs/COMMUNITIES.md).
 ### Run a community
 
 ```bash
-python src/process_community_workflow.py "Rankin Inlet"
+python3 src/process_community_workflow.py "Rankin Inlet"
 ```
 
 ### Where outputs go

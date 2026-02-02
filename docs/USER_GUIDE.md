@@ -20,13 +20,47 @@ See the installation guide for full setup instructions:
 ### `process_community_workflow.py` (main entrypoint)
 Runs the full workflow for a single community.
 
+Linux/macOS:
+
 ```bash
-python src/process_community_workflow.py "Old Crow"
+python3 src/process_community_workflow.py "Old Crow"
+```
+
+Windows (PowerShell):
+
+```powershell
+python src\process_community_workflow.py "Old Crow"
 ```
 
 Notes:
 - Community names with spaces must be quoted.
 - The workflow deletes `communities/<Community Name>/` at the start of each run.
+
+### API (`src/main.py`)
+Runs the FastAPI server so you can start a workflow run via HTTP and poll for status.
+
+Start the server:
+
+Linux/macOS:
+
+```bash
+python3 -m uvicorn src.main:app --reload
+```
+
+Windows (PowerShell):
+
+```powershell
+python -m uvicorn src.main:app --reload
+```
+
+Open the interactive docs:
+
+- http://localhost:8000/docs
+
+Notes:
+- The API server keeps running until you stop it with `Ctrl+C`.
+- Run state is stored in memory (restarting the server clears run history).
+- The API enforces a single active run per server process.
 
 ### Supporting scripts
 
@@ -46,16 +80,31 @@ Note: `communities/` is generated locally by the workflow (and may not exist unt
 
 ### 2) Run a community
 
+Linux/macOS:
 
 ```bash
-python src/process_community_workflow.py "Rankin Inlet"
+python3 src/process_community_workflow.py "Rankin Inlet"
+```
+
+Windows (PowerShell):
+
+```powershell
+python src\process_community_workflow.py "Rankin Inlet"
 ```
 
 ### 3) Re-run a community
 The workflow is designed to be re-runnable; it clears the specified community directory on each run.
 
+Linux/macOS:
+
 ```bash
-python src/process_community_workflow.py "Old Crow"
+python3 src/process_community_workflow.py "Old Crow"
+```
+
+Windows (PowerShell):
+
+```powershell
+python src\process_community_workflow.py "Old Crow"
 ```
 
 ## Outputs

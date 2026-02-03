@@ -148,7 +148,7 @@ python3 src/process_community_workflow.py "Old Crow"
 Optional: run the API instead of the CLI workflow:
 
 ```bash
-python3 -m uvicorn src.main:app --reload
+python3 -m uvicorn src.main:app
 ```
 
 Then open:

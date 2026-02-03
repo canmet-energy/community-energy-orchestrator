@@ -39,18 +39,19 @@ Notes:
 ### API (`src/main.py`)
 Runs the FastAPI server so you can start a workflow run via HTTP and poll for status.
 
+
 Start the server:
 
 Linux/macOS:
 
 ```bash
-python3 -m uvicorn src.main:app --reload
+python3 -m uvicorn src.main:app
 ```
 
 Windows (PowerShell):
 
 ```powershell
-python -m uvicorn src.main:app --reload
+python -m uvicorn src.main:app
 ```
 
 Open the interactive docs:

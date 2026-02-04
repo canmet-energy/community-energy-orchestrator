@@ -4,7 +4,7 @@ This module exposes a small REST API for running the community workflow in
 background and polling for status.
 
 How to run:
-    python -m uvicorn src.main:app --reload
+    python -m uvicorn src.main:app
 
 Key behavior:
     - Single-run-at-a-time: this API enforces at most one active run per process.
@@ -21,6 +21,7 @@ Endpoints:
     - GET  /runs/{run_id}/analysis-md
 """
 
+import re
 import threading
 from pathlib import Path
 from typing import Dict, Literal, Optional
@@ -77,7 +78,7 @@ def _run_workflow(run_id: str, community_name: str) -> None:
     with _lock:
         _runs[run_id]["status"] = "running"
 
-    try:
+    try: 
         run_workflow(community_name)
     
         with _lock:
@@ -113,6 +114,17 @@ def health():
 )
 def create_run(req: RunRequest, background_tasks: BackgroundTasks):
     global _current_run_id
+
+    # Validate community name is not empty or malformed
+    if not req.community_name or not req.community_name.strip():
+        raise HTTPException(status_code=400, detail="Community name cannot be empty.")
+    
+    # Validate no path traversal or dangerous characters
+    if re.search(r'[/\\<>:"|?*\x00-\x1f]', req.community_name):
+        raise HTTPException(
+            status_code=400, 
+            detail="Community name contains invalid characters."
+        )
 
     with _lock:
         if _current_run_id is not None and _runs.get(_current_run_id, {}).get("status") in ("queued", "running"):
@@ -173,12 +185,13 @@ def get_run_analysis_md(run_id: str):
         run = _runs.get(run_id)
         if run is None:
             raise HTTPException(status_code=404, detail="Run not found.")
+        community_name = run["community_name"]
     
-    analysis_md_path = Path(__file__).resolve().parent.parent / 'communities' / run["community_name"] / "analysis" / f'{run["community_name"]}_analysis.md'
+    analysis_md_path = Path(__file__).resolve().parent.parent / 'communities' / community_name / "analysis" / f'{community_name}_analysis.md'
     if not analysis_md_path.exists():
         raise HTTPException(status_code=404, detail="Analysis markdown file not found.")
     
     return {
-        "community_name": run["community_name"],
+        "community_name": community_name,
         "path": str(analysis_md_path),
         "markdown": analysis_md_path.read_text(encoding="utf-8", errors="replace")}

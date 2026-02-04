@@ -141,4 +141,4 @@ os-setup --help
 
 Reminder:
 - `src/h2k-hpxml/` is a git submodule and must be initialized.
-- `src/source-archetypes/` is a local input folder.
+- `src/source-archetypes/` is a local input folder you have to download.

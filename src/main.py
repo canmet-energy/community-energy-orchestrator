@@ -142,7 +142,20 @@ def create_run(req: RunRequest, background_tasks: BackgroundTasks):
         background_tasks.add_task(_run_workflow, run_id, req.community_name)
 
         return _runs[run_id]
-
+    
+@app.get(
+    "/runs",
+    response_model=Dict[str, RunRecord],
+    summary="List all runs",
+    description=(
+        "Returns a dictionary of all runs by run ID."
+    ),
+)
+def get_all_runs():
+    with _lock:
+        return _runs
+    
+    
 @app.get(
     "/runs/current",
     summary="Get current run",

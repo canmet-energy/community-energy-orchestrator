@@ -13,6 +13,11 @@ import random
 KBTU_TO_GJ = 0.001055056
 
 def read_timeseries(file_path):
+    """Load and process timeseries data from CSV file."""
+    file_path_obj = Path(file_path)
+    if not file_path_obj.exists():
+        raise FileNotFoundError(f"Timeseries file not found: {file_path}")
+    
     # Load timeseries data
     df = pd.read_csv(file_path)
     
@@ -65,6 +70,9 @@ def load_community_requirements(community_name):
     Load the community requirements from the CSV file.
     Returns a dictionary of building types and counts.
     """
+    if not REQUIREMENTS_FILE.exists():
+        raise FileNotFoundError(f"Requirements file not found: {REQUIREMENTS_FILE}")
+    
     try:
         # Try UTF-8 encoding first
         df = pd.read_csv(REQUIREMENTS_FILE, header=None, encoding='utf-8')
@@ -323,7 +331,15 @@ def select_and_sum_timeseries(community_name):
         community_total = community_total[expected_columns]
 
         # Save the results
-        community_folder = Path(__file__).resolve().parent.parent / 'communities' / community_name.replace('-', '_')
+        base_communities_path = Path(__file__).resolve().parent.parent / 'communities'
+        community_folder = base_communities_path / community_name.replace('-', '_')
+        
+        # Safety check for path
+        try:
+            community_folder.resolve().relative_to(base_communities_path.resolve())
+        except ValueError:
+            raise ValueError(f"Safety check failed: community folder path is outside communities directory")
+        
         community_folder.mkdir(parents=True, exist_ok=True)
         (community_folder / 'analysis').mkdir(parents=True, exist_ok=True)
         output_file = community_folder / 'analysis' / f'{community_name}-community_total.csv'
@@ -396,12 +412,15 @@ if __name__ == '__main__':
         args = parser.parse_args()
         print(f"Starting analysis for {args.community_name}...")
         
+        # Convert requirements path to Path object
+        requirements_path = Path(args.requirements)
+        
         # Check if requirements file exists
-        if not os.path.exists(args.requirements):
-            raise FileNotFoundError(f"Requirements file '{args.requirements}' not found")
+        if not requirements_path.exists():
+            raise FileNotFoundError(f"Requirements file '{requirements_path}' not found")
             
         # Update the requirements file path
-        REQUIREMENTS_FILE = args.requirements
+        REQUIREMENTS_FILE = requirements_path
             
         select_and_sum_timeseries(args.community_name)
         print("Script finished.")

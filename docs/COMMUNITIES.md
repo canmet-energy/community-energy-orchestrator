@@ -2,42 +2,33 @@
 
 The following communities are available to run with the orchestrator:
 
-- Old Crow
-- Inukjuak
+- Aklavik
+- Akulivik
 - Arctic Bay
-- Burwash
+- Burwash Landing
 - Cambridge Bay
-- Rankin Inlet
+- Chesterfield Inlet
 - Fort Smith
 - Fort Simpson
-- Eureka
+- Grise Fiord
 - Hall Beach
-- Iqaluit
-- Kugaaruk Climate
-- Bonilla Island
-- Watson Lake
-- Mary's Harbour
-- Chamouchouane
-- Lansdowne House
+- Kangiqsujuaq
+- Kimmirut
+- Kugaaruk
+- Kulkayu
+- Lower Post
+- Norman's Bay
+- Obedjiwan
+- Ogoki
+- Old Crow
 - Pond Inlet
-- Kuujjuaq
-- Little Chicago
-- Norman Wells
-- Lac La Martre
-- Resolute Bay
-
-## Running a community
-
-To run any community from the table above, use:
-
-```bash
-python src/process_community_workflow.py "Community Name"
-```
-
-For example:
-
-```bash
-python src/process_community_workflow.py "Rankin Inlet"
-```
-
-Note: Community names with spaces must be quoted.
+- Puvirnituq
+- Rankin Inlet
+- Resolute
+- St Lewis
+- Tasiujaq
+- Tsiigehtchic
+- Tulita
+- Watson Lake
+- Whale Cove
+- Whati

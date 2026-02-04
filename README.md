@@ -32,13 +32,13 @@ python src\process_community_workflow.py "Old Crow"
 Linux/macOS:
 
 ```bash
-python3 -m uvicorn src.main:app --reload
+python3 -m uvicorn src.main:app
 ```
 
 Windows (PowerShell):
 
 ```powershell
-python -m uvicorn src.main:app --reload
+python -m uvicorn src.main:app
 ```
 
 Then open the Swagger UI at:
@@ -64,7 +64,7 @@ Choose your OS:
 
 ```bash
 # 1) Clone (includes submodules)
-git clone --recurse-submodules https://github.com/micael-gourde/community-energy-orchestrator.git
+git clone --recurse-submodules https://github.com/canmet-energy/community-energy-orchestrator.git
 cd community-energy-orchestrator
 
 # 2) Create + activate venv
@@ -82,20 +82,23 @@ os-setup --test-installation
 # sudo os-setup --auto-install
 
 # 5) Provide the archetype library
-# Ensure src/source-archetypes/ exists and contains .H2K files.
+# Go to https://github.com/canmet-energy/housing-archetypes.git
+# Navigate to data/h2k_files/existing-stock
+# Download the folder: retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities
+# Rename it to 'source-archetypes' and place it in the src/ directory
 
 # 6) Run a community
 python3 src/process_community_workflow.py "Old Crow"
 
 # Optional: run the API instead
-# python3 -m uvicorn src.main:app --reload
+# python3 -m uvicorn src.main:app
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
 # 1) Clone (includes submodules)
-git clone --recurse-submodules https://github.com/micael-gourde/community-energy-orchestrator.git
+git clone --recurse-submodules https://github.com/canmet-energy/community-energy-orchestrator.git
 cd community-energy-orchestrator
 
 # 2) Create + activate venv
@@ -115,13 +118,16 @@ os-setup --test-installation
 # os-setup --add-to-path
 
 # 5) Provide the archetype library
-# Ensure src\source-archetypes\ exists and contains .H2K files.
+# Go to https://github.com/canmet-energy/housing-archetypes.git
+# Navigate to data/h2k_files/existing-stock
+# Download the folder: retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities
+# Rename it to 'source-archetypes' and place it in the src\ directory
 
 # 6) Run a community
 python src\process_community_workflow.py "Old Crow"
 
 # Optional: run the API instead
-# python -m uvicorn src.main:app --reload
+# python -m uvicorn src.main:app
 ```
 
 For first-time setup on a new machine (OpenStudio/EnergyPlus dependencies), follow: [Installation Guide](docs/INSTALLATION.md)

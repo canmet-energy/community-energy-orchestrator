@@ -4,12 +4,12 @@ Debug and validation module for community energy analysis.
 Validates timeseries outputs and weather location codes in H2K files.
 """
 
-import os
 from pathlib import Path
 from change_weather_location_regex import load_csv_data
 import xml.etree.ElementTree as ET
 from process_community_workflow import get_community_requirements
 import sys
+import csv
 
 def debug_timeseries_outputs(community_name):
     """
@@ -38,17 +38,24 @@ def debug_timeseries_outputs(community_name):
     found_counts = {k: 0 for k in requirements}  # Start all counts at 0
     missing = {}  # Will store types that have fewer files than required
     
-    # Count how many output files were actually generated for each type
-    for era_type in requirements:
-        # Look for directories like: pre-2000-single_1/run/results_timeseries.csv
-        # The glob pattern matches any directory starting with era_type followed by underscore
-        matches = [p for p in output_base.glob(f'{era_type}_*/run/results_timeseries.csv')]
-        found_counts[era_type] = len(matches)
-        required = requirements[era_type]
-        
-        # Track which types have missing files
-        if len(matches) < required:
-            missing[era_type] = required - len(matches)
+    # Only count files if output directory exists
+    if output_base.exists():
+        # Count how many output files were actually generated for each type
+        for era_type in requirements:
+            # Look for directories like: pre-2000-single_1/run/results_timeseries.csv
+            # The glob pattern matches any directory starting with era_type followed by underscore
+            matches = [p for p in output_base.glob(f'{era_type}_*/run/results_timeseries.csv')]
+            found_counts[era_type] = len(matches)
+            required = requirements[era_type]
+            
+            # Track which types have missing files
+            if len(matches) < required:
+                missing[era_type] = required - len(matches)
+    else:
+        # No output directory means all files are missing
+        for era_type in requirements:
+            required = requirements[era_type]
+            missing[era_type] = required
     
     # Write results to log file (mode 'w' overwrites any existing file)
     with open(debug_log_path, 'w') as f:
@@ -175,24 +182,51 @@ def get_location_code_from_h2k(file_path):
 
 def validate_location_code(community_name, location_code):
     """
-    Validate that location code matches expected code for community.
+    Validate that location code matches expected code for community's weather location.
+    
+    Communities use weather data from nearby weather stations, not necessarily their own location.
+    This function looks up which weather location the community uses, then validates against that.
     
     Args:
         community_name (str): Name of the community
         location_code (str): Location code from H2K file
     
     Returns:
-        bool: True if code matches, False otherwise
+        bool: True if code matches the weather location code for this community, False otherwise
     """
-    # Load the location codes CSV file (format: {community_name: code, ...})
-    location_codes_path = Path(__file__).resolve().parent.parent / 'csv' / 'location_code.csv'
-    location_codes = load_csv_data(location_codes_path)
-
     if location_code is None:
         return False
     
-    # Look up expected code for this community (case-insensitive lookup)
-    expected_code = location_codes.get(community_name.upper())
+    # First, get the weather location for this community
+    weather_locations_path = Path(__file__).resolve().parent.parent / 'csv' / 'train-test communities hdd and weather locations.csv'
+    
+    if not weather_locations_path.exists():
+        return False
+    
+    # Find the weather location for this community
+    weather_location = None
+    comm_upper = community_name.upper()
+    
+    with open(weather_locations_path, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row['Community'].strip().upper() == comm_upper:
+                weather_location = row['WEATHER'].strip()
+                break
+    
+    if weather_location is None:
+        return False
+    
+    # Now load the location codes CSV to get the code for that weather location
+    location_codes_path = Path(__file__).resolve().parent.parent / 'csv' / 'location_code.csv'
+    
+    if not location_codes_path.exists():
+        return False
+    
+    location_codes = load_csv_data(location_codes_path)
+    
+    # Look up expected code for the weather location (case-insensitive lookup)
+    expected_code = location_codes.get(weather_location.upper())
     if expected_code is None:
         return False
 

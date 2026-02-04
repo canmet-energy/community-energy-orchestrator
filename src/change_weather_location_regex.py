@@ -9,12 +9,21 @@ import re
 from pathlib import Path
 
 def load_csv_data(filename):
-    """Load CSV file and return dictionary"""
+    """Load CSV file and return dictionary."""
+    file_path = Path(filename)
+    if not file_path.exists():
+        raise FileNotFoundError(f"CSV file not found: {filename}")
+    
     data = {}
     with open(filename, 'r', encoding='latin-1') as f:
         for line in f:
-            key, value = line.strip().split(',')
-            data[key.upper()] = value
+            line = line.strip()
+            if not line:  # Skip empty lines
+                continue
+            parts = line.split(',')
+            if len(parts) >= 2:
+                key, value = parts[0], parts[1]
+                data[key.upper()] = value
     return data
 
 def get_region_for_location(location):
@@ -74,6 +83,10 @@ def change_weather_code(file_path, location="FORT SIMPSON", validate=True, debug
     Returns:
         bool: True if changes were made, False otherwise
     """
+    file_path_obj = Path(file_path)
+    if not file_path_obj.exists():
+        raise FileNotFoundError(f"H2K file not found: {file_path}")
+    
     try:
         location = location.upper()
         
@@ -89,15 +102,26 @@ def change_weather_code(file_path, location="FORT SIMPSON", validate=True, debug
 
         # Load location codes and weather details
         location_codes_path = Path(__file__).resolve().parent.parent / 'csv' / 'location_code.csv'
+        if not location_codes_path.exists():
+            raise FileNotFoundError(f"Location codes CSV not found: {location_codes_path}")
+        
         location_codes = load_csv_data(location_codes_path)
         
         weather_details = {}
         weather_details_path = Path(__file__).resolve().parent.parent / 'csv' / 'weather_details.csv'
+        if not weather_details_path.exists():
+            raise FileNotFoundError(f"Weather details CSV not found: {weather_details_path}")
+        
         with open(weather_details_path, 'r', encoding='latin-1') as csvfile:
             next(csvfile)  # Skip header
             for line in csvfile:
-                loc, hdd, lib = line.strip().split(',')
-                weather_details[loc.upper()] = {'hdd': hdd, 'library': lib}
+                line = line.strip()
+                if not line:  # Skip empty lines
+                    continue
+                parts = line.split(',')
+                if len(parts) >= 3:
+                    loc, hdd, lib = parts[0], parts[1], parts[2]
+                    weather_details[loc.upper()] = {'hdd': hdd, 'library': lib}
 
         # Validate location exists
         if location not in weather_details:
@@ -169,12 +193,19 @@ def main():
     parser.add_argument('--location', default="FORT SIMPSON", help='Weather location to change to')
     parser.add_argument('--debug', action='store_true', help='Print debug information')
     args = parser.parse_args()
+    
+    path_obj = Path(args.path)
+    if not path_obj.exists():
+        print(f"Error: Path does not exist: {args.path}")
+        return 1
 
     if os.path.isfile(args.path):
         change_weather_code(args.path, args.location, debug=args.debug)
     else:
         for file_path in glob.glob(os.path.join(args.path, "**", "*.H2K"), recursive=True):
             change_weather_code(file_path, args.location, debug=args.debug)
+    
+    return 0
 
 if __name__ == "__main__":
     main()

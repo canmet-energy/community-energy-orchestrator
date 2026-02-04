@@ -19,7 +19,7 @@ Notes:
 `src/h2k-hpxml/` is a git submodule and must be initialized.
 
 ```bash
-git clone --recurse-submodules https://github.com/micael-gourde/community-energy-orchestrator.git
+git clone --recurse-submodules https://github.com/canmet-energy/community-energy-orchestrator.git
 cd community-energy-orchestrator
 ```
 
@@ -135,7 +135,17 @@ This workflow expects a local Hot2000 archetype library at:
 
 - `src/source-archetypes/`
 
-This folder is intentionally treated as a local input (it is gitignored). Place/download the archetype library there before running any communities.
+This folder is intentionally treated as a local input.
+
+#### Downloading the archetype library:
+
+1. Go to https://github.com/canmet-energy/housing-archetypes.git
+2. Navigate to `data/h2k_files/existing-stock`
+3. Download the folder `retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities`
+4. Rename the downloaded folder to `source-archetypes`
+5. Place it in the `src/` directory of this repository
+
+The final path should be: `src/source-archetypes/` containing `.H2K` files.
 
 ### Step 7) Run a community
 
@@ -148,7 +158,7 @@ python3 src/process_community_workflow.py "Old Crow"
 Optional: run the API instead of the CLI workflow:
 
 ```bash
-python3 -m uvicorn src.main:app --reload
+python3 -m uvicorn src.main:app
 ```
 
 Then open:

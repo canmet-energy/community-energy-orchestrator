@@ -140,6 +140,10 @@ def get_weather_location(community_name):
         Weather location string, or community name with dashes replaced if not found
     """
     csv_path = Path(__file__).resolve().parent.parent / 'csv' / 'train-test communities hdd and weather locations.csv'
+    
+    if not csv_path.exists():
+        raise FileNotFoundError(f"Weather locations CSV not found: {csv_path}")
+    
     comm_upper = community_name.upper()
     try:
         with open(csv_path, newline='', encoding='utf-8') as csvfile:
@@ -168,6 +172,10 @@ def get_community_requirements(community_name):
     """
     comm_upper = community_name.upper()
     csv_path = Path(__file__).resolve().parent.parent / 'csv' / 'train-test communities number of housing types.csv'
+    
+    if not csv_path.exists():
+        raise FileNotFoundError(f"Requirements CSV not found: {csv_path}")
+    
     df = pd.read_csv(csv_path, header=None)
     # Find the row where the first column matches (case-insensitive)
     mask = df[0].astype(str).str.strip().str.upper() == comm_upper
@@ -246,6 +254,10 @@ def copy_archetype_files(community_name, requirements):
     """
 
     archetypes_source = Path(__file__).resolve().parent / 'source-archetypes'
+    
+    if not archetypes_source.exists():
+        raise FileNotFoundError(f"Source archetypes directory not found: {archetypes_source}")
+    
     base_path = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes'
     if not base_path.exists():
         base_path.mkdir(parents=True, exist_ok=True)
@@ -404,20 +416,38 @@ def main(community_name):
 
     print(f"\n[WORKFLOW] Starting workflow for community: {community_name}")
     
+    # Validate community name exists in requirements CSV before any operations
+    print(f"[WORKFLOW] Validating community name...")
+    try:
+        requirements = get_community_requirements(community_name)
+        print(f"[WORKFLOW] Community validated: {community_name}")
+    except ValueError as e:
+        print(f"[ERROR] {e}")
+        return 1
+    except FileNotFoundError as e:
+        print(f"[ERROR] {e}")
+        return 1
+    
     # 0. Clean existing community directory to ensure fresh run
     print(f"[WORKFLOW] Step 0: Cleaning previous run data...")
     cleanup_dir = Path(__file__).resolve().parent.parent / 'communities' / community_name
-    if cleanup_dir.exists():
-        shutil.rmtree(cleanup_dir)
-        print(f"[CLEANUP] Removed existing: {cleanup_dir}")
+    
+    # Safety check before deletion
+    if cleanup_dir.exists() and cleanup_dir.is_dir():
+        communities_base = Path(__file__).resolve().parent.parent / 'communities'
+        try:
+            cleanup_dir.resolve().relative_to(communities_base.resolve())
+            shutil.rmtree(cleanup_dir)
+            print(f"[CLEANUP] Removed existing: {cleanup_dir}")
+        except ValueError:
+            raise ValueError(f"Safety check failed: {cleanup_dir} is not within communities directory")
     
     # 1. Ensure all necessary directories exist
     print(f"[WORKFLOW] Step 1: Creating directories...")
     create_community_directories(community_name)
 
-    # 2. Get requirements for debug log
-    print(f"[WORKFLOW] Step 2: Reading requirements from CSV...")
-    requirements = get_community_requirements(community_name)
+    # 2. Create manifest with already-validated requirements
+    print(f"[WORKFLOW] Step 2: Creating manifest...")
     create_manifest(community_name, requirements)
     print(f"[WORKFLOW] Requirements: {requirements}")
 
@@ -470,9 +500,18 @@ def main(community_name):
 
     # 8. Remove archetypes/output directory after successful analysis
     output_dir = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes' / 'output'
+    
+    # Safety check before removal
     if output_dir.exists() and output_dir.is_dir():
-        shutil.rmtree(output_dir)
-        print(f"Removed directory: {output_dir}")
+        expected_base = Path(__file__).resolve().parent.parent / 'communities' / community_name
+        try:
+            output_dir.resolve().relative_to(expected_base.resolve())
+            shutil.rmtree(output_dir)
+            print(f"Removed directory: {output_dir}")
+        except ValueError:
+            print(f"[WARNING] Safety check failed for output directory removal: {output_dir}")
+    
+    print(f"All done!")
     return 0
 
 if __name__ == "__main__":

@@ -497,8 +497,10 @@ def main(community_name):
         print(f"Warning: Debug validation had issues: {result.stderr}")
     
     print(f"Analysis completed successfully for {community_name}")
+    
 
     # 8. Remove archetypes/output directory after successful analysis
+    print(f"[WORKFLOW] Cleaning up archetypes/output directory...")
     output_dir = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes' / 'output'
     
     # Safety check before removal
@@ -511,7 +513,7 @@ def main(community_name):
         except ValueError:
             print(f"[WARNING] Safety check failed for output directory removal: {output_dir}")
     
-    print(f"All done!")
+    print(f"Workflow for {community_name} completed successfully, you are free to proceed!")
     return 0
 
 if __name__ == "__main__":

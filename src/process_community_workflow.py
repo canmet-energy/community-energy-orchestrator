@@ -10,11 +10,27 @@ import os
 import random
 import re
 import shutil
+import stat
 import subprocess
 import sys
 from pathlib import Path
 
 import pandas as pd
+
+def remove_readonly(func, path, exc):
+    """Error handler for shutil.rmtree to handle read-only files."""
+    if not os.access(path, os.W_OK):
+        os.chmod(path, stat.S_IWUSR | stat.S_IRUSR | stat.S_IXUSR)
+        func(path)
+    else:
+        raise
+
+def safe_rmtree(path):
+    """Remove directory tree with read-only file handling, compatible with all Python versions."""
+    if sys.version_info >= (3, 12):
+        shutil.rmtree(path, onexc=remove_readonly)
+    else:
+        shutil.rmtree(path, onerror=remove_readonly)
 
 ARCHETYPE_TYPE_PATTERNS = {
     'pre-2000-single': [r'pre-2000-single_.*\.H2K$'],
@@ -423,10 +439,10 @@ def main(community_name):
         print(f"[WORKFLOW] Community validated: {community_name}")
     except ValueError as e:
         print(f"[ERROR] {e}")
-        return 1
+        raise
     except FileNotFoundError as e:
         print(f"[ERROR] {e}")
-        return 1
+        raise
     
     # 0. Clean existing community directory to ensure fresh run
     print(f"[WORKFLOW] Step 0: Cleaning previous run data...")
@@ -437,8 +453,12 @@ def main(community_name):
         communities_base = Path(__file__).resolve().parent.parent / 'communities'
         try:
             cleanup_dir.resolve().relative_to(communities_base.resolve())
-            shutil.rmtree(cleanup_dir)
+            safe_rmtree(cleanup_dir)
             print(f"[CLEANUP] Removed existing: {cleanup_dir}")
+        except PermissionError as e:
+            print(f"[ERROR] Could not remove {cleanup_dir}: {e}")
+            print(f"[ERROR] Some files may be open in an editor. Close all files in this community folder and try again.")
+            raise PermissionError(f"Permission denied when cleaning {community_name} directory. Close any open files and try again.") from e
         except ValueError:
             raise ValueError(f"Safety check failed: {cleanup_dir} is not within communities directory")
     
@@ -478,7 +498,7 @@ def main(community_name):
         print(result.stdout)
     else:
         print(f"Error running calculate_community_analysis.py: {result.stderr}")
-        return 1
+        raise RuntimeError(f"Community analysis failed: {result.stderr}")
 
     # 7. Debug timeseries and H2K files
     print(f"[WORKFLOW] Running debug validation...")
@@ -508,8 +528,12 @@ def main(community_name):
         expected_base = Path(__file__).resolve().parent.parent / 'communities' / community_name
         try:
             output_dir.resolve().relative_to(expected_base.resolve())
-            shutil.rmtree(output_dir)
+            safe_rmtree(output_dir)
             print(f"Removed directory: {output_dir}")
+        except PermissionError as e:
+            print(f"[ERROR] Could not remove {output_dir}: {e}")
+            print(f"[ERROR] Some files may be open in an editor. Close them and manually delete the output directory.")
+            raise PermissionError(f"Permission denied when cleaning output directory. Close any open files in {community_name}/archetypes/output.") from e
         except ValueError:
             print(f"[WARNING] Safety check failed for output directory removal: {output_dir}")
     

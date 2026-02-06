@@ -7,9 +7,10 @@ Validates timeseries outputs and weather location codes in H2K files.
 from pathlib import Path
 from change_weather_location_regex import load_csv_data
 import xml.etree.ElementTree as ET
-from process_community_workflow import get_community_requirements
+from process_community_workflow import get_community_requirements, get_max_workers
 import sys
 import csv
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 def debug_timeseries_outputs(community_name):
     """
@@ -75,6 +76,31 @@ def debug_timeseries_outputs(community_name):
     
     return debug_log_path
 
+def _validate_single_h2k(h2k_file, community_name):
+    """Validate weather location code for a single H2K file. Module-level for pickling."""
+    try:
+        with open(h2k_file, 'r', encoding='latin-1') as file:
+            contents = file.read()
+
+        if not contents.strip().startswith('<?xml') and not contents.strip().startswith('<HouseFile'):
+            return (h2k_file, "Not an XML H2K file.", None)
+        
+        location_code = get_location_code_from_h2k(h2k_file)
+
+        if location_code is None:
+            return (h2k_file, "Could not find location code in H2K file.", None)
+
+        is_valid = validate_location_code(community_name, location_code)
+
+        if not is_valid:
+            return (h2k_file, f"Location Code: {location_code}\n  Validation: FAILED (does not match expected code for {community_name})", location_code)
+        
+        return (h2k_file, None, location_code)  # None means validation passed
+                    
+    except Exception as e:
+        return (h2k_file, f"Error processing file: {e}", None)
+
+
 def debug_weather_h2k(community_name):
     """
     Validate weather location codes in H2K archetype files.
@@ -95,56 +121,45 @@ def debug_weather_h2k(community_name):
     # Create parent directory if needed
     debug_log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Keep track of validation issues found
-    validation_issues = 0
+    # Find all H2K files
+    h2k_files = list(archetype_base.glob('**/*.H2K'))
     
-    # Open log file in append mode to add weather validation after timeseries results
+    if not h2k_files:
+        with open(debug_log_path, 'a') as log_file:
+            log_file.write(f"\n\nWeather Location Code Validation\n\n")
+            log_file.write("No H2K files found.\n")
+        return debug_log_path
+    
+    # Process files in parallel
+    max_workers = min(get_max_workers(), len(h2k_files))
+    print(f"[PARALLEL] Validating weather location in {len(h2k_files)} H2K files with {max_workers} workers")
+    
+    validation_results = []
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(_validate_single_h2k, h2k_file, community_name): h2k_file for h2k_file in h2k_files}
+        
+        for future in as_completed(futures):
+            try:
+                result = future.result()
+                validation_results.append(result)
+            except Exception as e:
+                h2k_file = futures[future]
+                validation_results.append((h2k_file, f"Exception during validation: {e}", None))
+    
+    # Write all results to log file after parallel processing completes
+    validation_issues = 0
     with open(debug_log_path, 'a') as log_file:
         log_file.write(f"\n\nWeather Location Code Validation\n\n")
         
-        # Iterate through all H2K files (recursively searches subdirectories)
-        for f in archetype_base.glob('**/*.H2K'):
-            try:
-                # Read the H2K file contents (H2K files use latin-1 encoding)
-                with open(f, 'r', encoding='latin-1') as file:
-                    contents = file.read()
-
-                # Verify it's a valid XML file (H2K files are XML-based)
-                # Must start with either <?xml or <HouseFile tag
-                if not contents.strip().startswith('<?xml') and not contents.strip().startswith('<HouseFile'):
-                    log_file.write(f"H2K File: {f}\n")
-                    log_file.write(f"  Not an XML H2K file.\n")
-                    validation_issues += 1
-                    continue
-                
-                # Extract the location code from the XML structure
-                location_code = get_location_code_from_h2k(f)
-
-                if location_code is None:
-                    log_file.write(f"H2K File: {f}\n")
-                    log_file.write(f"  Could not find location code in H2K file.\n")
-                    validation_issues += 1
-                    continue
-
-                # Check if the location code matches the expected code for this community
-                is_valid = validate_location_code(community_name, location_code)
-
-                # Only log failures (keeps log concise for large numbers of files)
-                if not is_valid:
-                    log_file.write(f"H2K File: {f}\n")
-                    log_file.write(f"  Location Code: {location_code}\n")
-                    log_file.write(f"  Validation: FAILED (does not match expected code for {community_name})\n")
-                    validation_issues += 1
-                    continue
-                    
-            except Exception as e:
-                # Log any unexpected errors during processing
-                log_file.write(f"H2K File: {f}\n")
-                log_file.write(f"  Error processing file: {e}\n")
+        for h2k_file, error_msg, location_code in validation_results:
+            if error_msg is not None:
+                log_file.write(f"H2K File: {h2k_file}\n")
+                log_file.write(f"  {error_msg}\n")
                 validation_issues += 1
-                continue
+        
         if validation_issues == 0:
             log_file.write("All H2K files passed location code validation.\n")
+    
     return debug_log_path
 
 

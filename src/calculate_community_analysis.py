@@ -7,7 +7,6 @@ import traceback
 import random
 import os
 import numpy as np
-from process_community_workflow import get_max_workers, get_community_requirements
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 # Conversion factor from kBtu to GJ
@@ -19,8 +18,8 @@ def read_timeseries(file_path):
     if not file_path_obj.exists():
         raise FileNotFoundError(f"Timeseries file not found: {file_path}")
     
-    # Load timeseries data
-    df = pd.read_csv(file_path)
+    # Load timeseries data - low_memory=False prevents DtypeWarning for mixed types
+    df = pd.read_csv(file_path, low_memory=False)
     
     # Get heating load (what the house needs)
     df["Heating_Load_GJ"] = pd.to_numeric(df["Load: Heating: Delivered"], errors='coerce') * KBTU_TO_GJ
@@ -58,6 +57,9 @@ def read_timeseries(file_path):
     return df
 
 def select_and_sum_timeseries(community_name):
+    # Import here to avoid circular dependency
+    from process_community_workflow import get_max_workers, get_community_requirements
+    
     # Set random seed for reproducible file duplication (only if specified)
     seed = os.environ.get('ANALYSIS_RANDOM_SEED')
     use_deterministic_order = False

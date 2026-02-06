@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from change_weather_location_regex import change_weather_code
+
 def remove_readonly(func, path, exc):
     """Error handler for shutil.rmtree to handle read-only files."""
     if not os.access(path, os.W_OK):
@@ -52,10 +54,10 @@ def get_max_workers():
     
     if cpu_count < 4:
         return 1
-    elif cpu_count < 24:
-        return int(cpu_count * 0.75)  # Use 75% of available cores
+    elif cpu_count < 18:
+        return int(cpu_count * 0.8)  # Use 80% of available cores
     else:
-        return cpu_count - 6  # Reserve 6 cores for other processes
+        return cpu_count - 4  # Reserve 4 cores for other processes
 
 ARCHETYPE_TYPE_PATTERNS = {
     'pre-2000-single': [r'pre-2000-single_.*\.H2K$'],
@@ -138,36 +140,35 @@ def duplicate_missing_timeseries(timeseries_dir, building_type, required_count):
         timeseries_dir: Path to directory containing timeseries files
         building_type: Type prefix to match (e.g., 'pre-2000-single')
         required_count: Exact number of files needed
+    
+    Returns:
+        int: Final count of files for this building type
     """
     files = sorted(f for f in os.listdir(timeseries_dir) if f.startswith(building_type) and f.endswith("-results_timeseries.csv"))
     if not files:
-        print(f"No source files found for {building_type}")
-        return
+        print(f"[ERROR] No source files found for {building_type}")
+        return 0
     count = len(files)
 
     seed_str = os.environ.get('ARCHETYPE_SELECTION_SEED')
-    if seed_str is not None:
-        # Stable per-building-type seed so results don't depend on dict iteration order.
-        rng = random.Random(f"{seed_str}:{building_type}")
-        source_files = [f for f in files if '_DUPLICATE_' not in f] or files
-    else:
-        # No seed: truly random duplication each run
-        rng = random.Random()
-        source_files = files
+    rng = random.Random(seed_str) if seed_str is not None else random.Random()
+    source_files = [f for f in files if '_DUPLICATE_' not in f] or files
     
     if count >= required_count:
         print(f"{building_type}: Already have {count} files (required: {required_count})")
-        return
+        return count
     
     while count < required_count:
         src_file = rng.choice(source_files)
         src_path = os.path.join(timeseries_dir, src_file)
         new_name = f"{building_type}_DUPLICATE_{count+1}-results_timeseries.csv"
         dst_path = os.path.join(timeseries_dir, new_name)
-        shutil.copy2(src_path, dst_path)
+        shutil.copy(src_path, dst_path)
         print(f"Created {new_name}")
         files.append(new_name)
         count += 1
+    
+    return count
 
 
 def get_weather_location(community_name):
@@ -291,7 +292,7 @@ def create_community_directories(community_name):
 def copy_single_archetype(src_file, dst_file):
     """Copy a single archetype file with error handling."""
     try:
-        shutil.copy2(src_file, dst_file)
+        shutil.copy(src_file, dst_file)
         return True
     except Exception as e:
         print(f"[ERROR] Failed to copy {src_file} to {dst_file}: {e}")
@@ -378,7 +379,7 @@ def copy_archetype_files(community_name, requirements):
 
     copied_count = 0
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
-        futures = {executor.submit(copy_single_archetype,src_file,dst_file): (src_file, dst_file) for src_file, dst_file in copy_tasks}
+        futures = {executor.submit(copy_single_archetype, src_file, dst_file): (src_file, dst_file) for src_file, dst_file in copy_tasks}
         for future in as_completed(futures):
             try:
                 if future.result():
@@ -389,6 +390,15 @@ def copy_archetype_files(community_name, requirements):
     
     print(f"Copied {copied_count} archetype files for {community_name}")
 
+def update_single_weather_file(file_path, weather_location):
+    """Update weather location in a single HOT2000 file. Module-level for pickling."""
+    try:
+        change_weather_code(file_path, location=weather_location, validate=False, debug=False)
+        return True
+    except Exception as e:
+        print(f"[ERROR] Failed to update weather location in {file_path}: {e}")
+        return False
+    
 def update_weather_location(community_name):
     """
     Update HOT2000 files to use correct weather location.
@@ -398,14 +408,28 @@ def update_weather_location(community_name):
     """
     base_path = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes'
     weather_location = get_weather_location(community_name)
-    script_path = Path(__file__).resolve().parent / 'change_weather_location_regex.py'
-    subprocess.run([
-        sys.executable,
-        str(script_path),
-        str(base_path),
-        '--location',
-        weather_location
-    ], check=True)
+    
+    h2k_files = list(base_path.glob('*.H2K'))
+    if not h2k_files:
+        print(f"[WARNING] No H2K files found in {base_path} to update weather location.")
+        return
+    
+    max_workers = min(get_max_workers(), len(h2k_files))
+    print(f"[PARALLEL] Updating weather location in {len(h2k_files)} files with {max_workers} workers")
+
+    updated_count = 0
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(update_single_weather_file, h2k_file, weather_location): h2k_file for h2k_file in h2k_files}
+
+        for future in as_completed(futures):
+            try:
+                if future.result():
+                    updated_count += 1
+            except Exception as e:
+                h2k_file = futures[future]
+                print(f"[ERROR] Exception updating weather location in {h2k_file}: {e}")
+    print(f"Updated weather location in {updated_count} files for {community_name}")
+
 
 def _copy_single_timeseries(building_dir, timeseries_dir):
     """Copy timeseries file for a single building. Module-level for pickling."""
@@ -416,7 +440,10 @@ def _copy_single_timeseries(building_dir, timeseries_dir):
             if results_file.exists():
                 target_name = f"{building_dir.name}-results_timeseries.csv"
                 target_path = timeseries_dir / target_name
-                shutil.copy2(results_file, target_path)
+                if target_path.exists():
+                    print(f"[WARNING] Target file already exists: {target_path}")
+                    return False
+                shutil.copy(results_file, target_path)
                 return True
     except Exception as e:
         print(f"[ERROR] Failed to copy {building_dir.name}: {e}")
@@ -522,8 +549,15 @@ def run_hpxml_conversion(community_name, requirements):
 
     # Ensure each required type has enough files by duplicating as needed
     timeseries_dir_path = str(timeseries_dir)
+    verification_failed = False
     for building_type, required_count in requirements.items():
-        duplicate_missing_timeseries(timeseries_dir_path, building_type, required_count)
+        actual_count = duplicate_missing_timeseries(timeseries_dir_path, building_type, required_count)
+        if actual_count < required_count:
+            print(f"[ERROR] Failed to reach required count for {building_type}: {actual_count}/{required_count}")
+            verification_failed = True
+    
+    if verification_failed:
+        raise RuntimeError(f"Could not meet timeseries requirements for {community_name}")
 
 def main(community_name):
     """
@@ -535,6 +569,9 @@ def main(community_name):
     Returns:
         0 on success, 1 on failure
     """
+    # Import here to avoid circular dependency
+    from calculate_community_analysis import select_and_sum_timeseries
+    from debug_outputs import main as debug_main
 
     print(f"\n[WORKFLOW] Starting workflow for community: {community_name}")
     
@@ -542,6 +579,8 @@ def main(community_name):
     print(f"[WORKFLOW] Validating community name...")
     try:
         requirements = get_community_requirements(community_name)
+        if not requirements or all(count == 0 for count in requirements.values()):
+            raise ValueError(f"No valid requirements found for {community_name}. All counts are zero or missing.")
         print(f"[WORKFLOW] Community validated: {community_name}")
     except ValueError as e:
         print(f"[ERROR] {e}")
@@ -592,35 +631,21 @@ def main(community_name):
     run_hpxml_conversion(community_name, requirements)
     print(f"[WORKFLOW] Step 5 complete.")
 
-    # 6. Delegate aggregation and output to calculate_community_analysis.py
-    print("\nDelegating aggregation and output to calculate_community_analysis.py...")
-    script_path = Path(__file__).resolve().parent / 'calculate_community_analysis.py'
-    result = subprocess.run([
-        sys.executable,
-        str(script_path),
-        community_name
-    ], capture_output=True, text=True)
-    if result.returncode == 0:
-        print(result.stdout)
-    else:
-        print(f"Error running calculate_community_analysis.py: {result.stderr}")
-        raise RuntimeError(f"Community analysis failed: {result.stderr}")
+    # 6. Aggregate and output community analysis
+    print("\nAggregating community energy analysis...")
+    try:
+        select_and_sum_timeseries(community_name)
+    except Exception as e:
+        print(f"Error in community analysis: {e}")
+        raise RuntimeError(f"Community analysis failed: {e}") from e
 
     # 7. Debug timeseries and H2K files
     print(f"[WORKFLOW] Running debug validation...")
-    debug_script = Path(__file__).resolve().parent / 'debug_outputs.py'
-    result = subprocess.run([
-        sys.executable,
-        str(debug_script),
-        community_name
-    ], capture_output=True, text=True)
-    
-    if result.returncode == 0:
+    try:
+        debug_main(community_name)
         print(f"Debug validation complete. Check: communities/{community_name}/analysis/output_debug.log")
-        if result.stdout:
-            print(result.stdout)
-    else:
-        print(f"Warning: Debug validation had issues: {result.stderr}")
+    except Exception as e:
+        print(f"Warning: Debug validation had issues: {e}")
     
     print(f"Analysis completed successfully for {community_name}")
     

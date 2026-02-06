@@ -63,7 +63,7 @@ def read_timeseries(file_path):
     return df
 
 # Default requirements file
-REQUIREMENTS_FILE = Path(__file__).resolve().parent.parent / 'csv' / 'train-test communities number of housing types.csv'
+REQUIREMENTS_FILE = Path(__file__).resolve().parent.parent / 'csv' / 'communities-number-of-houses.csv'
 
 def load_community_requirements(community_name):
     """
@@ -404,7 +404,7 @@ def select_and_sum_timeseries(community_name):
         
 if __name__ == '__main__':
     try:
-        custom_rq_file_path = Path(__file__).resolve().parent.parent / 'csv' / 'train-test communities number of housing types.csv'
+        custom_rq_file_path = Path(__file__).resolve().parent.parent / 'csv' / 'communities-number-of-houses.csv'
         parser = argparse.ArgumentParser(description='Calculate community total energy use.')
         parser.add_argument('community_name', type=str, help='Name of the community (e.g., BONILLA-ISLAND)')
         parser.add_argument('--requirements', type=str, help='Path to custom requirements file', default=str(custom_rq_file_path))

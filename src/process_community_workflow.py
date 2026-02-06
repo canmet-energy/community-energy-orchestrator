@@ -6,6 +6,7 @@ Processes housing archetypes, runs simulations, and generates community-level en
 
 import csv
 import math
+import multiprocessing
 import os
 import random
 import re
@@ -13,6 +14,7 @@ import shutil
 import stat
 import subprocess
 import sys
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 import pandas as pd
@@ -31,6 +33,30 @@ def safe_rmtree(path):
         shutil.rmtree(path, onexc=remove_readonly)
     else:
         shutil.rmtree(path, onerror=remove_readonly)
+
+def get_max_workers():
+    """
+    Calculate optimal worker count for parallel operations.
+    
+    Returns:
+        int: Number of worker processes to use
+    """
+    # Allow manual override
+    env_workers = os.environ.get('MAX_PARALLEL_WORKERS')
+    if env_workers:
+        try:
+            return max(1, int(env_workers))
+        except ValueError:
+            pass
+    
+    cpu_count = os.cpu_count() or 1
+    
+    if cpu_count < 4:
+        return 1
+    elif cpu_count < 24:
+        return int(cpu_count * 0.75)  # Use 75% of available cores
+    else:
+        return cpu_count - 6  # Reserve 6 cores for other processes
 
 ARCHETYPE_TYPE_PATTERNS = {
     'pre-2000-single': [r'pre-2000-single_.*\.H2K$'],
@@ -187,7 +213,7 @@ def get_community_requirements(community_name):
         Dict mapping housing types (e.g., 'pre-2000-single') to required counts
     """
     comm_upper = community_name.upper()
-    csv_path = Path(__file__).resolve().parent.parent / 'csv' / 'train-test communities number of housing types.csv'
+    csv_path = Path(__file__).resolve().parent.parent / 'csv' / 'communities-number-of-houses.csv'
     
     if not csv_path.exists():
         raise FileNotFoundError(f"Requirements CSV not found: {csv_path}")
@@ -201,40 +227,41 @@ def get_community_requirements(community_name):
     # Skip the first column (community name)
     kv_pairs = row[1:]
     requirements = {}
+    
+    # Validate we have pairs
+    if len(kv_pairs) % 2 != 0:
+        print(f"[WARNING] Odd number of values in CSV row for {community_name}")
+    
     # Parse as key-value pairs
     for i in range(0, len(kv_pairs)-1, 2):
         key = kv_pairs[i]
         val = kv_pairs[i+1]
-        # Only process valid keys
-        if isinstance(key, str) and '-' in key:
-            # Extract era and type
-            parts = key.split('-')
-            if len(parts) >= 3:
-                era = parts[-2] + '-' + parts[-1] if parts[-2].isdigit() else parts[-2]
-                btype = parts[-1] if parts[-2].isdigit() else parts[-1]
-                # Actually, just use the last two segments for era and type
-                era_type = '-'.join(parts[-2:]) if parts[-2] in ['pre-2000','2001-2015','post-2016'] else parts[-2] + '-' + parts[-1]
-                # But for manifest, use era and type
-                # For requirements dict, use <era>-<type>
-                # Find era and type from key
-                for era_opt in ['pre-2000','2001-2015','post-2016']:
-                    if era_opt in key:
-                        era = era_opt
-                        break
-                else:
-                    era = None
-                for t_opt in ['single','semi','row-mid','row-end']:
-                    if t_opt in key:
-                        btype = t_opt
-                        break
-                else:
-                    btype = None
-                if era and btype:
-                    try:
-                        count = int(val)
-                    except Exception:
-                        count = 0
-                    requirements[f"{era}-{btype}"] = count
+        
+        # Only process valid string keys with hyphens
+        if not isinstance(key, str) or '-' not in key:
+            continue
+        
+        # Extract era and type using known patterns
+        era = None
+        btype = None
+        
+        for era_opt in ['pre-2000', '2001-2015', 'post-2016']:
+            if era_opt in key:
+                era = era_opt
+                break
+        
+        for type_opt in ['single', 'semi', 'row-mid', 'row-end']:
+            if type_opt in key:
+                btype = type_opt
+                break
+        
+        # Only add if we successfully identified both era and type
+        if era and btype:
+            try:
+                count = int(val)
+                requirements[f"{era}-{btype}"] = count
+            except (ValueError, TypeError):
+                print(f"[WARNING] Invalid count for {key}: {val}")
     # Write requirements to debug log for inspection
     debug_log_path = Path(__file__).resolve().parent.parent / 'logs' / 'archetype_copy_debug.log'
     debug_log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -346,6 +373,56 @@ def update_weather_location(community_name):
         weather_location
     ], check=True)
 
+def _copy_single_timeseries(building_dir, timeseries_dir):
+    """Copy timeseries file for a single building. Module-level for pickling."""
+    try:
+        run_dir = building_dir / 'run'
+        if run_dir.exists():
+            results_file = run_dir / 'results_timeseries.csv'
+            if results_file.exists():
+                target_name = f"{building_dir.name}-results_timeseries.csv"
+                target_path = timeseries_dir / target_name
+                shutil.copy2(results_file, target_path)
+                return True
+    except Exception as e:
+        print(f"[ERROR] Failed to copy {building_dir.name}: {e}")
+    return False
+
+def collect_timeseries_parallel(output_dir, timeseries_dir):
+    """
+    Parallel collection of timeseries files from h2k-hpxml output.
+    Each worker copies files from a separate building directory.
+    
+    Args:
+        output_dir: Path to archetypes/output directory
+        timeseries_dir: Path to community timeseries directory
+    
+    Returns:
+        int: Number of files successfully collected
+    """
+    building_dirs = [d for d in output_dir.iterdir() if d.is_dir()]
+    
+    if not building_dirs:
+        print("[WARNING] No building directories found in output")
+        return 0
+    
+    collected = 0
+    max_workers = min(get_max_workers(), len(building_dirs))
+    
+    print(f"[PARALLEL] Collecting {len(building_dirs)} timeseries files with {max_workers} workers")
+    
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(_copy_single_timeseries, bdir, timeseries_dir): bdir for bdir in building_dirs}
+
+        for future in as_completed(futures):
+            try:
+                if future.result():
+                    collected += 1
+            except Exception as e:
+                building_dir = futures[future]
+                print(f"[ERROR] Exception collecting {building_dir.name}: {e}")
+    return collected
+
 def run_hpxml_conversion(community_name, requirements):
     """
     Convert HOT2000 files to HPXML, run simulations, and collect timeseries results.
@@ -394,24 +471,19 @@ def run_hpxml_conversion(community_name, requirements):
     
     print(f"[HPXML] Conversion complete.")
 
-    # Collect timeseries files from archetypes/output
+    # Collect timeseries files from archetypes/output using parallel processing
     print(f"[HPXML] Collecting timeseries files from output directories...")
     base_dir = Path(__file__).resolve().parent.parent / 'communities' / community_name
     output_dir = base_dir / 'archetypes' / 'output'
     timeseries_dir = base_dir / 'timeseries'
     timeseries_dir.mkdir(parents=True, exist_ok=True)
-    collected = 0
+    
+    # Use parallel collection for performance
     if output_dir.exists():
-        for building_dir in output_dir.iterdir():
-            if building_dir.is_dir():
-                run_dir = building_dir / 'run'
-                if run_dir.exists():
-                    results_file = run_dir / 'results_timeseries.csv'
-                    if results_file.exists():
-                        target_name = f"{building_dir.name}-results_timeseries.csv"
-                        target_path = timeseries_dir / target_name
-                        shutil.copy2(results_file, target_path)
-                        collected += 1
+        collected = collect_timeseries_parallel(output_dir, timeseries_dir)
+    else:
+        collected = 0
+    
     print(f"Collected {collected} timeseries files for {community_name}")
 
     # Ensure each required type has enough files by duplicating as needed

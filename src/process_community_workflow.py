@@ -6,7 +6,6 @@ Processes housing archetypes, runs simulations, and generates community-level en
 
 import csv
 import math
-import multiprocessing
 import os
 import random
 import re
@@ -210,7 +209,8 @@ def get_community_requirements(community_name):
         community_name: Name of the community
     
     Returns:
-        Dict mapping housing types (e.g., 'pre-2000-single') to required counts
+        Dict mapping housing types (e.g., 'pre-2000-single') to required counts.
+        Returns {} if community not found (graceful fallback).
     """
     comm_upper = community_name.upper()
     csv_path = Path(__file__).resolve().parent.parent / 'csv' / 'communities-number-of-houses.csv'
@@ -222,7 +222,8 @@ def get_community_requirements(community_name):
     # Find the row where the first column matches (case-insensitive)
     mask = df[0].astype(str).str.strip().str.upper() == comm_upper
     if not mask.any():
-        raise ValueError(f"Community '{community_name}' not found in CSV file.")
+        print(f"[INFO] Community '{community_name}' not found in requirements CSV. Using graceful fallback.")
+        return {}
     row = df[mask].iloc[0].tolist()
     # Skip the first column (community name)
     kv_pairs = row[1:]
@@ -287,6 +288,15 @@ def create_community_directories(community_name):
         path.mkdir(parents=True, exist_ok=True)
     return base_path
 
+def copy_single_archetype(src_file, dst_file):
+    """Copy a single archetype file with error handling."""
+    try:
+        shutil.copy2(src_file, dst_file)
+        return True
+    except Exception as e:
+        print(f"[ERROR] Failed to copy {src_file} to {dst_file}: {e}")
+        return False
+
 def copy_archetype_files(community_name, requirements):
     """
     Copy archetype files matching requirements (targets N+20% per type).
@@ -318,6 +328,9 @@ def copy_archetype_files(community_name, requirements):
     debug_log_path.parent.mkdir(parents=True, exist_ok=True)
     seed_str = os.environ.get('ARCHETYPE_SELECTION_SEED')
     rng = random.Random(seed_str) if seed_str is not None else random.Random()
+
+    copy_tasks = []
+
     with open(debug_log_path, 'a') as debug_log:
         for req_type, count in requirements.items():
             if count == 0:
@@ -352,8 +365,29 @@ def copy_archetype_files(community_name, requirements):
             for file_name in files_to_copy:
                 src_file = archetypes_source / file_name
                 dst_file = base_path / file_name
-                shutil.copy2(src_file, dst_file)
+                copy_tasks.append((src_file, dst_file))
                 debug_log.write(f"[DEBUG] Copying {src_file} -> {dst_file}\n")
+    
+    # Perform copying in parallel
+    if not copy_tasks:
+        print("[WARNING] No archetype files to copy based on requirements.")
+        return
+    
+    max_workers = min(get_max_workers(),len(copy_tasks))
+    print(f"[PARALLEL] Copying {len(copy_tasks)} archetype files with {max_workers} workers")   
+
+    copied_count = 0
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(copy_single_archetype,src_file,dst_file): (src_file, dst_file) for src_file, dst_file in copy_tasks}
+        for future in as_completed(futures):
+            try:
+                if future.result():
+                    copied_count += 1
+            except Exception as e:
+                src_file, dst_file = futures[future]
+                print(f"[ERROR] Exception copying {src_file} to {dst_file}: {e}")
+    
+    print(f"Copied {copied_count} archetype files for {community_name}")
 
 def update_weather_location(community_name):
     """
@@ -409,7 +443,7 @@ def collect_timeseries_parallel(output_dir, timeseries_dir):
     collected = 0
     max_workers = min(get_max_workers(), len(building_dirs))
     
-    print(f"[PARALLEL] Collecting {len(building_dirs)} timeseries files with {max_workers} workers")
+    print(f"[PARALLEL] Collecting timeseries files with {max_workers} workers")
     
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(_copy_single_timeseries, bdir, timeseries_dir): bdir for bdir in building_dirs}

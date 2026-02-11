@@ -8,66 +8,55 @@ Complete setup instructions for running the community workflow end-to-end.
 This repo depends on the `h2k-hpxml` converter working on your machine.
 
 Notes: 
-- This orchestrator uses `pyproject.toml`
+- This orchestrator uses `pyproject.toml` and `uv` for dependency management
 
-- The converter submodule declares support for Python 3.10–3.13.
+- The converter library supports Python 3.10–3.13.
 
 - `communities/` is generated locally by the workflow and is not committed.
 
-### Step 1) Clone the repo (with submodules)
-
-`src/h2k-hpxml/` is a git submodule and must be initialized.
+### Step 1) Clone the repo
 
 ```bash
-git clone --recurse-submodules https://github.com/canmet-energy/community-energy-orchestrator.git
+git clone https://github.com/canmet-energy/community-energy-orchestrator.git
 cd community-energy-orchestrator
 ```
 
-If you already cloned without submodules:
-
-```bash
-git submodule update --init --recursive
-```
-
-### Step 2) Create and activate a Python virtual environment
+### Step 2) Install uv (if not already installed)
 
 Linux/macOS:
 
 ```bash
-python3 -m venv .venv
+pip install uv
+```
+
+Windows (PowerShell):
+
+```powershell
+pip install uv
+```
+
+Note: `uv` can also be installed via other methods (pipx, curl, etc.). See https://github.com/astral-sh/uv for alternatives.
+
+### Step 3) Sync dependencies
+
+This will create a virtual environment automatically and install all dependencies:
+
+```bash
+uv sync
+```
+
+### Step 4) Activate the virtual environment
+
+Linux/macOS:
+
+```bash
 source .venv/bin/activate
 ```
 
 Windows (PowerShell):
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-### Step 3) Install orchestrator dependencies
-
-```bash
-pip install -e .
-```
-
-### Step 4) (Optional) Install the converter package in editable mode
-
-On supported Python versions, the converter is installed automatically as a
-dependency from the `src/h2k-hpxml/` submodule when you run Step 3.
-
-Only do this step if you're developing the converter itself.
-
-Linux/macOS:
-
-```bash
-pip install -e src/h2k-hpxml
-```
-
-Windows:
-
-```powershell
-pip install -e src\h2k-hpxml
+ .venv\Scripts\Activate.ps1
 ```
 
 Verification:
@@ -77,7 +66,7 @@ h2k-hpxml --help
 os-setup --help
 ```
 
-If `h2k-hpxml` is “command not found”, confirm your venv is active and re-run the install. On Windows, you may need to restart your terminal.
+If commands are "command not found", confirm your venv is active. On Windows, you may need to restart your terminal.
 
 ### Step 5) Install and verify OpenStudio/EnergyPlus dependencies
 
@@ -96,7 +85,6 @@ If you hit permission errors on Linux, try:
 sudo os-setup --auto-install
 ```
 
-If `h2k-hpxml` is “command not found”, restart your terminal and confirm your venv is active.
 
 Windows (PowerShell):
 
@@ -110,8 +98,6 @@ If commands are still not found on Windows, try:
 ```powershell
 os-setup --add-to-path
 ```
-
-If `os-setup` is not found, re-check Step 4 (the converter package must be installed into your active environment).
 
 Optional deeper verification:
 

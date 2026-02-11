@@ -202,7 +202,8 @@ def main():
     if os.path.isfile(args.path):
         change_weather_code(args.path, args.location, debug=args.debug)
     else:
-        for file_path in glob.glob(os.path.join(args.path, "**", "*.H2K"), recursive=True):
+        root = Path(args.path)
+        for file_path in sorted(p for p in root.rglob('*') if p.is_file() and p.suffix.lower() == '.h2k'):
             change_weather_code(file_path, args.location, debug=args.debug)
     
     return 0

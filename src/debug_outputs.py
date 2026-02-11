@@ -121,8 +121,11 @@ def debug_weather_h2k(community_name):
     # Create parent directory if needed
     debug_log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Find all H2K files
-    h2k_files = list(archetype_base.glob('**/*.H2K'))
+    # Find all H2K files (case-insensitive extension; Linux is case-sensitive)
+    h2k_files = sorted(
+        [p for p in archetype_base.rglob('*') if p.is_file() and p.suffix.lower() == '.h2k'],
+        key=lambda p: str(p),
+    )
     
     if not h2k_files:
         with open(debug_log_path, 'a') as log_file:

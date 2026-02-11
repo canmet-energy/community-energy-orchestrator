@@ -65,31 +65,33 @@ Choose your OS:
 ### Linux/macOS
 
 ```bash
-# 1) Clone (includes submodules)
-git clone --recurse-submodules https://github.com/canmet-energy/community-energy-orchestrator.git
+# 1) Clone the repo
+git clone https://github.com/canmet-energy/community-energy-orchestrator.git
 cd community-energy-orchestrator
 
-# 2) Create + activate venv
-python3 -m venv .venv
+# 2) Install uv (if not already installed)
+pip install uv
+
+# 3) Sync dependencies (creates venv and installs everything)
+uv sync
+
+# 4) Activate the virtual environment
 source .venv/bin/activate
 
-# 3) Install orchestrator (pyproject.toml)
-pip install -e .
-
-# 4) Install/verify simulation dependencies (OpenStudio/EnergyPlus)
+# 5) Install/verify simulation dependencies (OpenStudio/EnergyPlus)
 os-setup --auto-install
 os-setup --test-installation
 
 # If you hit permission errors, try:
 # sudo os-setup --auto-install
 
-# 5) Provide the archetype library
+# 6) Provide the archetype library
 # Go to https://github.com/canmet-energy/housing-archetypes.git
 # Navigate to data/h2k_files/existing-stock
 # Download the folder: retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities
 # Rename it to 'source-archetypes' and place it in the src/ directory
 
-# 6) Run a community
+# 7) Run a community
 python3 src/process_community_workflow.py "Old Crow"
 
 # Optional: run the API instead
@@ -99,33 +101,33 @@ python3 src/process_community_workflow.py "Old Crow"
 ### Windows (PowerShell)
 
 ```powershell
-# 1) Clone (includes submodules)
-git clone --recurse-submodules https://github.com/canmet-energy/community-energy-orchestrator.git
+# 1) Clone the repo
+git clone https://github.com/canmet-energy/community-energy-orchestrator.git
 cd community-energy-orchestrator
 
-# 2) Create + activate venv
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+# 2) Install uv (if not already installed)
+pip install uv
 
-# 3) Install orchestrator (pyproject.toml)
-pip install -e .
+# 3) Sync dependencies (creates venv and installs everything)
+uv sync
 
-# 4) Install/verify simulation dependencies (OpenStudio/EnergyPlus)
+# 4) Activate the virtual environment
+.venv\Scripts\Activate.ps1
+
+# 5) Install/verify simulation dependencies (OpenStudio/EnergyPlus)
 os-setup --auto-install
 os-setup --test-installation
 
-# If 'h2k-hpxml' or 'os-setup' are not found, restart your terminal and confirm the venv is active.
-
-# If commands are still not found on Windows, try:
+# If commands are not found on Windows, try:
 # os-setup --add-to-path
 
-# 5) Provide the archetype library
+# 6) Provide the archetype library
 # Go to https://github.com/canmet-energy/housing-archetypes.git
 # Navigate to data/h2k_files/existing-stock
 # Download the folder: retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities
 # Rename it to 'source-archetypes' and place it in the src\ directory
 
-# 6) Run a community
+# 7) Run a community
 python src\process_community_workflow.py "Old Crow"
 
 # Optional: run the API instead

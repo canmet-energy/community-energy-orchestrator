@@ -11,7 +11,6 @@ import random
 import re
 import shutil
 import stat
-import subprocess
 import sys
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
@@ -498,39 +497,58 @@ def run_hpxml_conversion(community_name, requirements):
     # Create output directory if not already created
     output_path.mkdir(parents= True, exist_ok= True)
 
+    # Rename .H2K files to .h2k (h2k_hpxml uses case-sensitive glob("*.h2k"))
+    renamed = 0
+    for p in list(base_path.iterdir()):
+        if p.is_file() and p.suffix.upper() == '.H2K' and p.suffix != '.h2k':
+            # Use two-step rename to handle case-insensitive filesystems
+            tmp = p.with_suffix('.h2k.tmp')
+            p.rename(tmp)
+            tmp.rename(p.with_suffix('.h2k'))
+            renamed += 1
+    
+    if renamed:
+        print(f"[HPXML] Normalized {renamed} files from .H2K to .h2k")
+
     print(f"[HPXML] Starting HPXML conversion for files in: {base_path}")
     print(f"[HPXML] Output will be saved to: {output_path}")
-    
-    # Run h2k-hpxml conversion with hourly data
-    if shutil.which('h2k-hpxml'):
-        # Using CLI (recommended)
-        print(f"[HPXML] Running h2k-hpxml CLI with hourly output...")
-        subprocess.run([
-            'h2k-hpxml', 
-            str(base_path),
-            '--output',
-            str(output_path),
-            '--hourly', 
-            'ALL'
-            ], check=True)
-    else:
-        # Fallback to direct script if CLI not installed
-        print(f"[HPXML] Running convert.py directly with hourly output...")
-        convert_path = Path(__file__).resolve().parent / 'h2k-hpxml' / 'src' / 'h2k_hpxml' / 'cli' / 'convert.py'
-        h2k_hpxml_src = Path(__file__).resolve().parent / 'h2k-hpxml' / 'src'
-        env = os.environ.copy()
-        env["PYTHONPATH"] = f"{h2k_hpxml_src}{os.pathsep}{env.get('PYTHONPATH','')}"
-        subprocess.run([
-            sys.executable,
-            str(convert_path),
-            str(base_path),
-            '--output',
-            str(output_path),
-            '--hourly',
-            'ALL'
-        ], check=True, env=env)
-    
-    print(f"[HPXML] Conversion complete.")
+
+    # Run h2k-hpxml conversion using the Python library API.
+    try:
+        from h2k_hpxml.api import run_full_workflow, validate_dependencies
+    except Exception as e:
+        raise RuntimeError(
+            "Failed to import h2k_hpxml. Ensure dependencies are installed (e.g., 'uv sync') "
+            "and that pyproject.toml pins the git dependency correctly."
+        ) from e
+
+    deps = validate_dependencies()
+    if not deps.get("valid", False):
+        missing = deps.get("missing", [])
+        raise RuntimeError(
+            "h2k-hpxml external dependencies are missing or misconfigured. "
+            f"Missing: {missing}. "
+            "Run: uv run os-setup --install-quiet  (then)  uv run os-setup --check-only"
+        )
+
+    results = run_full_workflow(
+        input_path=base_path,
+        output_path=output_path,
+        simulate=True,
+        output_format="csv",
+        hourly_outputs=["ALL"],
+        debug=False,
+    )
+
+    print(
+        "[HPXML] Workflow complete: "
+        f"{results.get('successful_conversions', 0)} succeeded, "
+        f"{results.get('failed_conversions', 0)} failed."
+    )
+    if results.get("errors"):
+        print("[HPXML] Errors encountered during conversion/simulation:")
+        for err in results["errors"]:
+            print(f"  - {err}")
 
     # Collect timeseries files from archetypes/output using parallel processing
     print(f"[HPXML] Collecting timeseries files from output directories...")
@@ -652,7 +670,7 @@ def main(community_name):
 
     # 8. Remove archetypes/output directory after successful analysis
     print(f"[WORKFLOW] Cleaning up archetypes/output directory...")
-    output_dir = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes' / 'output'
+    output_dir = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes'
     
     # Safety check before removal
     if output_dir.exists() and output_dir.is_dir():
@@ -664,7 +682,7 @@ def main(community_name):
         except PermissionError as e:
             print(f"[ERROR] Could not remove {output_dir}: {e}")
             print(f"[ERROR] Some files may be open in an editor. Close them and manually delete the output directory.")
-            raise PermissionError(f"Permission denied when cleaning output directory. Close any open files in {community_name}/archetypes/output.") from e
+            raise PermissionError(f"Permission denied when cleaning output directory. Close any open files in {community_name}/archetypes.") from e
         except ValueError:
             print(f"[WARNING] Safety check failed for output directory removal: {output_dir}")
     

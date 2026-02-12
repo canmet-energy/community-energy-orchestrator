@@ -18,19 +18,26 @@ This repo supports two interfaces:
 Linux/macOS:
 
 ```bash
-python3 src/process_community_workflow.py "Old Crow"
+# Recommended (after uv sync)
+process-community "Old Crow"
+
+# Or directly
+python3 src/workflow/process_community_workflow.py "Old Crow"
 ```
 
 Windows (PowerShell):
 
 ```powershell
-python src\process_community_workflow.py "Old Crow"
+# Recommended (after uv sync)
+process-community "Old Crow"
+
+# Or directly
+python src\workflow\process_community_workflow.py "Old Crow"
 ```
 
 2) **REST API** (FastAPI) for starting runs and polling status
 
 Linux/macOS:
-
 
 ```bash
 python3 -m uvicorn src.app.main:app
@@ -42,21 +49,69 @@ Windows (PowerShell):
 python -m uvicorn src.app.main:app
 ```
 
-
 Then open the Swagger UI at:
 
 - http://localhost:8000/docs
 
+> **Note:** Dev environments use `src.app.main:app`. Docker uses `app.main:app` (see [Docker Guide](docs/DOCKER.md)).
+
 ## Documentation
 - [Installation Guide](docs/INSTALLATION.md) - Complete setup instructions for all platforms
+- [Docker Guide](docs/DOCKER.md) - Complete Docker deployment guide
 - [User Guide](docs/USER_GUIDE.md) - Complete guide to using the program
 - [Communities](docs/COMMUNITIES.md) - List of all available communities to test
+
+## Docker Quick Start (Recommended for Sharing)
+
+If you prefer containerized deployment:
+
+```bash
+# 1) Clone the repo
+git clone https://github.com/canmet-energy/community-energy-orchestrator.git
+cd community-energy-orchestrator
+
+# 2) CRITICAL: Download the archetype library BEFORE building
+# Go to https://github.com/canmet-energy/housing-archetypes.git
+# Navigate to data/h2k_files/existing-stock
+# Download: retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities
+# Rename it to 'source-archetypes' and place it in the src/ directory
+# The build will FAIL if this directory is missing!
+
+# 3) Build the Docker image
+docker build -t community-energy-orchestrator .
+
+# 4) Run the API server
+docker run -p 8000:8000 community-energy-orchestrator
+
+# OR use docker-compose for easier management:
+docker-compose up
+```
+
+Then open the Swagger UI at http://localhost:8000/docs
+
+**Note:** Docker installation automatically handles all dependencies (Python, uv, OpenStudio, EnergyPlus) inside the container. You only need Docker installed on your system.
+
+**Important:** The build validates that `source-archetypes/` exists and contains files. If you skip step 2, the build will fail with a clear error message.
+
 ## Repository Layout
-- `src/process_community_workflow.py`: end-to-end workflow driver
+- `src/workflow/process_community_workflow.py`: end-to-end workflow driver
+- `src/workflow/service.py`: public API for workflow operations
 - `src/h2k-hpxml/`: converter used to generate HPXML + run simulations (git submodule)
 - `src/source-archetypes/`: Hot2000 `.H2K` archetype library (local/downloaded)
 - `communities/<Community Name>/`: per-run working directory and outputs (generated locally)
 - `csv/`: community requirements + weather mapping inputs
+
+## CLI Command
+
+After installation with `uv sync`, run the workflow:
+
+```bash
+process-community "Old Crow"
+```
+
+This is equivalent to `python3 src/workflow/process_community_workflow.py "Old Crow"` but cleaner.
+
+See [User Guide](docs/USER_GUIDE.md) for details.
 
 ## Quick Start
 
@@ -92,7 +147,7 @@ os-setup --test-installation
 # Rename it to 'source-archetypes' and place it in the src/ directory
 
 # 7) Run a community
-python3 src/process_community_workflow.py "Old Crow"
+python3 src/workflow/process_community_workflow.py "Old Crow"
 
 # Optional: run the API instead
 # python3 -m uvicorn src.app.main:app
@@ -128,7 +183,7 @@ os-setup --test-installation
 # Rename it to 'source-archetypes' and place it in the src\ directory
 
 # 7) Run a community
-python src\process_community_workflow.py "Old Crow"
+python src\workflow\process_community_workflow.py "Old Crow"
 
 # Optional: run the API instead
 # python -m uvicorn src.app.main:app
@@ -144,8 +199,16 @@ See the full list of communities [here](docs/COMMUNITIES.md).
 
 ### Run a community
 
+Linux/macOS:
+
 ```bash
-python3 src/process_community_workflow.py "Rankin Inlet"
+python3 src/workflow/process_community_workflow.py "Rankin Inlet"
+```
+
+Windows (PowerShell):
+
+```powershell
+python src\workflow\process_community_workflow.py "Rankin Inlet"
 ```
 
 ### Where outputs go

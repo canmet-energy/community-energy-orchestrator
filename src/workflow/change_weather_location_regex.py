@@ -210,5 +210,9 @@ def main():
     
     return 0
 
-if __name__ == "__main__":
+def cli():
+    """CLI entry point for updating weather locations."""
     main()
+
+if __name__ == "__main__":
+    cli()

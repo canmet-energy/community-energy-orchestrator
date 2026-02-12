@@ -9,7 +9,9 @@ import os
 import numpy as np
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-from workflow.core import KBTU_TO_GJ, EXPECTED_ROWS, csv_dir, communities_dir
+from workflow.config import KBTU_TO_GJ, EXPECTED_ROWS, get_max_workers, get_analysis_random_seed
+from workflow.core import csv_dir, communities_dir
+from workflow.requirements import get_community_requirements
 
 def read_timeseries(file_path):
     """Load and process timeseries data from CSV file."""
@@ -56,15 +58,11 @@ def read_timeseries(file_path):
     return df
 
 def select_and_sum_timeseries(community_name):
-    # Import from core and requirements modules
-    from workflow.core import get_max_workers
-    from workflow.requirements import get_community_requirements
-    
     # Set random seed for reproducible file duplication (only if specified)
-    seed = os.environ.get('ANALYSIS_RANDOM_SEED')
+    seed = get_analysis_random_seed()
     use_deterministic_order = False
     if seed is not None:
-        random.seed(int(seed))
+        random.seed(seed)
         use_deterministic_order = True
     
     print(f"Processing community: {community_name}")
@@ -311,7 +309,8 @@ def select_and_sum_timeseries(community_name):
         print("\n[ERROR] No files were successfully processed. Analysis cannot proceed.")
         raise ValueError("All input files failed processing. Check error messages above.")
         
-if __name__ == '__main__':
+def cli():
+    """CLI entry point for calculating community analysis."""
     try:
         custom_rq_file_path = csv_dir() / 'communities-number-of-houses.csv'
         parser = argparse.ArgumentParser(description='Calculate community total energy use.')
@@ -329,3 +328,6 @@ if __name__ == '__main__':
     except Exception as e:
         print(f"Unexpected error: {e}")
         traceback.print_exc()
+
+if __name__ == '__main__':
+    cli()

@@ -31,7 +31,7 @@ from uuid import uuid4
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from pydantic import BaseModel
 
-from workflow.process_community_workflow import main as run_workflow
+from workflow.service import run_community_workflow
 from workflow.core import communities_dir
 
 app = FastAPI(
@@ -81,7 +81,7 @@ def _run_workflow(run_id: str, community_name: str) -> None:
         _runs[run_id]["status"] = "running"
 
     try: 
-        run_workflow(community_name)
+        run_community_workflow(community_name)
     
         with _lock:
             _runs[run_id]["status"] = "completed"

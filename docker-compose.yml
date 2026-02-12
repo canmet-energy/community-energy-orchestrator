@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    image: community-energy-orchestrator:latest
+    container_name: community-energy-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount directories to persist outputs on host machine
+      - ./communities:/app/communities
+      - ./output:/app/output
+      - ./logs:/app/logs
+    environment:
+      # Optional: Set environment variables for configuration
+      # - MAX_PARALLEL_WORKERS=4
+      # - ANALYSIS_RANDOM_SEED=42
+      # - ARCHETYPE_SELECTION_SEED=12345
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

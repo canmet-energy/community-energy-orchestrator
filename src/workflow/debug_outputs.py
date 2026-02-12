@@ -5,9 +5,10 @@ Validates timeseries outputs and weather location codes in H2K files.
 """
 
 from pathlib import Path
-from change_weather_location_regex import load_csv_data
+from workflow.change_weather_location_regex import load_csv_data
 import xml.etree.ElementTree as ET
-from process_community_workflow import get_community_requirements, get_max_workers
+from workflow.core import get_max_workers, csv_dir, communities_dir
+from workflow.requirements import get_community_requirements
 import sys
 import csv
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -26,8 +27,8 @@ def debug_timeseries_outputs(community_name):
         communities/<community>/analysis/output_debug.log (overwrites)
     """
     # Define paths for output directory and debug log
-    output_base = Path(__file__).resolve().parent.parent / f'communities/{community_name}/archetypes/output'
-    debug_log_path = Path(__file__).resolve().parent.parent / f'communities/{community_name}/analysis/output_debug.log'
+    output_base = communities_dir() / community_name / 'archetypes' / 'output'
+    debug_log_path = communities_dir() / community_name / 'analysis' / 'output_debug.log'
     
     # Load housing requirements from CSV (e.g., {"pre-2000-single": 5, "2001-2015-semi": 3, ...})
     requirements = get_community_requirements(community_name)
@@ -115,8 +116,8 @@ def debug_weather_h2k(community_name):
         communities/<community>/analysis/output_debug.log (appends)
     """
     # Define paths for archetype directory and debug log
-    archetype_base = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes'
-    debug_log_path = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'analysis' / 'output_debug.log'
+    archetype_base = communities_dir() / community_name / 'archetypes'
+    debug_log_path = communities_dir() / community_name / 'analysis' / 'output_debug.log'
 
     # Create parent directory if needed
     debug_log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -216,7 +217,7 @@ def validate_location_code(community_name, location_code):
         return False
     
     # First, get the weather location for this community
-    weather_locations_path = Path(__file__).resolve().parent.parent / 'csv' / 'train-test communities hdd and weather locations.csv'
+    weather_locations_path = csv_dir() / 'train-test communities hdd and weather locations.csv'
     
     if not weather_locations_path.exists():
         return False
@@ -236,7 +237,7 @@ def validate_location_code(community_name, location_code):
         return False
     
     # Now load the location codes CSV to get the code for that weather location
-    location_codes_path = Path(__file__).resolve().parent.parent / 'csv' / 'location_code.csv'
+    location_codes_path = csv_dir() / 'location_code.csv'
     
     if not location_codes_path.exists():
         return False

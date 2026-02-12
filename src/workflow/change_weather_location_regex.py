@@ -8,6 +8,8 @@ import argparse
 import re
 from pathlib import Path
 
+from workflow.core import csv_dir
+
 def load_csv_data(filename):
     """Load CSV file and return dictionary."""
     file_path = Path(filename)
@@ -101,14 +103,14 @@ def change_weather_code(file_path, location="FORT SIMPSON", validate=True, debug
             return False
 
         # Load location codes and weather details
-        location_codes_path = Path(__file__).resolve().parent.parent / 'csv' / 'location_code.csv'
+        location_codes_path = csv_dir() / 'location_code.csv'
         if not location_codes_path.exists():
             raise FileNotFoundError(f"Location codes CSV not found: {location_codes_path}")
         
         location_codes = load_csv_data(location_codes_path)
         
         weather_details = {}
-        weather_details_path = Path(__file__).resolve().parent.parent / 'csv' / 'weather_details.csv'
+        weather_details_path = csv_dir() / 'weather_details.csv'
         if not weather_details_path.exists():
             raise FileNotFoundError(f"Weather details CSV not found: {weather_details_path}")
         

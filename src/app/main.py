@@ -4,7 +4,7 @@ This module exposes a small REST API for running the community workflow in
 background and polling for status.
 
 How to run:
-    python -m uvicorn src.main:app
+    python -m uvicorn src.app.main:app
 
 Key behavior:
     - Single-run-at-a-time: this API enforces at most one active run per process.
@@ -15,6 +15,7 @@ Key behavior:
 
 Endpoints:
     - GET  /health
+    - GET  /runs
     - POST /runs
     - GET  /runs/current
     - GET  /runs/{run_id}
@@ -30,7 +31,8 @@ from uuid import uuid4
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from pydantic import BaseModel
 
-from process_community_workflow import main as run_workflow
+from workflow.process_community_workflow import main as run_workflow
+from workflow.core import communities_dir
 
 app = FastAPI(
     title="Community Energy Orchestrator API",
@@ -200,7 +202,7 @@ def get_run_analysis_md(run_id: str):
             raise HTTPException(status_code=404, detail="Run not found.")
         community_name = run["community_name"]
     
-    analysis_md_path = Path(__file__).resolve().parent.parent / 'communities' / community_name / "analysis" / f'{community_name}_analysis.md'
+    analysis_md_path = communities_dir() / community_name / "analysis" / f'{community_name}_analysis.md'
     if not analysis_md_path.exists():
         raise HTTPException(status_code=404, detail="Analysis markdown file not found.")
     

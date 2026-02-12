@@ -36,7 +36,7 @@ Notes:
 - Community names with spaces must be quoted.
 - The workflow deletes `communities/<Community Name>/` at the start of each run.
 
-### API (`src/main.py`)
+### API (`src/app/main.py`)
 Runs the FastAPI server so you can start a workflow run via HTTP and poll for status.
 
 
@@ -45,13 +45,13 @@ Start the server:
 Linux/macOS:
 
 ```bash
-python3 -m uvicorn src.main:app
+python3 -m uvicorn src.app.main:app
 ```
 
 Windows (PowerShell):
 
 ```powershell
-python -m uvicorn src.main:app
+python -m uvicorn src.app.main:app
 ```
 
 Open the interactive docs:

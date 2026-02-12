@@ -17,7 +17,9 @@ from pathlib import Path
 
 import pandas as pd
 
-from change_weather_location_regex import change_weather_code
+from workflow.change_weather_location_regex import change_weather_code
+from workflow.core import get_max_workers, communities_dir, logs_dir, source_archetypes_dir
+from workflow.requirements import get_community_requirements, get_weather_location
 
 def remove_readonly(func, path, exc):
     """Error handler for shutil.rmtree to handle read-only files."""
@@ -33,30 +35,6 @@ def safe_rmtree(path):
         shutil.rmtree(path, onexc=remove_readonly)
     else:
         shutil.rmtree(path, onerror=remove_readonly)
-
-def get_max_workers():
-    """
-    Calculate optimal worker count for parallel operations.
-    
-    Returns:
-        int: Number of worker processes to use
-    """
-    # Allow manual override
-    env_workers = os.environ.get('MAX_PARALLEL_WORKERS')
-    if env_workers:
-        try:
-            return max(1, int(env_workers))
-        except ValueError:
-            pass
-    
-    cpu_count = os.cpu_count() or 1
-    
-    if cpu_count < 4:
-        return 1
-    elif cpu_count < 18:
-        return int(cpu_count * 0.8)  # Use 80% of available cores
-    else:
-        return cpu_count - 4  # Reserve 4 cores for other processes
 
 ARCHETYPE_TYPE_PATTERNS = {
     'pre-2000-single': [r'pre-2000-single_.*\.H2K$'],
@@ -84,7 +62,7 @@ def create_manifest(community_name, requirements):
     Returns:
         Path to created manifest file
     """
-    manifest_path = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes' / f'{community_name}-manifest.md'
+    manifest_path = communities_dir() / community_name / 'archetypes' / f'{community_name}-manifest.md'
     # Ensure parent directory exists
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     # Use weather location from CSV
@@ -169,107 +147,6 @@ def duplicate_missing_timeseries(timeseries_dir, building_type, required_count):
     
     return count
 
-
-def get_weather_location(community_name):
-    """
-    Look up weather location from CSV.
-    
-    Args:
-        community_name: Name of the community
-    
-    Returns:
-        Weather location string, or community name with dashes replaced if not found
-    """
-    csv_path = Path(__file__).resolve().parent.parent / 'csv' / 'train-test communities hdd and weather locations.csv'
-    
-    if not csv_path.exists():
-        raise FileNotFoundError(f"Weather locations CSV not found: {csv_path}")
-    
-    comm_upper = community_name.upper()
-    try:
-        with open(csv_path, newline='', encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                if row['Community'].strip().upper() == comm_upper:
-                    return row['WEATHER'].strip()
-    except UnicodeDecodeError:
-        with open(csv_path, newline='', encoding='latin1') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                if row['Community'].strip().upper() == comm_upper:
-                    return row['WEATHER'].strip()
-    return community_name.replace('-', ' ')
-
-
-def get_community_requirements(community_name):
-    """
-    Read housing type requirements from CSV file.
-    
-    Args:
-        community_name: Name of the community
-    
-    Returns:
-        Dict mapping housing types (e.g., 'pre-2000-single') to required counts.
-        Returns {} if community not found (graceful fallback).
-    """
-    comm_upper = community_name.upper()
-    csv_path = Path(__file__).resolve().parent.parent / 'csv' / 'communities-number-of-houses.csv'
-    
-    if not csv_path.exists():
-        raise FileNotFoundError(f"Requirements CSV not found: {csv_path}")
-    
-    df = pd.read_csv(csv_path, header=None)
-    # Find the row where the first column matches (case-insensitive)
-    mask = df[0].astype(str).str.strip().str.upper() == comm_upper
-    if not mask.any():
-        print(f"[INFO] Community '{community_name}' not found in requirements CSV. Using graceful fallback.")
-        return {}
-    row = df[mask].iloc[0].tolist()
-    # Skip the first column (community name)
-    kv_pairs = row[1:]
-    requirements = {}
-    
-    # Validate we have pairs
-    if len(kv_pairs) % 2 != 0:
-        print(f"[WARNING] Odd number of values in CSV row for {community_name}")
-    
-    # Parse as key-value pairs
-    for i in range(0, len(kv_pairs)-1, 2):
-        key = kv_pairs[i]
-        val = kv_pairs[i+1]
-        
-        # Only process valid string keys with hyphens
-        if not isinstance(key, str) or '-' not in key:
-            continue
-        
-        # Extract era and type using known patterns
-        era = None
-        btype = None
-        
-        for era_opt in ['pre-2000', '2001-2015', 'post-2016']:
-            if era_opt in key:
-                era = era_opt
-                break
-        
-        for type_opt in ['single', 'semi', 'row-mid', 'row-end']:
-            if type_opt in key:
-                btype = type_opt
-                break
-        
-        # Only add if we successfully identified both era and type
-        if era and btype:
-            try:
-                count = int(val)
-                requirements[f"{era}-{btype}"] = count
-            except (ValueError, TypeError):
-                print(f"[WARNING] Invalid count for {key}: {val}")
-    # Write requirements to debug log for inspection
-    debug_log_path = Path(__file__).resolve().parent.parent / 'logs' / 'archetype_copy_debug.log'
-    debug_log_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(debug_log_path, 'a') as debug_log:
-        debug_log.write(f"[DEBUG] Extracted requirements for {community_name}: {requirements}\n")
-    return requirements
-
 def create_community_directories(community_name):
     """
     Create standard directory structure for a community.
@@ -280,7 +157,7 @@ def create_community_directories(community_name):
     Returns:
         Path to community base directory
     """
-    base_path = Path(__file__).resolve().parent.parent / 'communities' / community_name
+    base_path = communities_dir() / community_name
     archetypes_path = base_path / 'archetypes'
     timeseries_path = base_path / 'timeseries'
     analysis_path = base_path / 'analysis'
@@ -306,12 +183,12 @@ def copy_archetype_files(community_name, requirements):
         requirements: Dict of housing types to required counts
     """
 
-    archetypes_source = Path(__file__).resolve().parent / 'source-archetypes'
+    archetypes_source = source_archetypes_dir()
     
     if not archetypes_source.exists():
         raise FileNotFoundError(f"Source archetypes directory not found: {archetypes_source}")
     
-    base_path = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes'
+    base_path = communities_dir() / community_name / 'archetypes'
     if not base_path.exists():
         base_path.mkdir(parents=True, exist_ok=True)
     # Find all H2K files in the source directory
@@ -324,7 +201,7 @@ def copy_archetype_files(community_name, requirements):
         for req_type, patterns in ARCHETYPE_TYPE_PATTERNS.items()
     }
 
-    debug_log_path = Path(__file__).resolve().parent.parent / 'logs' / 'archetype_copy_debug.log'
+    debug_log_path = logs_dir() / 'archetype_copy_debug.log'
     debug_log_path.parent.mkdir(parents=True, exist_ok=True)
     seed_str = os.environ.get('ARCHETYPE_SELECTION_SEED')
     rng = random.Random(seed_str) if seed_str is not None else random.Random()
@@ -405,7 +282,7 @@ def update_weather_location(community_name):
     Args:
         community_name: Name of the community
     """
-    base_path = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes'
+    base_path = communities_dir() / community_name / 'archetypes'
     weather_location = get_weather_location(community_name)
     
     h2k_files = list(base_path.glob('*.H2K'))
@@ -491,7 +368,7 @@ def run_hpxml_conversion(community_name, requirements):
     Args:
         community_name: Name of the community
     """
-    base_path = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes'
+    base_path = communities_dir() / community_name / 'archetypes'
     output_path = base_path / 'output'
 
     # Create output directory if not already created
@@ -552,7 +429,7 @@ def run_hpxml_conversion(community_name, requirements):
 
     # Collect timeseries files from archetypes/output using parallel processing
     print(f"[HPXML] Collecting timeseries files from output directories...")
-    base_dir = Path(__file__).resolve().parent.parent / 'communities' / community_name
+    base_dir = communities_dir() / community_name
     output_dir = base_dir / 'archetypes' / 'output'
     timeseries_dir = base_dir / 'timeseries'
     timeseries_dir.mkdir(parents=True, exist_ok=True)
@@ -588,8 +465,8 @@ def main(community_name):
         0 on success, 1 on failure
     """
     # Import here to avoid circular dependency
-    from calculate_community_analysis import select_and_sum_timeseries
-    from debug_outputs import main as debug_main
+    from workflow.calculate_community_analysis import select_and_sum_timeseries
+    from workflow.debug_outputs import main as debug_main
 
     print(f"\n[WORKFLOW] Starting workflow for community: {community_name}")
     
@@ -609,11 +486,11 @@ def main(community_name):
     
     # 0. Clean existing community directory to ensure fresh run
     print(f"[WORKFLOW] Step 0: Cleaning previous run data...")
-    cleanup_dir = Path(__file__).resolve().parent.parent / 'communities' / community_name
+    cleanup_dir = communities_dir() / community_name
     
     # Safety check before deletion
     if cleanup_dir.exists() and cleanup_dir.is_dir():
-        communities_base = Path(__file__).resolve().parent.parent / 'communities'
+        communities_base = communities_dir()
         try:
             cleanup_dir.resolve().relative_to(communities_base.resolve())
             safe_rmtree(cleanup_dir)
@@ -670,11 +547,11 @@ def main(community_name):
 
     # 8. Remove archetypes/output directory after successful analysis
     print(f"[WORKFLOW] Cleaning up archetypes/output directory...")
-    output_dir = Path(__file__).resolve().parent.parent / 'communities' / community_name / 'archetypes'
+    output_dir = communities_dir() / community_name / 'archetypes'
     
     # Safety check before removal
     if output_dir.exists() and output_dir.is_dir():
-        expected_base = Path(__file__).resolve().parent.parent / 'communities' / community_name
+        expected_base = communities_dir() / community_name
         try:
             output_dir.resolve().relative_to(expected_base.resolve())
             safe_rmtree(output_dir)

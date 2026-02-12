@@ -9,8 +9,7 @@ import os
 import numpy as np
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-# Conversion factor from kBtu to GJ
-KBTU_TO_GJ = 0.001055056
+from workflow.core import KBTU_TO_GJ, EXPECTED_ROWS, csv_dir, communities_dir
 
 def read_timeseries(file_path):
     """Load and process timeseries data from CSV file."""
@@ -57,8 +56,9 @@ def read_timeseries(file_path):
     return df
 
 def select_and_sum_timeseries(community_name):
-    # Import here to avoid circular dependency
-    from process_community_workflow import get_max_workers, get_community_requirements
+    # Import from core and requirements modules
+    from workflow.core import get_max_workers
+    from workflow.requirements import get_community_requirements
     
     # Set random seed for reproducible file duplication (only if specified)
     seed = os.environ.get('ANALYSIS_RANDOM_SEED')
@@ -84,7 +84,7 @@ def select_and_sum_timeseries(community_name):
     community_upper = community_name.upper()
     community_upper_hyphen = community_upper.replace(" ", "-")
 
-    base_path = Path(__file__).resolve().parent.parent / 'communities'
+    base_path = communities_dir()
     timeseries_dirs = [
         base_path / community_name / 'timeseries',
         base_path / community_hyphen / 'timeseries',
@@ -181,7 +181,6 @@ def select_and_sum_timeseries(community_name):
     print("\nProcessing selected files...")
     processed_dfs = []
     error_files = []
-    expected_rows = 8761
     expected_columns = ["Time", "Heating_Load_GJ", "Heating_Propane_GJ", "Heating_Oil_GJ", "Heating_Electricity_GJ", "Total_Heating_Energy_GJ"]
 
     max_workers = min(get_max_workers(), len(selected_files))
@@ -192,8 +191,8 @@ def select_and_sum_timeseries(community_name):
             try:
                 df = future.result()
                 # Check for expected row count
-                if len(df) != expected_rows:
-                    print(f"[WARNING] File {file_path} has {len(df)} rows, expected {expected_rows}.")
+                if len(df) != EXPECTED_ROWS:
+                    print(f"[WARNING] File {file_path} has {len(df)} rows, expected {EXPECTED_ROWS}.")
                 # Only process if Time and Heating_Load_GJ exist
                 if "Time" not in df.columns or "Heating_Load_GJ" not in df.columns:
                     print(f"[ERROR] File {file_path} missing required columns (Time, Heating_Load_GJ). Skipping.")
@@ -241,13 +240,13 @@ def select_and_sum_timeseries(community_name):
         # Always ensure correct columns and row count
         community_total['Total_Heating_Energy_GJ'] = community_total['Heating_Propane_GJ'] + community_total['Heating_Oil_GJ'] + community_total['Heating_Electricity_GJ']
         # Truncate or pad to expected rows
-        if len(community_total) > expected_rows:
-            print(f"[WARNING] Output has {len(community_total)} rows, truncating to {expected_rows}.")
-            community_total = community_total.iloc[:expected_rows]
+        if len(community_total) > EXPECTED_ROWS:
+            print(f"[WARNING] Output has {len(community_total)} rows, truncating to {EXPECTED_ROWS}.")
+            community_total = community_total.iloc[:EXPECTED_ROWS]
         community_total = community_total[expected_columns]
 
         # Save the results
-        base_communities_path = Path(__file__).resolve().parent.parent / 'communities'
+        base_communities_path = communities_dir()
         community_folder = base_communities_path / community_name.replace('-', '_')
         community_folder.mkdir(parents=True, exist_ok=True)
         (community_folder / 'analysis').mkdir(parents=True, exist_ok=True)
@@ -314,7 +313,7 @@ def select_and_sum_timeseries(community_name):
         
 if __name__ == '__main__':
     try:
-        custom_rq_file_path = Path(__file__).resolve().parent.parent / 'csv' / 'communities-number-of-houses.csv'
+        custom_rq_file_path = csv_dir() / 'communities-number-of-houses.csv'
         parser = argparse.ArgumentParser(description='Calculate community total energy use.')
         parser.add_argument('community_name', type=str, help='Name of the community (e.g., BONILLA-ISLAND)')
         parser.add_argument('--requirements', type=str, help='Path to custom requirements file', default=str(custom_rq_file_path))

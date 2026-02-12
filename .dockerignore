@@ -1,0 +1,116 @@
+# ============================================
+# Python cache and build artifacts
+# ============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ============================================
+# Virtual environments
+# ============================================
+venv/
+.venv/
+env/
+ENV/
+
+# ============================================
+# IDE and editor files
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ============================================
+# Version control
+# ============================================
+.git/
+.github/
+.gitignore
+.gitattributes
+
+# ============================================
+# Testing and dev dependencies
+# ============================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+tests/
+.tox/
+.nox/
+
+# ============================================
+# Documentation (keep essential README)
+# ============================================
+docs/
+*.md
+!README.md
+LICENSE
+
+# ============================================
+# Runtime outputs (generated in container)
+# ============================================
+# NOTE: communities/ and output/ are created at runtime
+# If you need to preserve them, use volume mounts
+logs/
+output/
+communities/
+
+# ============================================
+# Dev container and Docker files
+# ============================================
+.devcontainer/
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# ============================================
+# Environment and sensitive files
+# ============================================
+.env
+.env.*
+*.env
+.envrc
+
+# ============================================
+# Temporary and log files
+# ============================================
+*.log
+*.tmp
+*.temp
+temp/
+tmp/
+.cache/
+
+# ============================================
+# OS-specific files
+# ============================================
+Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# ============================================
+# Data scrubbing scripts (not needed in prod)
+# ============================================
+src/data scrubbing/

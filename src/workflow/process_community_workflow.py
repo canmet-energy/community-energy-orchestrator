@@ -18,8 +18,11 @@ from pathlib import Path
 import pandas as pd
 
 from workflow.change_weather_location_regex import change_weather_code
-from workflow.core import get_max_workers, communities_dir, logs_dir, source_archetypes_dir
+from workflow.config import get_max_workers, get_archetype_selection_seed, ARCHETYPE_TYPE_PATTERNS
+from workflow.core import communities_dir, logs_dir, source_archetypes_dir
 from workflow.requirements import get_community_requirements, get_weather_location
+from workflow.calculate_community_analysis import select_and_sum_timeseries
+from workflow.debug_outputs import main as debug_main
 
 def remove_readonly(func, path, exc):
     """Error handler for shutil.rmtree to handle read-only files."""
@@ -36,20 +39,6 @@ def safe_rmtree(path):
     else:
         shutil.rmtree(path, onerror=remove_readonly)
 
-ARCHETYPE_TYPE_PATTERNS = {
-    'pre-2000-single': [r'pre-2000-single_.*\.H2K$'],
-    '2001-2015-single': [r'2001-2015-single_.*\.H2K$'],
-    'post-2016-single': [r'post-2016-single_.*\.H2K$'],
-    'pre-2000-semi': [r'pre-2000-semi_.*\.H2K$', r'pre-2000-double_.*\.H2K$'],
-    '2001-2015-semi': [r'2001-2015-semi_.*\.H2K$', r'2001-2015-double_.*\.H2K$'],
-    'post-2016-semi': [r'post-2016-semi_.*\.H2K$', r'post-2016-double_.*\.H2K$'],
-    'pre-2000-row-mid': [r'pre-2000-row-mid_.*\.H2K$', r'pre-2000-row-middle_.*\.H2K$'],
-    '2001-2015-row-mid': [r'2001-2015-row-mid_.*\.H2K$', r'2001-2015-row-middle_.*\.H2K$'],
-    'post-2016-row-mid': [r'post-2016-row-mid_.*\.H2K$', r'post-2016-row-middle_.*\.H2K$'],
-    'pre-2000-row-end': [r'pre-2000-row-end_.*\.H2K$'],
-    '2001-2015-row-end': [r'2001-2015-row-end_.*\.H2K$'],
-    'post-2016-row-end': [r'post-2016-row-end_.*\.H2K$'],
-}
 
 def create_manifest(community_name, requirements):
     """
@@ -127,7 +116,7 @@ def duplicate_missing_timeseries(timeseries_dir, building_type, required_count):
         return 0
     count = len(files)
 
-    seed_str = os.environ.get('ARCHETYPE_SELECTION_SEED')
+    seed_str = get_archetype_selection_seed()
     rng = random.Random(seed_str) if seed_str is not None else random.Random()
     source_files = [f for f in files if '_DUPLICATE_' not in f] or files
     
@@ -203,7 +192,7 @@ def copy_archetype_files(community_name, requirements):
 
     debug_log_path = logs_dir() / 'archetype_copy_debug.log'
     debug_log_path.parent.mkdir(parents=True, exist_ok=True)
-    seed_str = os.environ.get('ARCHETYPE_SELECTION_SEED')
+    seed_str = get_archetype_selection_seed()
     rng = random.Random(seed_str) if seed_str is not None else random.Random()
 
     copy_tasks = []
@@ -464,10 +453,6 @@ def main(community_name):
     Returns:
         0 on success, 1 on failure
     """
-    # Import here to avoid circular dependency
-    from workflow.calculate_community_analysis import select_and_sum_timeseries
-    from workflow.debug_outputs import main as debug_main
-
     print(f"\n[WORKFLOW] Starting workflow for community: {community_name}")
     
     # Validate community name exists in requirements CSV before any operations
@@ -566,10 +551,14 @@ def main(community_name):
     print(f"Workflow for {community_name} completed successfully, you are free to proceed!")
     return 0
 
-if __name__ == "__main__":
+def cli():
+    """CLI entry point for running the workflow."""
     if len(sys.argv) != 2:
-        print("Usage: python process_community_workflow.py <community_name>")
+        print("Usage: process-community <community_name>")
         sys.exit(1)
         
     community_name = sys.argv[1]
     main(community_name)
+
+if __name__ == "__main__":
+    cli()

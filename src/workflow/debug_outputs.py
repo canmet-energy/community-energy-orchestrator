@@ -7,7 +7,8 @@ Validates timeseries outputs and weather location codes in H2K files.
 from pathlib import Path
 from workflow.change_weather_location_regex import load_csv_data
 import xml.etree.ElementTree as ET
-from workflow.core import get_max_workers, csv_dir, communities_dir
+from workflow.config import get_max_workers
+from workflow.core import csv_dir, communities_dir
 from workflow.requirements import get_community_requirements
 import sys
 import csv
@@ -272,13 +273,15 @@ def main(community_name):
     return debug_log_path
 
 
-if __name__ == "__main__":
-    # Allow running this script standalone for debugging
-    # Usage: python debug_outputs.py "Old Crow"
+def cli():
+    """CLI entry point for validating workflow outputs."""
     if len(sys.argv) < 2:
-        print("Usage: python debug_outputs.py <community_name>")
+        print("Usage: validate-outputs <community_name>")
         sys.exit(1)
         
     community_name = sys.argv[1]
     log_path = main(community_name)
     print(f"Debug log written to: {log_path}")
+
+if __name__ == "__main__":
+    cli()

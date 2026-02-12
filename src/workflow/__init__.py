@@ -5,34 +5,15 @@ This package provides tools for:
 - Running energy simulations
 - Generating community-level energy analysis
 
-The workflow processes data stored in the communities/ directory.
+Public API:
+    run_community_workflow: Execute workflow for a community
+
+Internal modules should be imported directly:
+    from workflow.config import ...
+    from workflow.core import ...
+    from workflow.requirements import ...
 """
 
-from .core import (
-    get_max_workers,
-    KBTU_TO_GJ,
-    EXPECTED_ROWS,
-    project_root,
-    communities_dir,
-    csv_dir,
-    logs_dir,
-    source_archetypes_dir,
-)
+from workflow.service import run_community_workflow
 
-from .requirements import (
-    get_community_requirements,
-    get_weather_location,
-)
-
-__all__ = [
-    "get_max_workers",
-    "KBTU_TO_GJ",
-    "EXPECTED_ROWS",
-    "project_root",
-    "communities_dir",
-    "csv_dir",
-    "logs_dir",
-    "source_archetypes_dir",
-    "get_community_requirements",
-    "get_weather_location",
-]
+__all__ = ["run_community_workflow"]

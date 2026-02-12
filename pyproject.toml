@@ -28,6 +28,9 @@ dev = [
     "pylint",
 ]
 
+[project.scripts]
+process-community = "workflow.process_community_workflow:cli"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["*"]

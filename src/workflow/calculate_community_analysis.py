@@ -73,9 +73,13 @@ def select_and_sum_timeseries(community_name):
     if requirements:
         print(f"Found {len(requirements)} building types for {community_name}:")
         if all(count == 0 for count in requirements.values()):
-            raise ValueError(f"All requirements for {community_name} are zero. Nothing to process.")
+            print(f"\n{'='*60}")
+            print(f"Community '{community_name}' exists in database but has 0 houses.")
+            print(f"No analysis can be performed.")
+            print(f"{'='*60}\n")
+            return
     else:
-        print("Community not found. Using available files instead.")
+        print(f"Community '{community_name}' not found in database. Using available files instead.")
 
     # Try multiple variations of the directory name
     community_hyphen = community_name.replace(" ", "-")
@@ -245,7 +249,7 @@ def select_and_sum_timeseries(community_name):
 
         # Save the results
         base_communities_path = communities_dir()
-        community_folder = base_communities_path / community_name.replace('-', '_')
+        community_folder = base_communities_path / community_name
         community_folder.mkdir(parents=True, exist_ok=True)
         (community_folder / 'analysis').mkdir(parents=True, exist_ok=True)
         output_file = community_folder / 'analysis' / f'{community_name}-community_total.csv'

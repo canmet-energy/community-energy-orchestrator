@@ -22,15 +22,15 @@ def get_community_requirements(community_name):
     if not csv_path.exists():
         raise FileNotFoundError(f"Requirements CSV not found: {csv_path}")
     
-    df = pd.read_csv(csv_path, header=None)
+    df = pd.read_csv(csv_path, header=None, encoding='utf-8-sig')
     # Find the row where the first column matches (case-insensitive)
     mask = df[0].astype(str).str.strip().str.upper() == comm_upper
     if not mask.any():
         print(f"[INFO] Community '{community_name}' not found in requirements CSV. Using graceful fallback.")
         return {}
     row = df[mask].iloc[0].tolist()
-    # Skip the first column (community name)
-    kv_pairs = row[1:]
+    # Skip the first column (community name) and last 2 columns (Province/Territory and Population)
+    kv_pairs = row[1:-2] if len(row) > 3 else row[1:]
     requirements = {}
     
     # Validate we have pairs
@@ -84,14 +84,14 @@ def get_weather_location(community_name):
     Returns:
         Weather location string, or community name with dashes replaced if not found
     """
-    csv_path = csv_dir() / 'train-test communities hdd and weather locations.csv'
+    csv_path = csv_dir() / 'communities-hdd-and-weather-location.csv'
     
     if not csv_path.exists():
         raise FileNotFoundError(f"Weather locations CSV not found: {csv_path}")
     
     comm_upper = community_name.upper()
     try:
-        with open(csv_path, newline='', encoding='utf-8') as csvfile:
+        with open(csv_path, newline='', encoding='utf-8-sig') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 if row['Community'].strip().upper() == comm_upper:

@@ -16,8 +16,11 @@ def run_community_workflow(community_name: str) -> None:
         community_name: Name of the community to process
         
     Raises:
-        ValueError: If community requirements are invalid or all counts are zero
+        ValueError: If community is not found in database
         FileNotFoundError: If required CSV files or archetype files are missing
+        
+    Note:
+        Communities with 0 houses will complete successfully without processing.
         
     Example:
         >>> run_community_workflow("Old Crow")

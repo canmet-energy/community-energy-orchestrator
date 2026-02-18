@@ -2,33 +2,148 @@
 
 The following communities are available to run with the orchestrator:
 
-- Aklavik
-- Akulivik
-- Arctic Bay
-- Burwash Landing
-- Cambridge Bay
-- Chesterfield Inlet
-- Fort Smith
-- Fort Simpson
-- Grise Fiord
-- Hall Beach
-- Kangiqsujuaq
-- Kimmirut
-- Kugaaruk
-- Kulkayu
-- Lower Post
-- Norman's Bay
-- Obedjiwan
-- Ogoki
-- Old Crow
-- Pond Inlet
-- Puvirnituq
-- Rankin Inlet
-- Resolute
-- St Lewis
-- Tasiujaq
-- Tsiigehtchic
-- Tulita
-- Watson Lake
-- Whale Cove
-- Whati
+**Note:** Communities marked with * use inferred housing data to estimate heating energy demand (Insufficient housing data).
+
+- Aklavik (205 houses)
+- Akulivik (150 houses)
+- Anahim Lake (30 houses)
+- Arctic Bay (210 houses)
+- Armstrong (425 houses)
+- Arviat (575 houses)
+- Aupaluk (60 houses)
+- Baker Lake (455 houses)
+- Barren Lands (80 houses)
+- Beaver Creek (40 houses)
+- Biscotasing * (5 houses)
+- Black Tickle (35 houses)
+- Brochet (80 houses)
+- Burwash Landing (40 houses)
+- Cambridge Bay (485 houses)
+- Cape Dorset (350 houses)
+- Cartwright (195 houses)
+- Charlottetown (110 houses)
+- Chesterfield Inlet (115 houses)
+- Chipewyan Lake (5 houses)
+- Clova * (23 houses)
+- Clyde River (190 houses)
+- Collins * (7 houses)
+- Colville Lake (30 houses)
+- Coral Harbour (210 houses)
+- Crescent Spur * (6 houses)
+- Da'naxda'xw First Nation * (5 houses)
+- Dease River 4 * (25 houses)
+- Destruction Bay (10 houses)
+- Déline (180 houses)
+- Fort Chipewyan (355 houses)
+- Fort Good Hope (175 houses)
+- Fort Hope (250 houses)
+- Fort Liard (150 houses)
+- Fort McPherson (240 houses)
+- Fort Providence (245 houses)
+- Fort Severn (85 houses)
+- Fort Simpson (405 houses)
+- François (30 houses)
+- Gamètì (75 houses)
+- Gilford Island * (9 houses)
+- Gjoa Haven (290 houses)
+- Good Hope Lake (25 houses)
+- Grey River (40 houses)
+- Grise Fiord (75 houses)
+- Grosse-Île (210 houses)
+- Gull Bay (50 houses)
+- Gwawaenuk * (4 houses)
+- Hall Beach (195 houses)
+- Hesquiaht (25 houses)
+- Hopedale (155 houses)
+- Igloolik (395 houses)
+- Inukjuak (405 houses)
+- Iqaluit (1555 houses)
+- Ivujivik (105 houses)
+- Jade City * (6 houses)
+- Jean Marie River (5 houses)
+- Kakisa (15 houses)
+- Kangiqsualujjuaq (205 houses)
+- Kangiqsujuaq (210 houses)
+- Kangirsuk (145 houses)
+- Kimmirut (185 houses)
+- Kingcome Inlet (35 houses)
+- Kinoosao (5 houses)
+- Kluskus (10 houses)
+- Knight Inlet * (12 houses)
+- Kugaaruk (210 houses)
+- Kugluktuk (395 houses)
+- Kulkayu (40 houses)
+- Kuujjuaq (730 houses)
+- Kuujjuarapik (175 houses)
+- Kwadacha * (80 houses)
+- L'Île d'Anticosti (85 houses)
+- Lac Brochet (155 houses)
+- Les Îles-a-la-Madeleine (5040 houses)
+- Liard First Nation (50 houses)
+- Lodge Bay (30 houses)
+- Lower Post (35 houses)
+- Lutselk'e (125 houses)
+- Makkovik (135 houses)
+- Mary's Harbour (60 houses)
+- Masset (345 houses)
+- McCallum (20 houses)
+- Nahanni Butte (30 houses)
+- Nain (210 houses)
+- Natuashish 2 (160 houses)
+- Naujaat (200 houses)
+- Neskantaga (70 houses)
+- Norman's Bay (5 houses)
+- Oba * (1 houses)
+- Obedjiwan (410 houses)
+- Ogoki (55 houses)
+- Old Crow (110 houses)
+- Old Masset * (111 houses)
+- Pangnirtung (395 houses)
+- Paulatuk (80 houses)
+- Peawanuck (90 houses)
+- Pond Inlet (360 houses)
+- Port Clements (150 houses)
+- Port Hope Simpson (155 houses)
+- Postville (70 houses)
+- Puvirnituq (455 houses)
+- Qikiqtarjuaq (160 houses)
+- Quaqtaq (110 houses)
+- Ramea (205 houses)
+- Rankin Inlet (660 houses)
+- Resolute (65 houses)
+- Rigolet (125 houses)
+- Sachs Harbour (35 houses)
+- Salluit (340 houses)
+- Sambaa K'e (35 houses)
+- Sanikiluaq (230 houses)
+- Shamattawa (170 houses)
+- St Lewis * (42 houses)
+- St. Brendan's (70 houses)
+- Sultan (25 houses)
+- Summer Beaver (90 houses)
+- Tadoule Lake * (115 houses)
+- Taloyoak (195 houses)
+- Tasiujaq (100 houses)
+- Telegraph Creek (15 houses)
+- Tlatlasikwala * (15 houses)
+- Toad River Area * (9 houses)
+- Tsay Keh Dene * (75 houses)
+- Tsiigehtchic (55 houses)
+- Tuktoyaktuk (255 houses)
+- Tulita (125 houses)
+- Uchucklesaht * (73 houses)
+- Ulukhaktok (130 houses)
+- Umiujaq (145 houses)
+- Watson Lake (415 houses)
+- Webequie (170 houses)
+- Wekweètì (30 houses)
+- Whale Cove (115 houses)
+- Whapmagoostui (210 houses)
+- Whati (130 houses)
+- Whitesand (105 houses)
+- Wrigley (35 houses)
+- Xeni Gwet'in First Nation * (109 houses)
+
+**Total Communities:** 139  
+**Communities with Inferred Data:** 20  
+**Total Houses:** 26,532

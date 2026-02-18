@@ -19,10 +19,29 @@ import pandas as pd
 
 from workflow.change_weather_location_regex import change_weather_code
 from workflow.config import get_max_workers, get_archetype_selection_seed, ARCHETYPE_TYPE_PATTERNS
-from workflow.core import communities_dir, logs_dir, source_archetypes_dir
+from workflow.core import communities_dir, logs_dir, source_archetypes_dir, project_root
 from workflow.requirements import get_community_requirements, get_weather_location
 from workflow.calculate_community_analysis import select_and_sum_timeseries
 from workflow.debug_outputs import main as debug_main
+
+def normalize_community_name(community_name):
+    """
+    Normalize community name by stripping whitespace and converting to title case.
+    
+    Args:
+        community_name: Raw community name input
+    
+    Returns:
+        Normalized community name with proper capitalization
+    """
+    # Strip leading/trailing whitespace
+    normalized = community_name.strip()
+    # Split by spaces and capitalize first letter of each word
+    # This avoids .title() which capitalizes after apostrophes
+    words = normalized.split()
+    capitalized_words = [word[0].upper() + word[1:].lower() if word else word for word in words]
+    normalized = ' '.join(capitalized_words)
+    return normalized
 
 def remove_readonly(func, path, exc):
     """Error handler for shutil.rmtree to handle read-only files."""
@@ -397,6 +416,10 @@ def run_hpxml_conversion(community_name, requirements):
             "Run: uv run os-setup --install-quiet  (then)  uv run os-setup --check-only"
         )
 
+    # Use same worker count as other parallel operations to prevent resource exhaustion
+    # Each worker spawns an OpenStudio simulation which is CPU/IO intensive
+    hpxml_workers = get_max_workers()
+    
     results = run_full_workflow(
         input_path=base_path,
         output_path=output_path,
@@ -404,6 +427,7 @@ def run_hpxml_conversion(community_name, requirements):
         output_format="csv",
         hourly_outputs=["ALL"],
         debug=False,
+        max_workers=hpxml_workers,
     )
 
     print(
@@ -426,6 +450,13 @@ def run_hpxml_conversion(community_name, requirements):
     # Use parallel collection for performance
     if output_dir.exists():
         collected = collect_timeseries_parallel(output_dir, timeseries_dir)
+        
+        # Validate: check for simulations that completed but didn't produce timeseries
+        building_dirs = [d for d in output_dir.iterdir() if d.is_dir()]
+        completed_sims = sum(1 for d in building_dirs if (d / 'run').exists())
+        if collected < completed_sims:
+            missing_count = completed_sims - collected
+            print(f"[WARNING] {missing_count} simulations completed but did not produce timeseries output")
     else:
         collected = 0
     
@@ -453,21 +484,28 @@ def main(community_name):
     Returns:
         0 on success, 1 on failure
     """
+    # Normalize community name (strip whitespace, apply title case)
+    community_name = normalize_community_name(community_name)
     print(f"\n[WORKFLOW] Starting workflow for community: {community_name}")
     
     # Validate community name exists in requirements CSV before any operations
     print(f"[WORKFLOW] Validating community name...")
     try:
         requirements = get_community_requirements(community_name)
-        if not requirements or all(count == 0 for count in requirements.values()):
-            raise ValueError(f"No valid requirements found for {community_name}. All counts are zero or missing.")
+        if not requirements:
+            print(f"Community '{community_name}' not found in database.")
+            print(f"Please check the spelling and try again.")
+            print(f"Refer to communities-number-of-houses.csv for valid community names.")
+            return 0
+        if all(count == 0 for count in requirements.values()):
+            print(f"Community '{community_name}' exists in database but has 0 houses.")
+            print(f"No analysis can be performed.")
+            return 0
         print(f"[WORKFLOW] Community validated: {community_name}")
-    except ValueError as e:
-        print(f"[ERROR] {e}")
-        raise
     except FileNotFoundError as e:
-        print(f"[ERROR] {e}")
-        raise
+        print(f"Required CSV file not found: {e}")
+        print(f"Please ensure the csv directory contains the necessary files.")
+        return 0
     
     # 0. Clean existing community directory to ensure fresh run
     print(f"[WORKFLOW] Step 0: Cleaning previous run data...")
@@ -558,6 +596,8 @@ def cli():
         sys.exit(1)
         
     community_name = sys.argv[1]
+    # Normalize community name immediately at entry point
+    community_name = normalize_community_name(community_name)
     main(community_name)
 
 if __name__ == "__main__":

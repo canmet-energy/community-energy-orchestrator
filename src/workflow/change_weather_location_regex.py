@@ -17,7 +17,7 @@ def load_csv_data(filename):
         raise FileNotFoundError(f"CSV file not found: {filename}")
     
     data = {}
-    with open(filename, 'r', encoding='latin-1') as f:
+    with open(filename, 'r', encoding='utf-8-sig') as f:
         for line in f:
             line = line.strip()
             if not line:  # Skip empty lines
@@ -32,42 +32,90 @@ def get_region_for_location(location):
     """Get the region code and English/French names for a location"""
     # Map locations to regions
     location_map = {
-        # British Columbia
+        # British Columbia (Region 1)
         'BONILLA ISLAND': ('1', 'BRITISH COLUMBIA', 'COLOMBIE-BRITANNIQUE'),
+        'DEASE LAKE': ('1', 'BRITISH COLUMBIA', 'COLOMBIE-BRITANNIQUE'),
+        'ESTEVAN POINT': ('1', 'BRITISH COLUMBIA', 'COLOMBIE-BRITANNIQUE'),
+        'FORT NELSON': ('1', 'BRITISH COLUMBIA', 'COLOMBIE-BRITANNIQUE'),
+        'PORT HARDY': ('1', 'BRITISH COLUMBIA', 'COLOMBIE-BRITANNIQUE'),
+        'PRINCE GEORGE': ('1', 'BRITISH COLUMBIA', 'COLOMBIE-BRITANNIQUE'),
+        'PUNTZI MOUNTAIN': ('1', 'BRITISH COLUMBIA', 'COLOMBIE-BRITANNIQUE'),
+        'ROSE SPIT': ('1', 'BRITISH COLUMBIA', 'COLOMBIE-BRITANNIQUE'),
+        'SALMON ARM': ('1', 'BRITISH COLUMBIA', 'COLOMBIE-BRITANNIQUE'),
+        'SARTINE ISLAND': ('1', 'BRITISH COLUMBIA', 'COLOMBIE-BRITANNIQUE'),
+        'SHERINGHAM POINT': ('1', 'BRITISH COLUMBIA', 'COLOMBIE-BRITANNIQUE'),
         
-        # Northwest Territories
-        'FORT SMITH': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
-        'FORT SIMPSON': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
-        'LAC LA MARTRE': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
-        'LITTLE CHICAGO': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
-        'NORMAN WELLS': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        # Newfoundland and Labrador (Region 5)
+        "MARY'S HARBOUR": ('5', 'NEWFOUNDLAND AND LABRADOR', 'TERRE-NEUVE-ET-LABRADOR'),
+        'BONAVISTA': ('5', 'NEWFOUNDLAND AND LABRADOR', 'TERRE-NEUVE-ET-LABRADOR'),
+        'BURGEO': ('5', 'NEWFOUNDLAND AND LABRADOR', 'TERRE-NEUVE-ET-LABRADOR'),
+        'CARTWRIGHT': ('5', 'NEWFOUNDLAND AND LABRADOR', 'TERRE-NEUVE-ET-LABRADOR'),
+        'ST-LAWRENCE': ('5', 'NEWFOUNDLAND AND LABRADOR', 'TERRE-NEUVE-ET-LABRADOR'),
         
-        # Yukon
-        'WATSON LAKE': ('11', 'YUKON', 'YUKON'),
-        'OLD CROW': ('11', 'YUKON', 'YUKON'),
-        'BURWASH': ('11', 'YUKON', 'YUKON'),
-        
-        # Quebec
+        # Quebec (Region 6)
+        'CHAMOUCHOUANE': ('6', 'QUEBEC', 'QUÉBEC'),
         'INUKJUAK': ('6', 'QUEBEC', 'QUÉBEC'),
         'KUUJJUAQ': ('6', 'QUEBEC', 'QUÉBEC'),
-        'CHAMOUCHOUANE': ('6', 'QUEBEC', 'QUÉBEC'),
+        'KUUJJUARAPIK': ('6', 'QUEBEC', 'QUÉBEC'),
+        'NATASHQUAN': ('6', 'QUEBEC', 'QUÉBEC'),
+        "VAL-D'OR": ('6', 'QUEBEC', 'QUÉBEC'),
+        'ÎLES DE LA MADELEINE': ('6', 'QUEBEC', 'QUÉBEC'),
         
-        # Nunavut
+        # Ontario (Region 7)
+        'ARMSTRONG': ('7', 'ONTARIO', 'ONTARIO'),
+        'LANSDOWNE HOUSE': ('7', 'ONTARIO', 'ONTARIO'),
+        'NAGAGAMI': ('7', 'ONTARIO', 'ONTARIO'),
+        'PEAWANUCK': ('7', 'ONTARIO', 'ONTARIO'),
+        'TIMMINS': ('7', 'ONTARIO', 'ONTARIO'),
+        
+        # Manitoba (Region 8)
+        'COLLINS BAY': ('8', 'MANITOBA', 'MANITOBA'),
+        'GILLAM': ('8', 'MANITOBA', 'MANITOBA'),
+        'TADOULE LAKE': ('8', 'MANITOBA', 'MANITOBA'),
+        
+        # Yukon (Region 11)
+        'BURWASH': ('11', 'YUKON', 'YUKON'),
+        'OLD CROW': ('11', 'YUKON', 'YUKON'),
+        'WATSON LAKE': ('11', 'YUKON', 'YUKON'),
+        
+        # Northwest Territories (Region 12)
+        'DELINE': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'FORT GOOD HOPE': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'FORT LIARD': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'FORT PROVIDENCE': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'FORT SIMPSON': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'FORT SMITH': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'HOLMAN': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'LAC LA MARTRE': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'LITTLE CHICAGO': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'LOWER CARP LAKE': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        "LUTSELK'E": ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'NORMAN WELLS': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'PAULATUK': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'SACHS HARBOUR CLIMATE': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'TUKTOYAKTUK': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'YOHIN': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        
+        # Nunavut (Region 13)
         'ARCTIC BAY': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'ARVIAT CLIMATE': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'BAKER LAKE': ('13', 'NUNAVUT', 'NUNAVUT'),
         'CAMBRIDGE BAY': ('13', 'NUNAVUT', 'NUNAVUT'),
-        'RANKIN INLET': ('13', 'NUNAVUT', 'NUNAVUT'),
-        'HALL BEACH': ('13', 'NUNAVUT', 'NUNAVUT'),
-        'POND INLET': ('13', 'NUNAVUT', 'NUNAVUT'),
-        'RESOLUTE BAY': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'CAPE DORSET CLIMATE': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'CLYDE RIVER CLIMATE': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'CORAL HARBOUR': ('13', 'NUNAVUT', 'NUNAVUT'),
         'EUREKA': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'GJOA HAVEN CLIMATE': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'HALL BEACH': ('13', 'NUNAVUT', 'NUNAVUT'),
         'IQALUIT': ('13', 'NUNAVUT', 'NUNAVUT'),
         'KUGAARUK CLIMATE': ('13', 'NUNAVUT', 'NUNAVUT'),
-        
-        # Ontario
-        'LANSDOWNE HOUSE': ('7', 'ONTARIO', 'ONTARIO'),
-        
-        # Newfoundland and Labrador
-        "MARY'S HARBOUR": ('5', 'NEWFOUNDLAND AND LABRADOR', 'TERRE-NEUVE-ET-LABRADOR')
+        'KUGLUKTUK': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'PANGNIRTUNG': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'POND INLET': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'QIKIQTARJUAQ CLIMATE': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'RANKIN INLET': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'RESOLUTE BAY': ('13', 'NUNAVUT', 'NUNAVUT'),
+        'TALOYOAK': ('13', 'NUNAVUT', 'NUNAVUT'),
     }
     
     return location_map.get(location, (None, None, None))
@@ -114,7 +162,7 @@ def change_weather_code(file_path, location="FORT SIMPSON", validate=True, debug
         if not weather_details_path.exists():
             raise FileNotFoundError(f"Weather details CSV not found: {weather_details_path}")
         
-        with open(weather_details_path, 'r', encoding='latin-1') as csvfile:
+        with open(weather_details_path, 'r', encoding='utf-8-sig') as csvfile:
             next(csvfile)  # Skip header
             for line in csvfile:
                 line = line.strip()

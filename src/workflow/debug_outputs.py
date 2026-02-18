@@ -180,9 +180,25 @@ def get_location_code_from_h2k(file_path):
         str: Location code (e.g., "400"), or None if not found
     """
     try:
-        # Parse the XML file into an element tree
-        tree = ET.parse(file_path)
-        root = tree.getroot()
+        # Read file with fallback encodings to handle encoding mismatches
+        # Files may declare utf-8 but contain Windows-1252/Latin-1 characters
+        encodings_to_try = ['utf-8', 'windows-1252', 'latin-1']
+        xml_content = None
+        
+        for encoding in encodings_to_try:
+            try:
+                with open(file_path, 'r', encoding=encoding) as f:
+                    xml_content = f.read()
+                break
+            except (UnicodeDecodeError, LookupError):
+                continue
+        
+        if xml_content is None:
+            print(f'Could not read file with any encoding: {file_path}')
+            return None
+        
+        # Parse the XML from string
+        root = ET.fromstring(xml_content)
 
         # Navigate to Weather -> Location using XPath
         # .// means "search anywhere in the tree"
@@ -218,7 +234,7 @@ def validate_location_code(community_name, location_code):
         return False
     
     # First, get the weather location for this community
-    weather_locations_path = csv_dir() / 'train-test communities hdd and weather locations.csv'
+    weather_locations_path = csv_dir() / 'communities-hdd-and-weather-location.csv'
     
     if not weather_locations_path.exists():
         return False
@@ -227,7 +243,7 @@ def validate_location_code(community_name, location_code):
     weather_location = None
     comm_upper = community_name.upper()
     
-    with open(weather_locations_path, 'r', encoding='utf-8') as f:
+    with open(weather_locations_path, 'r', encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
         for row in reader:
             if row['Community'].strip().upper() == comm_upper:

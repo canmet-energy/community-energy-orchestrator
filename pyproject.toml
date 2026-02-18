@@ -11,25 +11,58 @@ requires-python = ">=3.10,<3.14"
 authors = [
     {name = "Community Energy Team"}
 ]
+license = {text = "MIT"}
+keywords = ["energy", "modeling", "community", "orchestrator", "FastAPI"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
 
 dependencies = [
     "numpy==1.26.2",
     "pandas>=2.2.0",
     "h2k-hpxml @ git+https://github.com/canmet-energy/h2k-hpxml.git@932e016efb2570dc006d60cfa32664d699315b24",
-    "fastapi",
-    "uvicorn[standard]",
-    "pydantic",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.23.0",
+    "pydantic>=2.0.0",
+    "python-multipart>=0.0.6",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
-    "black",
-    "pylint",
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "pylint>=2.17.0",
+    "flake8>=6.0.0",
+    "mypy>=1.4.0",
+    "isort>=5.12.0",
+    "safety>=2.3.0",
+    "bandit>=1.7.0",
+]
+
+test = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.0",
+    "httpx>=0.24.0",
 ]
 
 [project.scripts]
 process-community = "workflow.process_community_workflow:cli"
+energy-orchestrator = "app.main:main"
+
+[project.urls]
+Homepage = "https://github.com/canmet-energy/community-energy-orchestrator"
+Documentation = "https://github.com/canmet-energy/community-energy-orchestrator/tree/main/docs"
+Repository = "https://github.com/canmet-energy/community-energy-orchestrator"
+Issues = "https://github.com/canmet-energy/community-energy-orchestrator/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -37,9 +70,94 @@ include = ["*"]
 
 [tool.black]
 line-length = 100
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_output = 3
+include_trailing_comma = true
 
 [tool.pylint.messages_control]
 disable = [
     "C0111",  # missing-docstring
     "R0903",  # too-few-public-methods
 ]
+
+[tool.pylint.format]
+max-line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+strict_optional = true
+
+[[tool.mypy.overrides]]
+module = [
+    "pandas.*",
+    "numpy.*",
+    "h2k_hpxml.*",
+]
+ignore_missing_imports = true

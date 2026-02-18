@@ -32,6 +32,8 @@ MANIFEST
 # Expected outputs
 **/communities/**
 **/output/**
+output/
+Seeded Community Runs/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -42,7 +44,11 @@ MANIFEST
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
+
+# Application logs
+logs/
 *.log
+
 # Unit test / coverage reports
 htmlcov/
 .tox/

@@ -93,7 +93,7 @@ The following communities are available to run with the orchestrator:
 - Naujaat (200 houses)
 - Neskantaga (70 houses)
 - Norman's Bay (5 houses)
-- Oba * (1 houses)
+- Oba * (1 house)
 - Obedjiwan (410 houses)
 - Ogoki (55 houses)
 - Old Crow (110 houses)

@@ -17,6 +17,16 @@ from pathlib import Path
 
 import pandas as pd
 
+# Enable UTF-8 mode for Windows compatibility with special characters
+if sys.platform == "win32":
+    # Set Python to use UTF-8 for file I/O and console output
+    os.environ.setdefault('PYTHONUTF8', '1')
+    
+    # Reconfigure stdout/stderr to use UTF-8
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+
 from workflow.change_weather_location_regex import change_weather_code
 from workflow.config import get_max_workers, get_archetype_selection_seed, ARCHETYPE_TYPE_PATTERNS
 from workflow.core import communities_dir, logs_dir, source_archetypes_dir, project_root
@@ -113,7 +123,7 @@ Using weather data from: {weather_location}
 - Created on: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}
 - Additional files added: 20% extra for each housing type
 """
-    with open(manifest_path, 'w') as f:
+    with open(manifest_path, 'w', encoding='utf-8') as f:
         f.write(content)
     return manifest_path
 
@@ -216,7 +226,7 @@ def copy_archetype_files(community_name, requirements):
 
     copy_tasks = []
 
-    with open(debug_log_path, 'a') as debug_log:
+    with open(debug_log_path, 'a', encoding='utf-8') as debug_log:
         for req_type, count in requirements.items():
             if count == 0:
                 continue
@@ -596,6 +606,7 @@ def cli():
         sys.exit(1)
         
     community_name = sys.argv[1]
+    
     # Normalize community name immediately at entry point
     community_name = normalize_community_name(community_name)
     main(community_name)

@@ -120,6 +120,30 @@ Windows (PowerShell):
  .venv\Scripts\Activate.ps1
 ```
 
+**Important for Windows PowerShell Users:**
+
+If you'll be processing communities with French characters (Gamètì, Déline, François, etc.), you **must** configure UTF-8 encoding in PowerShell. Without this, you'll get encoding errors when the workflow tries to create directories and files.
+
+```powershell
+# Option 1 (Recommended): Add permanently to your PowerShell profile
+notepad $PROFILE
+# Add these two lines to the file:
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$env:PYTHONUTF8 = "1"
+# Save, close, and restart PowerShell
+
+# Option 2: Set temporarily for current session only
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$env:PYTHONUTF8 = "1"
+```
+
+If `$PROFILE` doesn't exist, create it first:
+```powershell
+New-Item -Path $PROFILE -Type File -Force
+```
+
+**Note:** Git Bash on Windows doesn't need this setup (it uses UTF-8 by default).
+
 Verification:
 
 ```bash

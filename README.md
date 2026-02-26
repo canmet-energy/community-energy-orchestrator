@@ -35,6 +35,13 @@ process-community "Old Crow"
 python src\workflow\process_community_workflow.py "Old Crow"
 ```
 
+> **Windows PowerShell:** Communities with French characters (Gamètì, Déline) require UTF-8 setup. Run once:
+> ```powershell
+> [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+> $env:PYTHONUTF8 = "1"
+> ```
+> Or add to PowerShell profile. See [Installation Guide](docs/INSTALLATION.md#step-4-activate-the-virtual-environment) for details. Git Bash doesn't need this.
+
 2) **REST API** (FastAPI) for starting runs and polling status
 
 Linux/macOS:
@@ -168,6 +175,11 @@ uv sync
 
 # 4) Activate the virtual environment
 .venv\Scripts\Activate.ps1
+
+# 4b) Configure UTF-8 (REQUIRED for French characters)
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$env:PYTHONUTF8 = "1"
+# To make permanent: notepad $PROFILE (add the two lines above)
 
 # 5) Install/verify simulation dependencies (OpenStudio/EnergyPlus)
 os-setup --auto-install

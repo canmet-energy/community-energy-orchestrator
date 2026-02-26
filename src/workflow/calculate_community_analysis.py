@@ -3,11 +3,22 @@ import pandas as pd
 from pathlib import Path
 import glob
 import argparse
+import sys
 import traceback
 import random
 import os
 import numpy as np
 from concurrent.futures import ProcessPoolExecutor, as_completed
+
+# Enable UTF-8 mode for Windows compatibility with special characters
+if sys.platform == "win32":
+    # Set Python to use UTF-8 for file I/O and console output
+    os.environ.setdefault('PYTHONUTF8', '1')
+    
+    # Reconfigure stdout/stderr to use UTF-8
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
 
 from workflow.config import KBTU_TO_GJ, EXPECTED_ROWS, get_max_workers, get_analysis_random_seed
 from workflow.core import csv_dir, communities_dir
@@ -20,7 +31,7 @@ def read_timeseries(file_path):
         raise FileNotFoundError(f"Timeseries file not found: {file_path}")
     
     # Load timeseries data - low_memory=False prevents DtypeWarning for mixed types
-    df = pd.read_csv(file_path, low_memory=False)
+    df = pd.read_csv(file_path, low_memory=False, encoding='utf-8')
     
     # Get heating load (what the house needs)
     df["Heating_Load_GJ"] = pd.to_numeric(df["Load: Heating: Delivered"], errors='coerce') * KBTU_TO_GJ
@@ -271,7 +282,7 @@ def select_and_sum_timeseries(community_name):
 
         # Save the analysis results
         analysis_file = community_folder / 'analysis' / f'{community_name}_analysis.md'
-        with open(analysis_file, 'w') as f:
+        with open(analysis_file, 'w', encoding='utf-8') as f:
             f.write(f"# {community_name} Community Analysis\n\n")
             f.write("## Community Heating Load Statistics (what the houses need):\n")
             f.write(f"- Total Annual Load: {total_annual_load:,.1f} GJ\n")

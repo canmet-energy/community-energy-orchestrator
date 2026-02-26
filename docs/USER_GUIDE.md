@@ -30,6 +30,8 @@ Alternatively, run the Python module directly:
 python3 src/workflow/process_community_workflow.py "Old Crow"
 ```
 
+**Windows PowerShell Users:** If processing communities with French characters, ensure UTF-8 is configured (see [Installation Guide](INSTALLATION.md#step-4-activate-the-virtual-environment)).
+
 ### Docker Commands
 
 If you're using Docker:
@@ -246,3 +248,28 @@ os-setup --help
 
 Reminder:
 - `src/source-archetypes/` is a local input folder you have to download.
+
+### Windows PowerShell encoding errors
+
+If communities with special characters (Gamètì, Déline, François) fail with encoding errors:
+
+**Cause:** PowerShell defaults to Windows-1252 encoding instead of UTF-8, which prevents Python from correctly processing community names with French accents.
+
+**Solution:** Configure PowerShell to use UTF-8 (this is a one-time setup):
+
+```powershell
+# Add to your PowerShell profile for permanent fix
+notepad $PROFILE
+# Add these lines:
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$env:PYTHONUTF8 = "1"
+# Save and restart PowerShell
+```
+
+Or set temporarily for current session:
+```powershell
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$env:PYTHONUTF8 = "1"
+```
+
+**Alternative:** Use Git Bash instead of PowerShell (Git Bash uses UTF-8 by default).

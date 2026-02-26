@@ -34,6 +34,7 @@ MANIFEST
 **/output/**
 output/
 Seeded Community Runs/
+Unseeded Community Runs/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

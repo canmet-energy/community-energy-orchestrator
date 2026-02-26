@@ -70,7 +70,7 @@ def get_community_requirements(community_name):
     # Write requirements to debug log for inspection
     debug_log_path = logs_dir() / 'archetype_copy_debug.log'
     debug_log_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(debug_log_path, 'a') as debug_log:
+    with open(debug_log_path, 'a', encoding='utf-8') as debug_log:
         debug_log.write(f"[DEBUG] Extracted requirements for {community_name}: {requirements}\n")
     return requirements
 

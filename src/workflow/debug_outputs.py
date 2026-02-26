@@ -12,7 +12,18 @@ from workflow.core import csv_dir, communities_dir
 from workflow.requirements import get_community_requirements
 import sys
 import csv
+import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
+
+# Enable UTF-8 mode for Windows compatibility with special characters
+if sys.platform == "win32":
+    # Set Python to use UTF-8 for file I/O and console output
+    os.environ.setdefault('PYTHONUTF8', '1')
+    
+    # Reconfigure stdout/stderr to use UTF-8
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
 
 def debug_timeseries_outputs(community_name):
     """
@@ -61,7 +72,7 @@ def debug_timeseries_outputs(community_name):
             missing[era_type] = required
     
     # Write results to log file (mode 'w' overwrites any existing file)
-    with open(debug_log_path, 'w') as f:
+    with open(debug_log_path, 'w', encoding='utf-8') as f:
         f.write(f"Timeseries output debug for {community_name}\n")
         
         # Write summary for all housing types
@@ -130,7 +141,7 @@ def debug_weather_h2k(community_name):
     )
     
     if not h2k_files:
-        with open(debug_log_path, 'a') as log_file:
+        with open(debug_log_path, 'a', encoding='utf-8') as log_file:
             log_file.write(f"\n\nWeather Location Code Validation\n\n")
             log_file.write("No H2K files found.\n")
         return debug_log_path
@@ -153,7 +164,7 @@ def debug_weather_h2k(community_name):
     
     # Write all results to log file after parallel processing completes
     validation_issues = 0
-    with open(debug_log_path, 'a') as log_file:
+    with open(debug_log_path, 'a', encoding='utf-8') as log_file:
         log_file.write(f"\n\nWeather Location Code Validation\n\n")
         
         for h2k_file, error_msg, location_code in validation_results:

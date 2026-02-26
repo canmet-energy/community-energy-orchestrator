@@ -3,10 +3,21 @@
 Change weather location in H2K files using regex-based replacement
 """
 import os
+import sys
 import glob
 import argparse
 import re
 from pathlib import Path
+
+# Enable UTF-8 mode for Windows compatibility with special characters
+if sys.platform == "win32":
+    # Set Python to use UTF-8 for file I/O and console output
+    os.environ.setdefault('PYTHONUTF8', '1')
+    
+    # Reconfigure stdout/stderr to use UTF-8
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
 
 from workflow.core import csv_dir
 
@@ -44,6 +55,9 @@ def get_region_for_location(location):
         'SALMON ARM': ('1', 'BRITISH COLUMBIA', 'COLOMBIE-BRITANNIQUE'),
         'SARTINE ISLAND': ('1', 'BRITISH COLUMBIA', 'COLOMBIE-BRITANNIQUE'),
         'SHERINGHAM POINT': ('1', 'BRITISH COLUMBIA', 'COLOMBIE-BRITANNIQUE'),
+
+        # Saskatchewan (Region 3)
+        'COLLINS BAY': ('3', 'SASKATCHEWAN', 'SASKATCHEWAN'),
         
         # Newfoundland and Labrador (Region 5)
         "MARY'S HARBOUR": ('5', 'NEWFOUNDLAND AND LABRADOR', 'TERRE-NEUVE-ET-LABRADOR'),
@@ -69,7 +83,6 @@ def get_region_for_location(location):
         'TIMMINS': ('7', 'ONTARIO', 'ONTARIO'),
         
         # Manitoba (Region 8)
-        'COLLINS BAY': ('8', 'MANITOBA', 'MANITOBA'),
         'GILLAM': ('8', 'MANITOBA', 'MANITOBA'),
         'TADOULE LAKE': ('8', 'MANITOBA', 'MANITOBA'),
         
@@ -79,7 +92,7 @@ def get_region_for_location(location):
         'WATSON LAKE': ('11', 'YUKON', 'YUKON'),
         
         # Northwest Territories (Region 12)
-        'DELINE': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
+        'DÉLINE': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
         'FORT GOOD HOPE': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
         'FORT LIARD': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),
         'FORT PROVIDENCE': ('12', 'NORTHWEST TERRITORIES', 'TERRITOIRES DU NORD-OUEST'),

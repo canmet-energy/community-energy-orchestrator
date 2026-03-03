@@ -161,7 +161,11 @@ def process_xml_file(
 
     # Builder code mapping (privacy-preserving)
     builder_element = find(file_node, "BuilderName")
-    builder_raw_text = builder_element.text if builder_element is not None and builder_element.text is not None else ""
+    builder_raw_text = (
+        builder_element.text
+        if builder_element is not None and builder_element.text is not None
+        else ""
+    )
     builder_raw_5 = truncate_builder_name(builder_raw_text)
 
     if builder_raw_5 not in builder_code_map:

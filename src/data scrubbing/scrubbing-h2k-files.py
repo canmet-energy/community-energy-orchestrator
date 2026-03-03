@@ -22,23 +22,24 @@ from __future__ import annotations
 
 import argparse
 import csv
-from datetime import date
-from pathlib import Path
 import re
 import shutil
 import sys
 import xml.etree.ElementTree as ET
 from collections import defaultdict
-
+from datetime import date
+from pathlib import Path
 
 # ---------------------------
 # XML helper utilities
 # ---------------------------
 
+
 def find(elem: ET.Element | None, path: str) -> ET.Element | None:
     if elem is None:
         return None
     return elem.find(path)
+
 
 def ensure_child(parent: ET.Element | None, tag: str) -> ET.Element | None:
     if parent is None:
@@ -48,13 +49,16 @@ def ensure_child(parent: ET.Element | None, tag: str) -> ET.Element | None:
         child = ET.SubElement(parent, tag)
     return child
 
+
 def set_text(elem: ET.Element | None, text: str) -> None:
     if elem is not None:
         elem.text = text
 
+
 def set_attrib(elem: ET.Element | None, key: str, value: str) -> None:
     if elem is not None:
         elem.set(key, value)
+
 
 def delete_if_exists(parent: ET.Element | None, child_tag: str) -> None:
     if parent is None:
@@ -63,8 +67,10 @@ def delete_if_exists(parent: ET.Element | None, child_tag: str) -> None:
     if child is not None:
         parent.remove(child)
 
-def write_xml(tree: ET.ElementTree, path: Path) -> None:
+
+def write_xml(tree: ET.ElementTree[ET.Element], path: Path) -> None:
     tree.write(path, encoding="utf-8", xml_declaration=True)
+
 
 def province_initials(region_english: str | None) -> str:
     """
@@ -75,6 +81,7 @@ def province_initials(region_english: str | None) -> str:
     parts = [p.strip() for p in region_english.strip().split() if p.strip()]
     return "".join(p[0] for p in parts).upper()
 
+
 def truncate_builder_name(builder_text: str | None) -> str:
     """
     Match Ruby behavior: uppercased, left-stripped, first 5 chars only.
@@ -84,8 +91,9 @@ def truncate_builder_name(builder_text: str | None) -> str:
     s = builder_text.lstrip().upper()
     return s[:5]
 
+
 def tag_matches_hoc_alpha(tag: str | None) -> bool:
-    return bool(tag) and re.match(r"^HOC[a-zA-Z]", tag) is not None
+    return bool(tag) and tag is not None and re.match(r"^HOC[a-zA-Z]", tag) is not None
 
 
 # ---------------------------
@@ -112,6 +120,7 @@ GLOBAL_CLEAR_ATTR_TAGS = {
 # Core sanitizer
 # ---------------------------
 
+
 def process_xml_file(
     xml_path: Path,
     identification_value: str | None,
@@ -132,7 +141,9 @@ def process_xml_file(
     pi = find(root, "HouseFile/ProgramInformation")
     file_node = find(pi, "File")
     weather_region_english = find(find(find(pi, "Weather"), "Region"), "English")
-    weather_region_english_text = weather_region_english.text if weather_region_english is not None else ""
+    weather_region_english_text = (
+        weather_region_english.text if weather_region_english is not None else ""
+    )
 
     # File attributes / text
     set_attrib(file_node, "evaluationDate", str(date.today()))
@@ -149,8 +160,8 @@ def process_xml_file(
     province_code = province_initials(weather_region_english_text)
 
     # Builder code mapping (privacy-preserving)
-    builder_raw_text = (find(file_node, "BuilderName").text
-                        if find(file_node, "BuilderName") is not None else "")
+    builder_element = find(file_node, "BuilderName")
+    builder_raw_text = builder_element.text if builder_element is not None and builder_element.text is not None else ""
     builder_raw_5 = truncate_builder_name(builder_raw_text)
 
     if builder_raw_5 not in builder_code_map:
@@ -226,7 +237,7 @@ def process_xml_file(
         set_text(find(verm_parent, "French"), "Inconnu")
 
     def main_attr_is_true(attr: str) -> bool:
-        return (main_opts is not None and main_opts.get(attr, "").lower() == "true")
+        return main_opts is not None and main_opts.get(attr, "").lower() == "true"
 
     if main_attr_is_true("applyHouseholdOperatingConditions"):
         delete_if_exists(options, "HouseholdOperatingConditions")
@@ -288,27 +299,36 @@ def process_xml_file(
 # Driver
 # ---------------------------
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="Sanitize ERS *.H2K XMLs (paths only via CLI; no hardcoded dirs)."
     )
     group_dest = parser.add_mutually_exclusive_group(required=True)
     parser.add_argument("--origin", required=True, help="Folder containing source .H2K files")
-    group_dest.add_argument("--dest", help="Destination folder for sanitized copies (keeps same filenames)")
-    group_dest.add_argument("--in-place", action="store_true", help="Edit files in-place under --origin (NO copying)")
-    parser.add_argument("--recurse", action="store_true", help="Recurse into subfolders under --origin")
+    group_dest.add_argument(
+        "--dest", help="Destination folder for sanitized copies (keeps same filenames)"
+    )
+    group_dest.add_argument(
+        "--in-place", action="store_true", help="Edit files in-place under --origin (NO copying)"
+    )
+    parser.add_argument(
+        "--recurse", action="store_true", help="Recurse into subfolders under --origin"
+    )
     parser.add_argument(
         "--id-source",
         choices=["stem", "name", "none"],
         default="stem",
-        help="What to write into <Identification>: file stem (default), full filename (name), or do not change (none)."
+        help="What to write into <Identification>: file stem (default), full filename (name), or do not change (none).",
     )
     parser.add_argument(
-        "--drop-tsv", action="store_true",
-        help="Delete <Tsv> sections entirely instead of blanking their values."
+        "--drop-tsv",
+        action="store_true",
+        help="Delete <Tsv> sections entirely instead of blanking their values.",
     )
     parser.add_argument(
-        "--summary", help="Optional path to write Summary CSV; if omitted, writes to --dest or --origin (in-place)."
+        "--summary",
+        help="Optional path to write Summary CSV; if omitted, writes to --dest or --origin (in-place).",
     )
     args = parser.parse_args()
 
@@ -345,7 +365,7 @@ def main():
         summary_path = (default_summary_base / "Summary.csv").resolve()
 
     # Init builder mapping (province-based counters start at 1000)
-    per_province_counter = defaultdict(lambda: 1000)
+    per_province_counter: defaultdict[str, int] = defaultdict(lambda: 1000)
     builder_code_map: dict[str, str] = {}
 
     with summary_path.open("w", newline="", encoding="utf-8") as csvfile:
@@ -378,12 +398,22 @@ def main():
                     per_province_counter=per_province_counter,
                     drop_tsv=args.drop_tsv,
                 )
-                writer.writerow([identification_value if identification_value is not None else "", target.name, builder_raw5, builder_assigned])
-                print(f"[OK] {target.name} sanitized | <Identification>={identification_value if identification_value is not None else '(unchanged)'} | Builder:{builder_raw5} -> {builder_assigned}")
+                writer.writerow(
+                    [
+                        identification_value if identification_value is not None else "",
+                        target.name,
+                        builder_raw5,
+                        builder_assigned,
+                    ]
+                )
+                print(
+                    f"[OK] {target.name} sanitized | <Identification>={identification_value if identification_value is not None else '(unchanged)'} | Builder:{builder_raw5} -> {builder_assigned}"
+                )
             except Exception as ex:
                 print(f"[ERROR] Failed processing {target}: {ex}", file=sys.stderr)
 
     print(f"[DONE] Processed {len(files)} file(s). Summary: {summary_path}")
+
 
 if __name__ == "__main__":
     main()

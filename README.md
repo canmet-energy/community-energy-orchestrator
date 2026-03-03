@@ -231,3 +231,25 @@ After a run, you’ll typically see:
 - `communities/<Community Name>/analysis/`: aggregated outputs (community totals, logs, etc.)
 
 Note: the workflow currently deletes the existing `communities/<Community Name>/` directory at the start of each run to ensure a clean rebuild.
+
+## Contributing
+
+Contributions are welcome! For full setup instructions, see the [Installation Guide](docs/INSTALLATION.md).
+
+Quick setup for running tests:
+
+```bash
+# Fork and clone
+git clone https://github.com/YOUR_USERNAME/community-energy-orchestrator.git
+cd community-energy-orchestrator
+
+# Install dependencies
+pip install uv
+uv sync --all-extras
+source .venv/bin/activate  # or .venv\Scripts\Activate.ps1 on Windows
+
+# Run tests
+pytest tests/
+```
+
+Pull requests are automatically tested on Python 3.10-3.13 via GitHub Actions. Please ensure tests pass locally before submitting.

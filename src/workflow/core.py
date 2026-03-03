@@ -1,7 +1,5 @@
-
-
-
 """Core path utilities for the workflow package."""
+
 from pathlib import Path
 
 
@@ -23,4 +21,3 @@ def logs_dir() -> Path:
 
 def source_archetypes_dir() -> Path:
     return project_root() / "src" / "source-archetypes"
-

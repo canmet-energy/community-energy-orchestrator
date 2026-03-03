@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, dev ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, dev ]
 
 jobs:
   lint:
@@ -31,12 +31,20 @@ jobs:
       - name: Lint with pylint
         run: uv run pylint src/
         continue-on-error: true
+      
+      - name: Type check with mypy
+        run: uv run mypy src/
+        continue-on-error: true
+      
+      - name: Check imports with isort
+        run: uv run isort --check-only src/ tests/
+        continue-on-error: true
 
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.10', '3.11', '3.12']
+        python-version: ['3.10', '3.11', '3.12', '3.13']
     
     steps:
       - uses: actions/checkout@v4
@@ -54,8 +62,12 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras
       
-      - name: Run tests with coverage
-        run: uv run pytest tests/ --cov=src/ --cov-report=xml --cov-report=term-missing
+      - name: Run unit tests with coverage
+        run: uv run pytest tests/unit/ -m unit --cov=src/ --cov-report=xml --cov-report=term-missing --cov-report=html
+      
+      - name: Run integration tests
+        run: uv run pytest tests/integration/ -m integration
+        continue-on-error: true
       
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3

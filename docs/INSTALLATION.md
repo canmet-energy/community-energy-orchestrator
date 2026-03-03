@@ -106,6 +106,8 @@ This will create a virtual environment automatically and install all dependencie
 uv sync
 ```
 
+**For contributors:** Use `uv sync --all-extras` to include testing and linting tools.
+
 ### Step 4) Activate the virtual environment
 
 Linux/macOS:
@@ -262,6 +264,22 @@ If a run fails during conversion/simulation, start by re-running:
 
 ```bash
 os-setup --test-installation
+```
+
+### Step 8) Run tests (optional)
+
+To verify your installation is working correctly:
+
+```bash
+# Install test dependencies if you haven't already
+uv sync --all-extras
+source .venv/bin/activate  # or .venv\Scripts\Activate.ps1 on Windows
+
+# Run all tests
+pytest tests/
+
+# Run with coverage (like CI does)
+pytest tests/unit/ -m unit --cov=src/ --cov-report=term-missing
 ```
 
 Next: once you're installed, jump straight to the usage and outputs overview in the [User Guide](USER_GUIDE.md).

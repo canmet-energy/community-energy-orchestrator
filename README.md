@@ -77,28 +77,28 @@ If you prefer containerized deployment:
 git clone https://github.com/canmet-energy/community-energy-orchestrator.git
 cd community-energy-orchestrator
 
-# 2) CRITICAL: Download the archetype library BEFORE building
+# 2) (Optional) Download the archetype library
 # Go to https://github.com/canmet-energy/housing-archetypes.git
 # Navigate to data/h2k_files/existing-stock
 # Download: retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities
 # Rename it to 'source-archetypes' and place it in the src/ directory
-# The build will FAIL if this directory is missing!
+# Note: The archetype library is gitignored and mounted as a volume at runtime
 
 # 3) Build the Docker image
 docker build -t community-energy-orchestrator .
 
-# 4) Run the API server
-docker run -p 8000:8000 community-energy-orchestrator
-
-# OR use docker-compose for easier management:
+# 4) Run with docker-compose (recommended - auto-mounts volumes):
 docker-compose up
+
+# OR run directly:
+docker run -p 8000:8000 community-energy-orchestrator
 ```
 
 Then open the Swagger UI at http://localhost:8000/docs
 
 **Note:** Docker installation automatically handles all dependencies (Python, uv, OpenStudio, EnergyPlus) inside the container. You only need Docker installed on your system.
 
-**Important:** The build validates that `source-archetypes/` exists and contains files. If you skip step 2, the build will fail with a clear error message.
+**Important:** The `source-archetypes/` directory is optional for building but required for running workflows. Download and place it in `src/source-archetypes/` before processing communities. Docker-compose automatically mounts it as a volume.
 
 ## Repository Layout
 - `src/workflow/process_community_workflow.py`: end-to-end workflow driver

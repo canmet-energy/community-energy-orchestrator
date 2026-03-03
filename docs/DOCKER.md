@@ -5,13 +5,11 @@ Complete guide for building and running the Community Energy Orchestrator using 
 ## Prerequisites
 
 1. **Docker installed** - Get it from https://docs.docker.com/get-docker/
-2. **Source archetypes downloaded** - See below for critical setup steps
+2. **Source archetypes downloaded** - See below
 
-## Critical Setup: Download Archetype Library
+## Setup: Download Archetype Library
 
-**⚠️ YOU MUST DO THIS BEFORE BUILDING THE DOCKER IMAGE**
-
-The Docker build will validate and **FAIL** if this directory is missing.
+**⚠️ REQUIRED:** This directory is needed to process communities.
 
 1. Go to https://github.com/canmet-energy/housing-archetypes.git
 2. Navigate to `data/h2k_files/existing-stock`
@@ -40,14 +38,11 @@ The Dockerfile:
 4. Installs all Python dependencies (using your `uv.lock` if present)
 5. Installs OpenStudio/EnergyPlus via `os-setup`
 6. Copies CSV data files
-7. Validates that `source-archetypes/` exists and has files
+7. Creates runtime directories
 
 > **Import paths in Docker:** The CMD uses `app.main:app` because packages are installed as top-level modules (`app`, `workflow`). In dev environments, use `src.app.main:app` instead (editable install).
 
 ### Common Build Issues
-
-**Error: "source-archetypes directory is empty"**
-- Solution: Download the archetype library (see Critical Setup above)
 
 **Error: "os-setup command not found"**
 - Solution: The h2k-hpxml package may not have installed. Check that pyproject.toml is correct.

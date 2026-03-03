@@ -29,7 +29,7 @@ cd community-energy-orchestrator
 
 ### Step 3) Download the archetype library
 
-**⚠️ CRITICAL:** This step is REQUIRED. The Docker build will fail if skipped.
+**⚠️ REQUIRED:** This directory is needed to process communities.
 
 1. Go to https://github.com/canmet-energy/housing-archetypes.git
 2. Navigate to `data/h2k_files/existing-stock`
@@ -39,7 +39,7 @@ cd community-energy-orchestrator
 
 The final path should be: `src/source-archetypes/` containing `.H2K` files.
 
-**Verification:** Check that `src/source-archetypes/2001-2015-single_EX-0001.H2K` exists before building.
+**Verification:** Check that `src/source-archetypes/2001-2015-single_EX-0001.H2K` exists.
 
 ### Step 4) Build the Docker image
 
@@ -51,11 +51,7 @@ This will:
 - Install Python 3.10 and uv package manager
 - Install all dependencies (matching your uv.lock)
 - Install OpenStudio/EnergyPlus automatically
-- Validate that source-archetypes exists
 - Set up the complete environment
-
-
-**If build fails at "source-archetypes" step:** You forgot Step 3. Download the archetype library first.
 
 ### Step 5) Run the container
 

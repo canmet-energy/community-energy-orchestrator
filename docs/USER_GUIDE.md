@@ -37,7 +37,7 @@ python3 src/workflow/process_community_workflow.py "Old Crow"
 If you're using Docker:
 
 ```bash
-# Build the image (first time only - requires source-archetypes to be downloaded first!)
+# Build the image (first time only)
 docker build -t community-energy-orchestrator .
 
 # Run the API server

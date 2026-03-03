@@ -36,16 +36,9 @@ RUN h2k-hpxml --version && \
 # Copy CSV data files (required for community requirements and weather mapping)
 COPY csv/ ./csv/
 
-# CRITICAL: Verify source-archetypes exists before continuing
-# This directory is NOT in git and must be downloaded manually before building
-# If missing, the build will fail here with a clear error message
-COPY src/source-archetypes/ ./src/source-archetypes/
-RUN if [ ! -f "src/source-archetypes/2001-2015-single_EX-0001.H2K" ]; then \
-        echo "ERROR: source-archetypes directory is empty or missing required files!"; \
-        echo "You must download the archetype library before building Docker image."; \
-        echo "See README.md for instructions."; \
-        exit 1; \
-    fi
+# NOTE: source-archetypes directory is NOT included in git and must be provided at runtime
+# Either mount as a volume: -v ./src/source-archetypes:/app/src/source-archetypes
+# Or download into the container after starting
 
 # Create runtime directories for outputs and logs
 RUN mkdir -p output logs communities

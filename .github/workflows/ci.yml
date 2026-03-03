@@ -86,14 +86,14 @@ jobs:
         uses: docker/setup-buildx-action@v3
       
       - name: Build Docker image
-        run: docker-compose build
+        run: docker compose build
       
       - name: Test Docker container starts
         run: |
-          docker-compose up -d
+          docker compose up -d
           sleep 10
-          docker-compose ps
-          docker-compose down
+          docker compose ps
+          docker compose down
 
   security:
     runs-on: ubuntu-latest

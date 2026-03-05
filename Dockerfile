@@ -1,4 +1,4 @@
-# Use Python 3.10 for maximum compatibility (project supports 3.10-3.13)
+# Use Python 3.10 for maximum compatibility (project supports 3.10-3.12)
 FROM python:3.10-slim
 
 # Set working directory

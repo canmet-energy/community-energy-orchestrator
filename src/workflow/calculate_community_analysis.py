@@ -216,6 +216,13 @@ def select_and_sum_timeseries(community_name):
             selected = available_files[:required_count]
         selected_files.extend(selected)
 
+    # Check if any files were selected before processing
+    if not selected_files:
+        print("\n[ERROR] No files were selected for processing. Cannot proceed with analysis.")
+        raise ValueError(
+            "No timeseries files could be selected. Check that files exist and match the required building types."
+        )
+
     # Aggregation logic with robust error handling
     print("\nProcessing selected files...")
     processed_dfs = []

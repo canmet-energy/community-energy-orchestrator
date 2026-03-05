@@ -1,4 +1,8 @@
-"""Unit tests for community analysis calculations."""
+"""Unit tests for community analysis data processing functions.
+
+Tests focus on data loading and transformation logic.
+Integration tests cover the full aggregation workflow.
+"""
 
 import tempfile
 from pathlib import Path
@@ -12,8 +16,13 @@ import workflow.config as config
 pytestmark = pytest.mark.unit
 
 
-def test_read_timeseries_valid_file():
-    """Test reading timeseries data with all fuel types"""
+# =============================================================================
+# read_timeseries - Data loading and transformation
+# =============================================================================
+
+
+def test_read_timeseries_loads_all_fuel_types():
+    """Test reading timeseries with all fuel types (electricity, oil, propane)."""
     csv_content = """Load: Heating: Delivered,End Use: Electricity: Heating,End Use: Fuel Oil: Heating,End Use: Propane: Heating
 100,10,20,30
 200,20,40,60
@@ -24,23 +33,31 @@ def test_read_timeseries_valid_file():
 
     try:
         df = analysis.read_timeseries(temp_path)
+
+        # Verify all columns are created
         assert "Heating_Load_GJ" in df.columns
         assert "Heating_Electricity_GJ" in df.columns
         assert "Heating_Oil_GJ" in df.columns
         assert "Heating_Propane_GJ" in df.columns
+
+        # Verify conversion from kBTU to GJ
         assert df["Heating_Load_GJ"].iloc[0] == pytest.approx(100 * config.KBTU_TO_GJ)
+        assert df["Heating_Electricity_GJ"].iloc[0] == pytest.approx(10 * config.KBTU_TO_GJ)
+        assert df["Heating_Oil_GJ"].iloc[0] == pytest.approx(20 * config.KBTU_TO_GJ)
+        assert df["Heating_Propane_GJ"].iloc[0] == pytest.approx(30 * config.KBTU_TO_GJ)
     finally:
         Path(temp_path).unlink()
 
 
-def test_read_timeseries_missing_file():
-    """Test that reading non-existent file raises FileNotFoundError"""
-    with pytest.raises(FileNotFoundError):
+def test_read_timeseries_missing_file_raises_error():
+    """Test that reading non-existent file raises FileNotFoundError."""
+    with pytest.raises(FileNotFoundError, match="Timeseries file not found"):
         analysis.read_timeseries("/nonexistent/path/file.csv")
 
 
-def test_read_timeseries_electricity_only():
-    """Test reading timeseries with only electricity heating"""
+def test_read_timeseries_fills_missing_fuel_columns_with_zeros():
+    """Test that missing fuel type columns are filled with zeros."""
+    # Only electricity heating, no oil or propane
     csv_content = """Load: Heating: Delivered,End Use: Electricity: Heating
 100,10
 200,20
@@ -51,18 +68,23 @@ def test_read_timeseries_electricity_only():
 
     try:
         df = analysis.read_timeseries(temp_path)
+
+        # Electricity should have values
         assert df["Heating_Electricity_GJ"].iloc[0] == pytest.approx(10 * config.KBTU_TO_GJ)
+
+        # Missing fuel types should be filled with 0
         assert df["Heating_Oil_GJ"].iloc[0] == 0
         assert df["Heating_Propane_GJ"].iloc[0] == 0
     finally:
         Path(temp_path).unlink()
 
 
-def test_read_timeseries_handles_invalid_numeric_data():
-    """Test that invalid numeric values are handled gracefully"""
-    csv_content = """Load: Heating: Delivered,End Use: Electricity: Heating
-invalid,10
-200,abc
+def test_read_timeseries_uses_system_column_names_as_fallback():
+    """Test that function falls back to System Use column names if End Use columns missing."""
+    # Use System Use columns instead of End Use
+    csv_content = """Load: Heating: Delivered,System Use: HeatingSystem1: Electricity: Heating,System Use: HeatingSystem1: Fuel Oil: Heating
+100,10,20
+200,20,40
 """
     with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, encoding="utf-8") as f:
         f.write(csv_content)
@@ -70,7 +92,57 @@ invalid,10
 
     try:
         df = analysis.read_timeseries(temp_path)
-        # Should convert to NaN with errors='coerce'
+
+        # Should successfully read from System Use columns
+        assert df["Heating_Electricity_GJ"].iloc[0] == pytest.approx(10 * config.KBTU_TO_GJ)
+        assert df["Heating_Oil_GJ"].iloc[0] == pytest.approx(20 * config.KBTU_TO_GJ)
+        assert df["Heating_Propane_GJ"].iloc[0] == 0  # Not present
+    finally:
+        Path(temp_path).unlink()
+
+
+def test_read_timeseries_converts_invalid_data_to_nan():
+    """Test that invalid numeric values are coerced to NaN."""
+    csv_content = """Load: Heating: Delivered,End Use: Electricity: Heating
+invalid_value,10
+200,not_a_number
+"""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, encoding="utf-8") as f:
+        f.write(csv_content)
+        temp_path = f.name
+
+    try:
+        df = analysis.read_timeseries(temp_path)
+
+        # Invalid values should be converted to NaN with errors='coerce'
         assert pd.isna(df["Heating_Load_GJ"].iloc[0])
+        assert df["Heating_Electricity_GJ"].iloc[0] == pytest.approx(10 * config.KBTU_TO_GJ)
+        assert pd.isna(df["Heating_Electricity_GJ"].iloc[1])
+    finally:
+        Path(temp_path).unlink()
+
+
+def test_read_timeseries_with_no_fuel_columns():
+    """Test reading timeseries with only load data (no fuel type columns)."""
+    csv_content = """Load: Heating: Delivered
+100
+200
+300
+"""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, encoding="utf-8") as f:
+        f.write(csv_content)
+        temp_path = f.name
+
+    try:
+        df = analysis.read_timeseries(temp_path)
+
+        # Load should be present
+        assert "Heating_Load_GJ" in df.columns
+        assert df["Heating_Load_GJ"].iloc[0] == pytest.approx(100 * config.KBTU_TO_GJ)
+
+        # All fuel types should default to 0
+        assert df["Heating_Electricity_GJ"].iloc[0] == 0
+        assert df["Heating_Oil_GJ"].iloc[0] == 0
+        assert df["Heating_Propane_GJ"].iloc[0] == 0
     finally:
         Path(temp_path).unlink()

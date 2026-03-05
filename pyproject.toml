@@ -7,7 +7,7 @@ name = "community-energy-orchestrator"
 version = "0.1.0"
 description = "Community energy modeling workflow orchestrator with FastAPI"
 readme = "README.md"
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.10,<3.13"
 authors = [
     {name = "Community Energy Team"}
 ]
@@ -20,11 +20,10 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
 ]
 
 dependencies = [
-    "numpy==1.26.2",
+    "numpy>=1.26.2,<3.0",
     "pandas>=2.2.0",
     "h2k-hpxml @ git+https://github.com/canmet-energy/h2k-hpxml.git@932e016efb2570dc006d60cfa32664d699315b24",
     "fastapi>=0.100.0",
@@ -70,7 +69,7 @@ include = ["*"]
 
 [tool.black]
 line-length = 100
-target-version = ['py310', 'py311', 'py312', 'py313']
+target-version = ['py310', 'py311', 'py312']
 include = '\.pyi?$'
 extend-exclude = '''
 /(

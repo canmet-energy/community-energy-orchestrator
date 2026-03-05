@@ -252,4 +252,4 @@ source .venv/bin/activate  # or .venv\Scripts\Activate.ps1 on Windows
 pytest tests/
 ```
 
-Pull requests are automatically tested on Python 3.10-3.13 via GitHub Actions. Please ensure tests pass locally before submitting.
+Pull requests are automatically tested on Python 3.10-3.12 via GitHub Actions. Please ensure tests pass locally before submitting.

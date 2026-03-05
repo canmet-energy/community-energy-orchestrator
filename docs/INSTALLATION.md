@@ -75,7 +75,7 @@ This repo depends on the `h2k-hpxml` converter working on your machine.
 Notes: 
 - This orchestrator uses `pyproject.toml` and `uv` for dependency management
 
-- The converter library supports Python 3.10–3.13.
+- The converter library supports Python 3.10–3.12.
 
 - `communities/` is generated locally by the workflow and is not committed.
 

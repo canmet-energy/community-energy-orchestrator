@@ -56,7 +56,7 @@ def get_analysis_random_seed():
         int or None: Seed value if ANALYSIS_RANDOM_SEED is set, None otherwise
     """
     seed = os.environ.get("ANALYSIS_RANDOM_SEED")
-    return int(seed) if seed is not None else None
+    return int(seed) if seed else None
 
 
 def get_archetype_selection_seed():

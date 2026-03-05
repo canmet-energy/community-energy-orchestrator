@@ -61,6 +61,8 @@ class RunRecord(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str
+    warning: Optional[str] = None
+    active_runs: int = 0
 
 
 _runs: Dict[str, dict] = {}
@@ -102,10 +104,19 @@ def _run_workflow(run_id: str, community_name: str) -> None:
     "/health",
     response_model=HealthResponse,
     summary="Health check",
-    description="Simple liveness endpoint.",
+    description="Simple liveness endpoint with system status.",
 )
 def health():
-    return {"status": "ok"}
+    with _lock:
+        active_count = sum(
+            1 for run in _runs.values() if run.get("status") in ("queued", "running")
+        )
+
+    return {
+        "status": "ok",
+        "warning": "Using in-memory state storage. Run history will be lost on restart.",
+        "active_runs": active_count,
+    }
 
 
 @app.post(

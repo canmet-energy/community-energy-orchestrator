@@ -26,6 +26,24 @@ def test_get_region_for_location_invalid_location():
     assert province_fr is None
 
 
+def test_get_region_for_location_case_insensitive():
+    """Test getting region is case-insensitive"""
+    # Test lowercase
+    region1, prov_en1, prov_fr1 = weather.get_region_for_location("fort simpson")
+    assert region1 == "12"
+
+    # Test mixed case
+    region2, prov_en2, prov_fr2 = weather.get_region_for_location("Fort Simpson")
+    assert region2 == "12"
+
+    # Test uppercase (explicit)
+    region3, prov_en3, prov_fr3 = weather.get_region_for_location("FORT SIMPSON")
+    assert region3 == "12"
+
+    # All should return same values
+    assert region1 == region2 == region3
+
+
 def test_load_csv_data_valid_file():
     """Test loading CSV file with valid data"""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, encoding="utf-8") as f:

@@ -32,7 +32,7 @@ docker build -t community-energy-orchestrator .
 ### Build Process
 
 The Dockerfile:
-1. Installs Python 3.10 (compatible with your project's 3.10-3.13 range)
+1. Installs Python 3.10 (compatible with your project's 3.10-3.12 range)
 2. Copies application source code (app/ and workflow/ directories)
 3. Installs `uv` package manager for fast, reproducible dependency installation
 4. Installs all Python dependencies (using your `uv.lock` if present)

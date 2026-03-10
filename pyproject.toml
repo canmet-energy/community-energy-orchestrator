@@ -25,7 +25,7 @@ classifiers = [
 dependencies = [
     "numpy>=1.26.2,<3.0",
     "pandas>=2.2.0",
-    "h2k-hpxml @ git+https://github.com/canmet-energy/h2k-hpxml.git@932e016efb2570dc006d60cfa32664d699315b24",
+    "h2k-hpxml @ git+https://github.com/canmet-energy/h2k-hpxml.git@d82ee3c007b07b4d310d1634181bc56596e72e24",
     "fastapi>=0.100.0",
     "uvicorn[standard]>=0.23.0",
     "pydantic>=2.0.0",

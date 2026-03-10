@@ -1,5 +1,6 @@
 # Use Python 3.10 for maximum compatibility (project supports 3.10-3.12)
-FROM python:3.10-slim
+# Using bookworm instead of slim (trixie) for better dev container feature compatibility
+FROM python:3.10-bookworm
 
 # Set working directory
 WORKDIR /app
@@ -13,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     unzip \
     libgomp1 \
+    libgfortran5 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files first

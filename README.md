@@ -47,13 +47,13 @@ python src\workflow\process_community_workflow.py "Old Crow"
 Linux/macOS:
 
 ```bash
-python3 -m uvicorn src.app.main:app
+python3 -m uvicorn src.app.main:app --host 0.0.0.0
 ```
 
 Windows (PowerShell):
 
 ```powershell
-python -m uvicorn src.app.main:app
+python -m uvicorn src.app.main:app --host 0.0.0.0
 ```
 
 Then open the Swagger UI at:
@@ -157,7 +157,7 @@ os-setup --test-installation
 python3 src/workflow/process_community_workflow.py "Old Crow"
 
 # Optional: run the API instead
-# python3 -m uvicorn src.app.main:app
+# python3 -m uvicorn src.app.main:app --host 0.0.0.0
 ```
 
 ### Windows (PowerShell)
@@ -198,7 +198,7 @@ os-setup --test-installation
 python src\workflow\process_community_workflow.py "Old Crow"
 
 # Optional: run the API instead
-# python -m uvicorn src.app.main:app
+# python -m uvicorn src.app.main:app --host 0.0.0.0
 ```
 
 For first-time setup on a new machine (OpenStudio/EnergyPlus dependencies), follow: [Installation Guide](docs/INSTALLATION.md)

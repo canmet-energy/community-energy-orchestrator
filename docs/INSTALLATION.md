@@ -241,13 +241,13 @@ Optional: run the API instead of the CLI workflow:
 Linux/macOS:
 
 ```bash
-python3 -m uvicorn src.app.main:app
+python3 -m uvicorn src.app.main:app --host 0.0.0.0
 ```
 
 Windows (PowerShell):
 
 ```powershell
-python -m uvicorn src.app.main:app
+python -m uvicorn src.app.main:app --host 0.0.0.0
 ```
 
 Then open:

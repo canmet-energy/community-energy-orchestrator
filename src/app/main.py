@@ -4,7 +4,7 @@ This module exposes a small REST API for running the community workflow in
 background and polling for status.
 
 How to run:
-    python -m uvicorn src.app.main:app
+    python -m uvicorn src.app.main:app --host 0.0.0.0
 
 Key behavior:
     - Single-run-at-a-time: this API enforces at most one active run per process.
@@ -15,22 +15,31 @@ Key behavior:
 
 Endpoints:
     - GET  /health
+    - GET  /communities
     - GET  /runs
     - POST /runs
     - GET  /runs/current
     - GET  /runs/{run_id}
     - GET  /runs/{run_id}/analysis-md
+    - GET  /runs/{run_id}/download/community-total
+    - GET  /runs/{run_id}/download/dwelling-timeseries
 """
 
 import re
 import threading
-from typing import Dict, Literal, Optional
+from typing import Dict, List, Literal, Optional
 from uuid import uuid4
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 
-from workflow.core import communities_dir
+from workflow.outputs import (
+    create_timeseries_zip,
+    get_analysis_markdown_path,
+    get_community_total_path,
+)
+from workflow.requirements import get_all_communities
 from workflow.service import run_community_workflow
 
 app = FastAPI(
@@ -63,6 +72,17 @@ class HealthResponse(BaseModel):
     status: str
     warning: Optional[str] = None
     active_runs: int = 0
+
+
+class CommunityInfo(BaseModel):
+    """Information about a single community."""
+
+    name: str
+    province_territory: str
+    population: Optional[int] = None
+    total_houses: Optional[int] = None
+    hdd: Optional[int] = None  # Heating Degree Days
+    weather_location: Optional[str] = None
 
 
 _runs: Dict[str, dict] = {}
@@ -100,6 +120,25 @@ def _run_workflow(run_id: str, community_name: str) -> None:
             _current_run_id = None
 
 
+def _get_run_community(run_id: str) -> str:
+    """Validate run exists and return community name.
+
+    Args:
+        run_id: The run ID to validate
+
+    Returns:
+        Community name for the run
+
+    Raises:
+        HTTPException: If run not found
+    """
+    with _lock:
+        run = _runs.get(run_id)
+        if run is None:
+            raise HTTPException(status_code=404, detail="Run not found.")
+        return run["community_name"]
+
+
 @app.get(
     "/health",
     response_model=HealthResponse,
@@ -117,6 +156,21 @@ def health():
         "warning": "Using in-memory state storage. Run history will be lost on restart.",
         "active_runs": active_count,
     }
+
+
+@app.get(
+    "/communities",
+    response_model=List[CommunityInfo],
+    summary="List communities",
+    description="Returns all available communities with their metadata (population, houses, HDD, etc.).",
+)
+def get_communities():
+    """List all available communities with metadata from CSV files."""
+    try:
+        communities_data = get_all_communities()
+        return [CommunityInfo(**comm) for comm in communities_data]
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post(
@@ -209,20 +263,65 @@ def get_run(run_id: str):
     ),
 )
 def get_run_analysis_md(run_id: str):
-    with _lock:
-        run = _runs.get(run_id)
-        if run is None:
-            raise HTTPException(status_code=404, detail="Run not found.")
-        community_name = run["community_name"]
+    community_name = _get_run_community(run_id)
 
-    analysis_md_path = (
-        communities_dir() / community_name / "analysis" / f"{community_name}_analysis.md"
-    )
-    if not analysis_md_path.exists():
-        raise HTTPException(status_code=404, detail="Analysis markdown file not found.")
+    try:
+        analysis_md_path = get_analysis_markdown_path(community_name)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
     return {
         "community_name": community_name,
         "path": str(analysis_md_path),
         "markdown": analysis_md_path.read_text(encoding="utf-8", errors="replace"),
     }
+
+
+@app.get(
+    "/runs/{run_id}/download/community-total",
+    summary="Download community total CSV",
+    description=(
+        "Downloads the community total energy use CSV file for a completed run. "
+        "Returns 404 if the file hasn't been generated yet."
+    ),
+)
+def download_community_total(run_id: str):
+    """Return community total CSV as downloadable file."""
+    community_name = _get_run_community(run_id)
+
+    try:
+        csv_path = get_community_total_path(community_name)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    return FileResponse(
+        path=csv_path,
+        media_type="text/csv",
+        filename=f"{community_name}-community_total.csv",
+    )
+
+
+@app.get(
+    "/runs/{run_id}/download/dwelling-timeseries",
+    summary="Download dwelling timeseries ZIP",
+    description=(
+        "Downloads a ZIP archive containing all dwelling timeseries CSV files "
+        "for a completed run. Returns 404 if no timeseries files are found."
+    ),
+)
+def download_dwelling_timeseries(run_id: str):
+    """Return ZIP archive of all dwelling timeseries CSVs."""
+    community_name = _get_run_community(run_id)
+
+    try:
+        zip_buffer = create_timeseries_zip(community_name)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f"attachment; filename={community_name}-dwelling-timeseries.zip"
+        },
+    )

@@ -27,3 +27,16 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+
+  frontend:
+    build: ./frontend
+    image: community-energy-frontend:latest
+    container_name: community-energy-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+    environment:
+      # API endpoint for production (accessed from browser, not container)
+      - VITE_API_URL=http://localhost:8000

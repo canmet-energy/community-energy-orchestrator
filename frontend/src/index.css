@@ -1,68 +1,391 @@
+/* ===== Global Styles ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --success-color: #16a34a;
+  --error-color: #dc2626;
+  --border-color: #e5e7eb;
+  --bg-gray: #f9fafb;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  line-height: 1.6;
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
+  background-color: var(--bg-gray);
+  color: var(--text-primary);
   min-height: 100vh;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-button {
+/* ===== App Container ===== */
+.app {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  width: 100%;
+}
+
+/* ===== Header ===== */
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+header h1 {
+  font-size: 2rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+header p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+/* ===== Main Content ===== */
+main {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== Error Messages ===== */
+.error {
+  background-color: #fee2e2;
+  border: 1px solid var(--error-color);
+  color: var(--error-color);
+  padding: 1rem;
   border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
+  margin-bottom: 1.5rem;
   font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+.error-large {
+  padding: 1.5rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+/* ===== Error View ===== */
+.error-view {
+  text-align: center;
+  padding: 2rem;
+}
+
+.error-view h2 {
+  color: var(--error-color);
+  margin-bottom: 0.5rem;
+}
+
+.error-view h3 {
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-bottom: 2rem;
+}
+
+.error-actions {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ===== Search Box ===== */
+.search-box {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.search-box label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.search-box input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-box input:focus {
+  border-color: var(--primary-color);
+}
+
+.search-box input:disabled {
+  background-color: var(--bg-gray);
+  cursor: not-allowed;
+}
+
+.loading-text {
+  margin-top: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* ===== Autocomplete Dropdown ===== */
+.suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.25rem;
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  list-style: none;
+}
+
+.suggestions li {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.15s;
+}
+
+.suggestions li:last-child {
+  border-bottom: none;
+}
+
+.suggestions li:hover {
+  background-color: var(--bg-gray);
+}
+
+.suggestions li strong {
+  display: block;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.suggestions li .meta {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* ===== Buttons ===== */
+.btn-primary {
+  width: 100%;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-bottom: 1rem;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.btn-primary:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn-download {
+  display: inline-block;
+  background-color: var(--success-color);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  margin-right: 0.75rem;
+  margin-bottom: 0.75rem;
+  transition: background-color 0.2s;
+}
+
+.btn-download:hover {
+  background-color: #15803d;
+}
+
+.btn-secondary {
+  width: 100%;
+  background-color: white;
+  color: var(--text-primary);
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 1rem;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btn-secondary:disabled {
+  background-color: var(--bg-gray);
+  cursor: not-allowed;
+}
+
+/* ===== Info Boxes ===== */
+.info-box {
+  background-color: #dbeafe;
+  border: 1px solid #3b82f6;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.info-box p {
+  margin: 0.5rem 0;
+  color: #1e40af;
+}
+
+.info-box p:first-child {
+  margin-top: 0;
+}
+
+.info-box p:last-child {
+  margin-bottom: 0;
+}
+
+.selected-info {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.run-id {
+  font-size: 0.875rem;
+}
+
+.run-id code {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+}
+
+/* ===== Running View ===== */
+.running-view {
+  text-align: center;
+  padding: 3rem 2rem;
+}
+
+.running-view h2 {
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+.running-view .status,
+.running-view .elapsed {
+  font-size: 1.1rem;
+  margin: 1rem 0;
+  color: var(--text-secondary);
+}
+
+/* ===== Spinner Animation ===== */
+.spinner {
+  margin: 2rem auto;
+  width: 60px;
+  height: 60px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
-  a:hover {
-    color: #747bff;
+}
+
+/* ===== Results View ===== */
+.results-view h2 {
+  margin-bottom: 1.5rem;
+  color: var(--success-color);
+}
+
+.results-view h3 {
+  margin: 2rem 0 1rem;
+  color: var(--text-primary);
+}
+
+.actions {
+  margin: 1.5rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.analysis-content {
+  margin-top: 2rem;
+}
+
+.markdown-preview {
+  background-color: var(--bg-gray);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  white-space: pre-wrap;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  max-height: 500px;
+  overflow-y: auto;
+  color: var(--text-primary);
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+  .app {
+    padding: 1rem;
   }
-  button {
-    background-color: #f9f9f9;
+
+  header h1 {
+    font-size: 1.5rem;
+  }
+
+  main {
+    padding: 1.5rem;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .btn-download {
+    margin-right: 0;
+    text-align: center;
   }
 }

@@ -67,6 +67,7 @@ Then open the Swagger UI at:
 - [Docker Guide](docs/DOCKER.md) - Complete Docker deployment guide
 - [User Guide](docs/USER_GUIDE.md) - Complete guide to using the program
 - [Communities](docs/COMMUNITIES.md) - List of all available communities to test
+- [Contributing](CONTRIBUTING.md) - Development setup, testing, and code style
 
 ## Docker Quick Start (Recommended for Sharing)
 
@@ -234,22 +235,12 @@ Note: the workflow currently deletes the existing `communities/<Community Name>/
 
 ## Contributing
 
-Contributions are welcome! For full setup instructions, see the [Installation Guide](docs/INSTALLATION.md).
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, code style, and submission guidelines.
 
-Quick setup for running tests:
+Quick start:
 
 ```bash
-# Fork and clone
-git clone https://github.com/YOUR_USERNAME/community-energy-orchestrator.git
-cd community-energy-orchestrator
-
-# Install dependencies
 pip install uv
 uv sync --all-extras
-source .venv/bin/activate  # or .venv\Scripts\Activate.ps1 on Windows
-
-# Run tests
-pytest tests/
+make fix-all          # Format, lint, and test before pushing
 ```
-
-Pull requests are automatically tested on Python 3.10-3.12 via GitHub Actions. Please ensure tests pass locally before submitting.

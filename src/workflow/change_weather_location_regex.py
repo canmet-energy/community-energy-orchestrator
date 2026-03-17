@@ -1,6 +1,18 @@
 #!/usr/bin/env python3
 """
-Change weather location in H2K files using regex-based replacement
+Change weather location in H2K files using regex-based replacement.
+
+This script modifies ONLY the Region/English and Location/English fields
+in the H2K Weather section, which are the only fields actually used by
+h2k-hpxml to determine the CWEC weather file. All other attributes
+(HDD, library, location codes, French names, etc.) are left unchanged.
+
+The h2k-hpxml library looks up weather files based solely on:
+  - Region English name (e.g., "NORTHWEST TERRITORIES")
+  - Location English name (e.g., "FORT SIMPSON")
+
+These are matched against the h2k_weather_names.csv file in h2k-hpxml
+to find the appropriate CWEC2020 weather file.
 """
 
 import argparse
@@ -20,25 +32,6 @@ if sys.platform == "win32":
         sys.stderr.reconfigure(encoding="utf-8")
 
 from workflow.core import csv_dir
-
-
-def load_csv_data(filename):
-    """Load CSV file and return dictionary."""
-    file_path = Path(filename)
-    if not file_path.exists():
-        raise FileNotFoundError(f"CSV file not found: {filename}")
-
-    data = {}
-    with open(filename, "r", encoding="utf-8-sig") as f:
-        for line in f:
-            line = line.strip()
-            if not line:  # Skip empty lines
-                continue
-            parts = line.split(",")
-            if len(parts) >= 2:
-                key, value = parts[0], parts[1]
-                data[key.upper()] = value
-    return data
 
 
 def get_region_for_location(location):
@@ -134,7 +127,11 @@ def get_region_for_location(location):
 
 def change_weather_code(file_path, location="FORT SIMPSON", validate=True, debug=False):
     """
-    Changes the weather information in an H2K file using regex.
+    Changes the weather location in an H2K file using regex.
+
+    Only modifies Region/English and Location/English fields, which are the
+    only weather fields actually read by h2k-hpxml. All other attributes
+    (HDD, library, codes, French names, etc.) are left unchanged.
 
     Args:
         file_path: Path to the .H2K file to modify
@@ -162,75 +159,27 @@ def change_weather_code(file_path, location="FORT SIMPSON", validate=True, debug
                 print(f"File {file_path} does not appear to be valid XML")
             return False
 
-        # Load location codes and weather details
-        location_codes_path = csv_dir() / "location_code.csv"
-        if not location_codes_path.exists():
-            raise FileNotFoundError(f"Location codes CSV not found: {location_codes_path}")
-
-        location_codes = load_csv_data(location_codes_path)
-
-        weather_details = {}
-        weather_details_path = csv_dir() / "weather_details.csv"
-        if not weather_details_path.exists():
-            raise FileNotFoundError(f"Weather details CSV not found: {weather_details_path}")
-
-        with open(weather_details_path, "r", encoding="utf-8-sig") as csvfile:
-            next(csvfile)  # Skip header
-            for line in csvfile:
-                line = line.strip()
-                if not line:  # Skip empty lines
-                    continue
-                parts = line.split(",")
-                if len(parts) >= 3:
-                    loc, hdd, lib = parts[0], parts[1], parts[2]
-                    weather_details[loc.upper()] = {"hdd": hdd, "library": lib}
-
-        # Validate location exists
-        if location not in weather_details:
-            print(f"Error: Location '{location}' not found in weather_details.csv")
-            return False
-
-        if location not in location_codes:
-            print(f"Error: Location '{location}' not found in location_code.csv")
-            return False
-
-        # Get region information
+        # Get region information for the location
         region_code, region_en, region_fr = get_region_for_location(location)
         if not region_code:
             print(f"Error: Could not determine region for location '{location}'")
             return False
 
         if debug:
-            print(f"Found location {location}")
-            print(f"Region: {region_en} (code: {region_code})")
-            print(f"HDD: {weather_details[location]['hdd']}")
-            print(f"Location code: {location_codes[location]}")
+            print(f"Changing weather to: {location}")
+            print(f"Region: {region_en}")
 
-        # Pattern to match the exact Weather section structure
-        pattern = (
-            r'<Weather\s+depthOfFrost="[^"]*"\s+heatingDegreeDay="[^"]*"\s+'
-            r'library="[^"]*">\s*<Region\s+code="[^"]*">\s*<English>[^<]*</English>\s*'
-            r'<French>[^<]*</French>\s*</Region>\s*<Location\s+code="[^"]*">\s*'
-            r"<English>[^<]*</English>\s*<French>[^<]*</French>\s*</Location>\s*</Weather>"
-        )
+        # Pattern to match Region/English element
+        region_pattern = r'(<Region\s+code="[^"]*">\s*<English>)[^<]*(</English>)'
+        region_replacement = rf"\1{region_en}\2"
 
-        # Create replacement with exact XML structure and indentation
-        replacement = (
-            f'<Weather depthOfFrost="1.2192" heatingDegreeDay="{weather_details[location]["hdd"]}" '
-            f'library="{weather_details[location]["library"]}">\n'
-            f'            <Region code="{region_code}">\n'
-            f"                <English>{region_en}</English>\n"
-            f"                <French>{region_fr}</French>\n"
-            f"            </Region>\n"
-            f'            <Location code="{location_codes[location]}">\n'
-            f"                <English>{location}</English>\n"
-            f"                <French>{location}</French>\n"
-            f"            </Location>\n"
-            f"        </Weather>"
-        )
+        # Pattern to match Location/English element
+        location_pattern = r'(<Location\s+code="[^"]*">\s*<English>)[^<]*(</English>)'
+        location_replacement = rf"\1{location}\2"
 
-        # Make the replacement
-        new_content = re.sub(pattern, replacement, content)
+        # Make the replacements
+        new_content = re.sub(region_pattern, region_replacement, content)
+        new_content = re.sub(location_pattern, location_replacement, new_content)
 
         if new_content == content:
             if debug:

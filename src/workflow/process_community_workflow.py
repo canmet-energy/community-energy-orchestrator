@@ -57,19 +57,17 @@ def normalize_community_name(community_name):
     return normalized
 
 
-def remove_readonly(func, path, exc):
+def remove_readonly(func, path, exc):  # pylint: disable=unused-argument
     """Error handler for shutil.rmtree to handle read-only files."""
-    if not os.access(path, os.W_OK):
-        os.chmod(path, stat.S_IWUSR | stat.S_IRUSR | stat.S_IXUSR)
-        func(path)
-    else:
-        raise
+    # Clear read-only bit and retry
+    os.chmod(path, stat.S_IWUSR | stat.S_IRUSR | stat.S_IXUSR)
+    func(path)
 
 
 def safe_rmtree(path):
     """Remove directory tree with read-only file handling, compatible with all Python versions."""
     if sys.version_info >= (3, 12):
-        shutil.rmtree(path, onexc=remove_readonly)
+        shutil.rmtree(path, onexc=remove_readonly)  # pylint: disable=unexpected-keyword-arg
     else:
         shutil.rmtree(path, onerror=remove_readonly)
 

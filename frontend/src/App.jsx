@@ -3,10 +3,16 @@ import {
     fetchCommunities,
     createRun,
     getRunStatus,
-    getAnalysisMarkdown,
+    getAnalysisData,
+    getDailyLoadData,
+    getPeakDayHourlyData,
     getCommunityTotalDownloadUrl,
     getDwellingTimeseriesDownloadUrl,
+    getAnalysisMarkdownDownloadUrl,
 } from './api';
+import AnalysisVisualization from './AnalysisVisualization';
+import DailyEnergyChart from './DailyEnergyChart';
+import PeakDayChart from './PeakDayChart';
 
 function App() {
     // View state
@@ -20,16 +26,109 @@ function App() {
     const [showSuggestions, setShowSuggestions] = useState(false);
 
     // Run tracking
-    const [currentRunId, setCurrentRunId] = useState(null);
+    const [currentRunId, setCurrentRunId] = useState(() => {
+        const saved = localStorage.getItem('currentRunId');
+        return saved || null;
+    });
     const [runStatus, setRunStatus] = useState(null);
     const [startTime, setStartTime] = useState(null);
     const [elapsedTime, setElapsedTime] = useState(0);
 
+    // Run history (max 5 runs)
+    const [runHistory, setRunHistory] = useState(() => {
+        const saved = localStorage.getItem('runHistory');
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [activeRunId, setActiveRunId] = useState(null); // Which run is being viewed
+
     // Results
-    const [analysisMarkdown, setAnalysisMarkdown] = useState('');
+    const [analysisData, setAnalysisData] = useState(null);
+    const [dailyLoadData, setDailyLoadData] = useState(null);
+    const [peakDayData, setPeakDayData] = useState(null);
 
     // Error handling
     const [error, setError] = useState(null);
+    
+    // Dark mode
+    const [darkMode, setDarkMode] = useState(() => {
+        // Check localStorage first
+        const saved = localStorage.getItem('darkMode');
+        if (saved !== null) {
+            return JSON.parse(saved);
+        }
+        // Otherwise, check system preference
+        return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    });
+
+    // Apply dark mode class to root element
+    useEffect(() => {
+        if (darkMode) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        localStorage.setItem('darkMode', JSON.stringify(darkMode));
+    }, [darkMode]);
+
+    // Toggle dark mode
+    function toggleDarkMode() {
+        setDarkMode(prev => !prev);
+    }
+    
+    // Save run history to localStorage whenever it changes
+    useEffect(() => {
+        localStorage.setItem('runHistory', JSON.stringify(runHistory));
+    }, [runHistory]);
+
+    // Save current run ID to localStorage
+    useEffect(() => {
+        if (currentRunId) {
+            localStorage.setItem('currentRunId', currentRunId);
+        } else {
+            localStorage.removeItem('currentRunId');
+        }
+    }, [currentRunId]);
+
+    // On mount, validate that restored currentRunId is still valid
+    useEffect(() => {
+        if (currentRunId) {
+            // Check if this run exists in history and is still active
+            const runInHistory = runHistory.find(r => r.run_id === currentRunId);
+            if (runInHistory && (runInHistory.status === 'completed' || runInHistory.status === 'failed')) {
+                // Run is no longer active, clear it
+                setCurrentRunId(null);
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Run only on mount - we intentionally use initial values
+
+    // Helper: Add or update run in history
+    function addToHistory(runId, communityName, status) {
+        setRunHistory(prevHistory => {
+            // Remove any existing run for this community
+            let newHistory = prevHistory.filter(run => run.community_name !== communityName);
+            
+            // Add new run at the beginning
+            newHistory = [{
+                run_id: runId,
+                community_name: communityName,
+                status: status,
+                timestamp: Date.now(),
+            }, ...newHistory];
+            
+            // Keep only last 5 runs
+            return newHistory.slice(0, 5);
+        });
+    }
+
+    // Helper: Update status of a run in history
+    function updateHistoryStatus(runId, status) {
+        setRunHistory(prevHistory => 
+            prevHistory.map(run => 
+                run.run_id === runId ? { ...run, status } : run
+            )
+        );
+    }
     
 
     // Load communities when app starts
@@ -48,15 +147,24 @@ function App() {
         loadCommunities();
     }, []);
 
-    // Start run when entering run view
+    // Start NEW run when entering run view (only if we don't already have a currentRunId)
     useEffect(() => {
-        if (view === 'run' && selectedCommunity && !currentRunId) {
+        // Only start a new run if:
+        // 1. We're in the run view
+        // 2. A community is selected
+        // 3. We don't have a current run ID (this prevents starting when viewing existing runs)
+        // 4. activeRunId is also null (we're not viewing a historical run)
+        if (view === 'run' && selectedCommunity && !currentRunId && !activeRunId) {
             async function startRun() {
                 try {
                     const run = await createRun(selectedCommunity);
                     setCurrentRunId(run.run_id);
                     setRunStatus(run.status);
                     setStartTime(Date.now());
+                    setActiveRunId(run.run_id); // Set as active run being viewed
+                    
+                    // Add to history with initial status
+                    addToHistory(run.run_id, selectedCommunity, run.status);
                 } catch (err) {
                     // Handle 409 Conflict specifically
                     if (err.status === 409) {
@@ -69,46 +177,76 @@ function App() {
             }
             startRun();
         }
-    }, [view, selectedCommunity, currentRunId]);
+    }, [view, selectedCommunity, currentRunId, activeRunId]);
 
     // Poll for run status when running
+    // This continues polling currentRunId in the background even when viewing other runs
     useEffect(() => {
-        if (view === 'run' && currentRunId) {
+        if (currentRunId) {
             const interval = setInterval(async () => {
                 try {
                     const status = await getRunStatus(currentRunId);
                     setRunStatus(status.status);
+                    
+                    // Update history status
+                    updateHistoryStatus(currentRunId, status.status);
 
                     if (status.status === 'completed') {
-                        // Load results
-                        const analysis = await getAnalysisMarkdown(currentRunId);
-                        setAnalysisMarkdown(analysis.markdown);
-                        setView('results');
+                        // Load results if this is the active run being viewed
+                        if (activeRunId === currentRunId) {
+                            const data = await getAnalysisData(currentRunId);
+                            setAnalysisData(data.data);
+                            // Also fetch daily load data and peak day data
+                            try {
+                                const dailyData = await getDailyLoadData(currentRunId);
+                                setDailyLoadData(dailyData);
+                            } catch (err) {
+                                console.error('Failed to load daily load data:', err);
+                                // Don't fail the whole view if daily data fails
+                            }
+                            try {
+                                const peakData = await getPeakDayHourlyData(currentRunId);
+                                setPeakDayData(peakData);
+                            } catch (err) {
+                                console.error('Failed to load peak day data:', err);
+                                // Don't fail the whole view if peak day data fails
+                            }
+                            setView('results');
+                        }
+                        // Clear currentRunId since run is complete
+                        setCurrentRunId(null);
                     } else if (status.status === 'failed') {
-                        setError(status.error || 'Analysis failed. Please try again.');
-                        setView('error');
+                        // Only show error if this is the active run being viewed
+                        if (activeRunId === currentRunId) {
+                            setError(status.error || 'Analysis failed. Please try again.');
+                            setView('error');
+                        }
+                        // Clear currentRunId since run failed
+                        setCurrentRunId(null);
                     }
                 } catch (err) {
                     // Network or API error during polling
-                    setError(`Lost connection to server: ${err.message}. The analysis may still be running.`);
-                    setView('error');
+                    if (activeRunId === currentRunId) {
+                        setError(`Lost connection to server: ${err.message}. The analysis may still be running.`);
+                        setView('error');
+                    }
                 }
             }, 3000); // Poll every 3 seconds
 
             return () => clearInterval(interval);
         }
-    }, [view, currentRunId]);
+    }, [currentRunId, activeRunId]);
 
     // Update elapsed time
     useEffect(() => {
-        if (view === 'run' && startTime) {
+        if (view === 'run' && startTime && activeRunId === currentRunId) {
             const interval = setInterval(() => {
                 setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
             }, 1000); // Update every second
 
             return () => clearInterval(interval);
         }
-    }, [view, startTime]);
+    }, [view, startTime, activeRunId, currentRunId]);
 
     // Handler: Select a community from dropdown
     function handleSelectCommunity(communityName) {
@@ -124,6 +262,12 @@ function App() {
             return;
         }
 
+        // Check if there's a background run still in progress locally
+        if (currentRunId && (runStatus === 'queued' || runStatus === 'running')) {
+            setError(`Cannot start new analysis: A run is still in progress. Please wait for it to complete.`);
+            return;
+        }
+
         setError(null);
         setCurrentRunId(null); // Reset run ID
         setRunStatus(null);
@@ -133,12 +277,20 @@ function App() {
     }
 
     // Handler: Retry the same analysis
-    function handleRetry() {
+    async function handleRetry() {
+        // Clear previous run state
         setError(null);
+        setAnalysisData(null);
+        
+        // Reset run tracking for fresh start
+        // Don't clear selectedCommunity - we're retrying the same community
         setCurrentRunId(null);
         setRunStatus(null);
         setStartTime(null);
         setElapsedTime(0);
+        setActiveRunId(null);
+        
+        // The handleStartAnalysis logic will validate if another run is active
         setView('run');
     }
 
@@ -155,12 +307,64 @@ function App() {
         setSelectedCommunity('');
         setSearchTerm('');
         setShowSuggestions(false);
-        setCurrentRunId(null);
-        setRunStatus(null);
-        setStartTime(null);
-        setElapsedTime(0);
-        setAnalysisMarkdown('');
+        
+        // Only clear run data if no run is currently active
+        // (completed/failed runs have already cleared currentRunId via polling)
+        if (!currentRunId) {
+            setRunStatus(null);
+            setStartTime(null);
+            setElapsedTime(0);
+        }
+        
+        setAnalysisData(null);
+        setDailyLoadData(null);
+        setPeakDayData(null);
         setError(null);
+        setActiveRunId(null);
+    }
+
+    // Handler: Click on a history item to view its results
+    async function handleHistoryClick(historyRun) {
+        setActiveRunId(historyRun.run_id);
+        setSelectedCommunity(historyRun.community_name);
+        setError(null);
+
+        // If the run is queued or running, show the run view
+        if (historyRun.status === 'queued' || historyRun.status === 'running') {
+            // Set this as the current run to resume tracking/polling
+            setCurrentRunId(historyRun.run_id);
+            setRunStatus(historyRun.status);
+            // Don't set startTime - we don't know when it started after refresh
+            setView('run');
+        } else if (historyRun.status === 'completed') {
+            // Load and show results
+            try {
+                const data = await getAnalysisData(historyRun.run_id);
+                setAnalysisData(data.data);
+                // Also fetch daily load data and peak day data
+                try {
+                    const dailyData = await getDailyLoadData(historyRun.run_id);
+                    setDailyLoadData(dailyData);
+                } catch (err) {
+                    console.error('Failed to load daily load data:', err);
+                    // Don't fail the whole view if daily data fails
+                }
+                try {
+                    const peakData = await getPeakDayHourlyData(historyRun.run_id);
+                    setPeakDayData(peakData);
+                } catch (err) {
+                    console.error('Failed to load peak day data:', err);
+                    // Don't fail the whole view if peak day data fails
+                }
+                setView('results');
+            } catch (err) {
+                setError(`Failed to load results: ${err.message}`);
+                setView('error');
+            }
+        } else if (historyRun.status === 'failed') {
+            setError('This run failed. Please start a new analysis.');
+            setView('error');
+        }
     }
 
     // Filter communities based on search term
@@ -170,82 +374,151 @@ function App() {
             .slice(0, 10) // Show max 10 suggestions
         : [];
 
+    // Render history sidebar
+    function renderHistorySidebar() {
+        if (runHistory.length === 0) {
+            return null;
+        }
+
+        return (
+            <aside className="history-sidebar">
+                <h3>Run History</h3>
+                <ul className="history-list">
+                    {runHistory.map((run) => {
+                        const isActive = run.run_id === activeRunId;
+                        const statusClass = run.status === 'completed' ? 'completed' 
+                            : run.status === 'failed' ? 'failed'
+                            : run.status === 'running' ? 'running'
+                            : 'queued';
+                        
+                        return (
+                            <li
+                                key={run.run_id}
+                                className={`history-item ${isActive ? 'active' : ''} ${statusClass}`}
+                                onClick={() => handleHistoryClick(run)}
+                            >
+                                <div className="history-item-header">
+                                    <span className="community-name">{run.community_name}</span>
+                                    <span className={`status-indicator ${statusClass}`}></span>
+                                </div>
+                                <div className="history-item-meta">
+                                    <span className="run-id-short">{run.run_id.slice(0, 8)}...</span>
+                                    <span className="status-text">{run.status}</span>
+                                </div>
+                            </li>
+                        );
+                    })}
+                </ul>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '1rem', textAlign: 'center' }}>
+                    Maximum of 5 runs shown
+                </p>
+            </aside>
+        );
+    }
+
     // SEARCH VIEW
     if (view === 'search') {
         return (
             <div className="app">
                 <header>
+                    <button onClick={toggleDarkMode} className="theme-toggle" aria-label="Toggle dark mode">
+                        {darkMode ? (
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        ) : (
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                        )}
+                    </button>
                     <h1>Community Energy Orchestrator</h1>
                     <p>Analyze energy use for remote Canadian communities</p>
                 </header>
+                
+                <div className="content-wrapper">
+                    <main>
+                        {error && (
+                            <div className="error">
+                                {error}
+                            </div>
+                        )}
 
-                <main>
-                    {error && (
-                        <div className="error">
-                            {error}
+                        <div className="search-box">
+                            <label htmlFor="community-search">
+                                Select a Community:
+                            </label>
+                            <input
+                                id="community-search"
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                    setShowSuggestions(true); // Show dropdown when typing
+                                }}
+                                onFocus={() => searchTerm.length > 0 && setShowSuggestions(true)}
+                                placeholder={loadingCommunities ? "Loading communities..." : "Start typing a community name..."}
+                                autoComplete="off"
+                                disabled={loadingCommunities}
+                            />
+
+                            {loadingCommunities && (
+                                <p className="loading-text">Loading {communities.length || '...'} communities...</p>
+                            )}
+
+                            {!loadingCommunities && showSuggestions && filteredCommunities.length > 0 && (
+                                <ul className="suggestions">
+                                    {filteredCommunities.map((community) => (
+                                        <li
+                                            key={community.name}
+                                            onClick={() => handleSelectCommunity(community.name)}
+                                        >
+                                            <strong>{community.name}</strong>
+                                            <span className="meta">
+                                                {community.province_territory}
+                                                {community.population && ` • Pop: ${community.population.toLocaleString()}`}
+                                                {community.total_houses && ` • Houses: ${community.total_houses}`}
+                                                {community.hdd && ` • HDD: ${community.hdd.toLocaleString()}`}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
-                    )}
 
-                    <div className="search-box">
-                        <label htmlFor="community-search">
-                            Select a Community:
-                        </label>
-                        <input
-                            id="community-search"
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => {
-                                setSearchTerm(e.target.value);
-                                setShowSuggestions(true); // Show dropdown when typing
-                            }}
-                            onFocus={() => searchTerm.length > 0 && setShowSuggestions(true)}
-                            placeholder={loadingCommunities ? "Loading communities..." : "Start typing a community name..."}
-                            autoComplete="off"
-                            disabled={loadingCommunities}
-                        />
+                        <button
+                            onClick={handleStartAnalysis}
+                            disabled={!selectedCommunity || loadingCommunities}
+                            className="btn-primary"
+                        >
+                            Start Analysis
+                        </button>
 
-                        {loadingCommunities && (
-                            <p className="loading-text">Loading {communities.length || '...'} communities...</p>
+                        {currentRunId && (runStatus === 'queued' || runStatus === 'running') && (
+                            <div className="warning-box">
+                                <p><strong>⚠️ Another Run In Progress</strong></p>
+                                <p>
+                                    A run for &ldquo;{runHistory.find(r => r.run_id === currentRunId)?.community_name || 'a community'}&rdquo; is currently {runStatus}. 
+                                    Please wait for it to complete before starting a new analysis.
+                                </p>
+                                <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                                    You can view the progress in the Run History sidebar or by clicking on that run.
+                                </p>
+                            </div>
                         )}
 
-                        {!loadingCommunities && showSuggestions && filteredCommunities.length > 0 && (
-                            <ul className="suggestions">
-                                {filteredCommunities.map((community) => (
-                                    <li
-                                        key={community.name}
-                                        onClick={() => handleSelectCommunity(community.name)}
-                                    >
-                                        <strong>{community.name}</strong>
-                                        <span className="meta">
-                                            {community.province_territory}
-                                            {community.population && ` • Pop: ${community.population.toLocaleString()}`}
-                                            {community.total_houses && ` • Houses: ${community.total_houses}`}
-                                            {community.hdd && ` • HDD: ${community.hdd.toLocaleString()}`}
-                                        </span>
-                                    </li>
-                                ))}
-                            </ul>
+                        {selectedCommunity && (
+                            <p className="selected-info">
+                                Selected: <strong>{selectedCommunity}</strong>
+                            </p>
                         )}
-                    </div>
 
-                    <button
-                        onClick={handleStartAnalysis}
-                        disabled={!selectedCommunity || loadingCommunities}
-                        className="btn-primary"
-                    >
-                        Start Analysis
-                    </button>
-
-                    {selectedCommunity && (
-                        <p className="selected-info">
-                            Selected: <strong>{selectedCommunity}</strong>
-                        </p>
-                    )}
-
-                    <div className="info-box">
-                        <p><strong>Note:</strong> Analysis typically takes 3-15 minutes depending on community size.</p>
-                    </div>
-                </main>
+                        <div className="info-box">
+                            <p><strong>Note:</strong> Analysis typically takes 3-15 minutes depending on community size.</p>
+                        </div>
+                    </main>
+                    {renderHistorySidebar()}
+                </div>
             </div>
         );
     }
@@ -255,31 +528,47 @@ function App() {
         return (
             <div className="app">
                 <header>
+                    <button onClick={toggleDarkMode} className="theme-toggle" aria-label="Toggle dark mode">
+                        {darkMode ? (
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        ) : (
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                        )}
+                    </button>
                     <h1>Community Energy Orchestrator</h1>
                 </header>
+                
+                <div className="content-wrapper">
+                    <main className="running-view">
+                        <div className="spinner"></div>
 
-                <main className="running-view">
-                    <div className="spinner"></div>
+                        <h2>Running Analysis for {selectedCommunity}</h2>
 
-                    <h2>Running Analysis for {selectedCommunity}</h2>
+                        <p className="status">
+                            Status: <strong>{runStatus || 'Initializing...'}</strong>
+                        </p>
 
-                    <p className="status">
-                        Status: <strong>{runStatus || 'Initializing...'}</strong>
-                    </p>
-
-                    <p className="elapsed">
-                        Elapsed Time: <strong>{formatTime(elapsedTime)}</strong>
-                    </p>
-
-                    <div className="info-box">
-                        <p>This may take 3-15 minutes depending on community size.</p>
-                        {currentRunId && (
-                            <p className="run-id">
-                                Run ID: <code>{currentRunId}</code>
+                        {activeRunId === currentRunId && (
+                            <p className="elapsed">
+                                Elapsed Time: <strong>{startTime ? formatTime(elapsedTime) : 'Not available (page was refreshed)'}</strong>
                             </p>
                         )}
-                    </div>
-                </main>
+
+                        <div className="info-box">
+                            <p>This may take 3-15 minutes depending on community size.</p>
+                            {activeRunId && (
+                                <p className="run-id">
+                                    Run ID: <code>{activeRunId}</code>
+                                </p>
+                            )}
+                        </div>
+                    </main>
+                    {renderHistorySidebar()}
+                </div>
             </div>
         );
     }
@@ -289,38 +578,76 @@ function App() {
         return (
             <div className="app">
                 <header>
+                    <button onClick={toggleDarkMode} className="theme-toggle" aria-label="Toggle dark mode">
+                        {darkMode ? (
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        ) : (
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                        )}
+                    </button>
                     <h1>Community Energy Orchestrator</h1>
                 </header>
+                
+                <div className="content-wrapper">
+                    <main className="results-view">
+                        <h2>Analysis Complete: {selectedCommunity}</h2>
 
-                <main className="results-view">
-                    <h2>Analysis Complete: {selectedCommunity}</h2>
+                        <div className="actions">
+                            <a
+                                href={getCommunityTotalDownloadUrl(activeRunId)}
+                                download
+                                className="btn-download"
+                            >
+                                Download Community Total CSV
+                            </a>
+                            <a
+                                href={getDwellingTimeseriesDownloadUrl(activeRunId)}
+                                download
+                                className="btn-download"
+                            >
+                                Download Dwelling Timeseries ZIP
+                            </a>
+                        </div>
 
-                    <div className="actions">
-                        <a
-                            href={getCommunityTotalDownloadUrl(currentRunId)}
-                            download
-                            className="btn-download"
-                        >
-                            Download Community Total CSV
-                        </a>
-                        <a
-                            href={getDwellingTimeseriesDownloadUrl(currentRunId)}
-                            download
-                            className="btn-download"
-                        >
-                            Download Dwelling Timeseries ZIP
-                        </a>
-                    </div>
+                        <button onClick={handleNewAnalysis} className="btn-primary">
+                            Analyze Another Community
+                        </button>
 
-                    <div className="analysis-content">
-                        <h3>Analysis Report</h3>
-                        <pre className="markdown-preview">{analysisMarkdown}</pre>
-                    </div>
+                        {/* Visualizations */}
+                        {analysisData && (
+                            <AnalysisVisualization analysisData={analysisData} />
+                        )}
 
-                    <button onClick={handleNewAnalysis} className="btn-primary">
-                        Analyze Another Community
-                    </button>
-                </main>
+                        {/* Daily Energy Chart */}
+                        {dailyLoadData && analysisData && (
+                            <DailyEnergyChart dailyLoadData={dailyLoadData} analysisData={analysisData} />
+                        )}
+
+                        {/* Peak Day Hourly Chart */}
+                        {peakDayData && (
+                            <PeakDayChart peakDayData={peakDayData} />
+                        )}
+
+                        <div className="bottom-download">
+                            <a
+                                href={getAnalysisMarkdownDownloadUrl(activeRunId)}
+                                download
+                                className="btn-download"
+                            >
+                                Download Analysis Report (Markdown)
+                            </a>
+                        </div>
+
+                        <button onClick={handleNewAnalysis} className="btn-primary">
+                            Analyze Another Community
+                        </button>
+                    </main>
+                    {renderHistorySidebar()}
+                </div>
             </div>
         );
     }
@@ -330,37 +657,51 @@ function App() {
         return (
             <div className="app">
                 <header>
+                    <button onClick={toggleDarkMode} className="theme-toggle" aria-label="Toggle dark mode">
+                        {darkMode ? (
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        ) : (
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                        )}
+                    </button>
                     <h1>Community Energy Orchestrator</h1>
                 </header>
+                
+                <div className="content-wrapper">
+                    <main className="error-view">
+                        <h2>Analysis Failed</h2>
+                        <h3>{selectedCommunity}</h3>
 
-                <main className="error-view">
-                    <h2>Analysis Failed</h2>
-                    <h3>{selectedCommunity}</h3>
-
-                    <div className="error error-large">
-                        {error || 'An unknown error occurred'}
-                    </div>
-
-                    <div className="error-actions">
-                        <button onClick={handleRetry} className="btn-primary">
-                            Retry Analysis
-                        </button>
-                        <button onClick={handleNewAnalysis} className="btn-secondary">
-                            Choose Different Community
-                        </button>
-                    </div>
-
-                    {currentRunId && (
-                        <div className="info-box">
-                            <p className="run-id">
-                                Run ID: <code>{currentRunId}</code>
-                            </p>
-                            <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
-                                You can check the backend logs for more details about this error.
-                            </p>
+                        <div className="error error-large">
+                            {error || 'An unknown error occurred'}
                         </div>
-                    )}
-                </main>
+
+                        <div className="error-actions">
+                            <button onClick={handleRetry} className="btn-primary">
+                                Retry Analysis
+                            </button>
+                            <button onClick={handleNewAnalysis} className="btn-secondary">
+                                Choose Different Community
+                            </button>
+                        </div>
+
+                        {activeRunId && (
+                            <div className="info-box">
+                                <p className="run-id">
+                                    Run ID: <code>{activeRunId}</code>
+                                </p>
+                                <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                                    You can check the backend logs for more details about this error.
+                                </p>
+                            </div>
+                        )}
+                    </main>
+                    {renderHistorySidebar()}
+                </div>
             </div>
         );
     }

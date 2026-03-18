@@ -4,7 +4,7 @@ import os
 
 # Conversion constants
 KBTU_TO_GJ = 0.001055056
-EXPECTED_ROWS = 8761
+EXPECTED_ROWS = 8760  # 365 days × 24 hours/day
 
 # Archetype patterns for matching housing types
 ARCHETYPE_TYPE_PATTERNS = {

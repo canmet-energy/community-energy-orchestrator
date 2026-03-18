@@ -179,7 +179,8 @@ def get_all_communities():
         # Convert population to int if possible
         pop_int = None
         try:
-            pop_int = int(population) if pd.notna(population) else None
+            if pd.notna(population):
+                pop_int = int(float(population))  # type: ignore[arg-type]
         except (ValueError, TypeError):
             pass
 

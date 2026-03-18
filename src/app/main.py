@@ -21,6 +21,9 @@ Endpoints:
     - GET  /runs/current
     - GET  /runs/{run_id}
     - GET  /runs/{run_id}/analysis-md
+    - GET  /runs/{run_id}/analysis-data
+    - GET  /runs/{run_id}/daily-load-data
+    - GET  /runs/{run_id}/peak-day-hourly-data
     - GET  /runs/{run_id}/download/community-total
     - GET  /runs/{run_id}/download/dwelling-timeseries
 """
@@ -37,8 +40,11 @@ from pydantic import BaseModel
 
 from workflow.outputs import (
     create_timeseries_zip,
+    get_analysis_json_path,
     get_analysis_markdown_path,
     get_community_total_path,
+    get_daily_load_data,
+    get_peak_day_hourly_data,
 )
 from workflow.requirements import get_all_communities
 from workflow.service import run_community_workflow
@@ -145,7 +151,7 @@ def _get_run_community(run_id: str) -> str:
         run = _runs.get(run_id)
         if run is None:
             raise HTTPException(status_code=404, detail="Run not found.")
-        return run["community_name"]
+        return str(run["community_name"])
 
 
 @app.get(
@@ -171,7 +177,9 @@ def health():
     "/communities",
     response_model=List[CommunityInfo],
     summary="List communities",
-    description="Returns all available communities with their metadata (population, houses, HDD, etc.).",
+    description=(
+        "Returns all available communities with their metadata " "(population, houses, HDD, etc.)."
+    ),
 )
 def get_communities():
     """List all available communities with metadata from CSV files."""
@@ -284,6 +292,106 @@ def get_run_analysis_md(run_id: str):
         "path": str(analysis_md_path),
         "markdown": analysis_md_path.read_text(encoding="utf-8", errors="replace"),
     }
+
+
+@app.get(
+    "/runs/{run_id}/analysis-data",
+    summary="Get analysis data",
+    description=(
+        "Returns the generated analysis data as JSON for a completed run. "
+        "If the file is not present yet, returns 404."
+    ),
+)
+def get_run_analysis_data(run_id: str):
+    """Return structured analysis data for visualizations."""
+    community_name = _get_run_community(run_id)
+
+    try:
+        analysis_json_path = get_analysis_json_path(community_name)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    return {
+        "community_name": community_name,
+        "path": str(analysis_json_path),
+        "data": analysis_json_path.read_text(encoding="utf-8", errors="replace"),
+    }
+
+
+@app.get(
+    "/runs/{run_id}/daily-load-data",
+    summary="Get daily load data",
+    description=(
+        "Returns daily average and peak heating load data (365 days) "
+        "processed from the hourly community-total CSV. "
+        "If the file is not present yet, returns 404."
+    ),
+)
+def get_run_daily_load_data(run_id: str):
+    """Return daily heating load data for visualization."""
+    community_name = _get_run_community(run_id)
+
+    try:
+        daily_data_json = get_daily_load_data(community_name)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    return {
+        "community_name": community_name,
+        "data": daily_data_json,
+    }
+
+
+@app.get(
+    "/runs/{run_id}/peak-day-hourly-data",
+    summary="Get peak day hourly data",
+    description=(
+        "Returns hourly energy data (24 hours) for the day containing "
+        "the highest single-hour energy peak in the year. "
+        "If the file is not present yet, returns 404."
+    ),
+)
+def get_run_peak_day_hourly_data(run_id: str):
+    """Return hourly data for the peak day for visualization."""
+    community_name = _get_run_community(run_id)
+
+    try:
+        peak_day_data_json = get_peak_day_hourly_data(community_name)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    return {
+        "community_name": community_name,
+        "data": peak_day_data_json,
+    }
+
+
+@app.get(
+    "/runs/{run_id}/download/analysis-md",
+    summary="Download analysis markdown",
+    description=(
+        "Downloads the analysis markdown report for a completed run. "
+        "Returns 404 if the file hasn't been generated yet."
+    ),
+)
+def download_analysis_markdown(run_id: str):
+    """Return analysis markdown as downloadable file."""
+    community_name = _get_run_community(run_id)
+
+    try:
+        md_path = get_analysis_markdown_path(community_name)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    return FileResponse(
+        path=md_path,
+        media_type="text/markdown",
+        filename=f"{community_name}_analysis.md",
+    )
 
 
 @app.get(

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import glob
+import json
 import os
 import random
 import sys
@@ -32,8 +33,10 @@ def read_timeseries(file_path):
     if not file_path_obj.exists():
         raise FileNotFoundError(f"Timeseries file not found: {file_path}")
 
-    # Load timeseries data - low_memory=False prevents DtypeWarning for mixed types
-    df = pd.read_csv(file_path, low_memory=False, encoding="utf-8")
+    # Load timeseries data - skip row 1 (units row) to avoid misalignment
+    # Row 0: header, Row 1: units (kBtu, kWh, etc.), Row 2+: actual data
+    # low_memory=False prevents DtypeWarning for mixed types
+    df = pd.read_csv(file_path, skiprows=[1], low_memory=False, encoding="utf-8")
 
     # Get heating load (what the house needs)
     df["Heating_Load_GJ"] = (
@@ -41,37 +44,51 @@ def read_timeseries(file_path):
     )
 
     # Get heating fuel use (what equipment uses)
-    # Try to find electricity, propane, and oil columns
-    elec_cols = [
-        "End Use: Electricity: Heating",
-        "System Use: HeatingSystem1: Electricity: Heating",
+    # Each fuel type uses End Use columns with System Use as fallback.
+    # Electricity includes main heating, fans/pumps, and heat pump backup.
+    fuel_col_map = {
+        "Heating_Electricity_GJ": [
+            "End Use: Electricity: Heating",
+            "System Use: HeatingSystem1: Electricity: Heating",
+        ],
+        "Heating_Oil_GJ": [
+            "End Use: Fuel Oil: Heating",
+            "System Use: HeatingSystem1: Fuel Oil: Heating",
+        ],
+        "Heating_Propane_GJ": [
+            "End Use: Propane: Heating",
+            "System Use: HeatingSystem1: Propane: Heating",
+        ],
+        "Heating_Natural_Gas_GJ": [
+            "End Use: Natural Gas: Heating",
+            "System Use: HeatingSystem1: Natural Gas: Heating",
+        ],
+        "Heating_Wood_GJ": [
+            "End Use: Wood Cord: Heating",
+            "System Use: SupplHeatingSystem1: Wood Cord: Heating",
+        ],
+    }
+
+    for output_col, source_cols in fuel_col_map.items():
+        for col in source_cols:
+            if col in df.columns:
+                df[output_col] = pd.to_numeric(df[col], errors="coerce") * KBTU_TO_GJ
+                break
+        else:
+            df[output_col] = 0
+
+    # Add auxiliary electricity columns (fans/pumps and heat pump backup)
+    # into the electricity total — these are separate End Use entries from
+    # the simulation that represent additional electrical energy for heating.
+    aux_elec_cols = [
+        "End Use: Electricity: Heating Fans/Pumps",
+        "End Use: Electricity: Heating Heat Pump Backup",
     ]
-    oil_cols = ["End Use: Fuel Oil: Heating", "System Use: HeatingSystem1: Fuel Oil: Heating"]
-    propane_cols = ["End Use: Propane: Heating", "System Use: HeatingSystem1: Propane: Heating"]
-
-    # Electricity
-    for col in elec_cols:
+    for col in aux_elec_cols:
         if col in df.columns:
-            df["Heating_Electricity_GJ"] = pd.to_numeric(df[col], errors="coerce") * KBTU_TO_GJ
-            break
-    else:
-        df["Heating_Electricity_GJ"] = 0
-
-    # Fuel Oil
-    for col in oil_cols:
-        if col in df.columns:
-            df["Heating_Oil_GJ"] = pd.to_numeric(df[col], errors="coerce") * KBTU_TO_GJ
-            break
-    else:
-        df["Heating_Oil_GJ"] = 0
-
-    # Propane
-    for col in propane_cols:
-        if col in df.columns:
-            df["Heating_Propane_GJ"] = pd.to_numeric(df[col], errors="coerce") * KBTU_TO_GJ
-            break
-    else:
-        df["Heating_Propane_GJ"] = 0
+            df["Heating_Electricity_GJ"] += (
+                pd.to_numeric(df[col], errors="coerce").fillna(0) * KBTU_TO_GJ
+            )
 
     return df
 
@@ -233,6 +250,8 @@ def select_and_sum_timeseries(community_name):
         "Heating_Propane_GJ",
         "Heating_Oil_GJ",
         "Heating_Electricity_GJ",
+        "Heating_Natural_Gas_GJ",
+        "Heating_Wood_GJ",
         "Total_Heating_Energy_GJ",
     ]
 
@@ -258,7 +277,13 @@ def select_and_sum_timeseries(community_name):
                     error_files.append(current_file)
                     continue
                 # Fill missing columns with zeros
-                for col in ["Heating_Propane_GJ", "Heating_Oil_GJ", "Heating_Electricity_GJ"]:
+                for col in [
+                    "Heating_Propane_GJ",
+                    "Heating_Oil_GJ",
+                    "Heating_Electricity_GJ",
+                    "Heating_Natural_Gas_GJ",
+                    "Heating_Wood_GJ",
+                ]:
                     if col not in df.columns:
                         df[col] = 0
 
@@ -276,12 +301,16 @@ def select_and_sum_timeseries(community_name):
         heating_propane = np.zeros(n_rows)
         heating_oil = np.zeros(n_rows)
         heating_electricity = np.zeros(n_rows)
+        heating_natural_gas = np.zeros(n_rows)
+        heating_wood = np.zeros(n_rows)
 
         for df in processed_dfs:
             heating_load += df["Heating_Load_GJ"].values
             heating_propane += df["Heating_Propane_GJ"].values
             heating_oil += df["Heating_Oil_GJ"].values
             heating_electricity += df["Heating_Electricity_GJ"].values
+            heating_natural_gas += df["Heating_Natural_Gas_GJ"].values
+            heating_wood += df["Heating_Wood_GJ"].values
 
         community_total = pd.DataFrame(
             {
@@ -290,6 +319,8 @@ def select_and_sum_timeseries(community_name):
                 "Heating_Propane_GJ": heating_propane,
                 "Heating_Oil_GJ": heating_oil,
                 "Heating_Electricity_GJ": heating_electricity,
+                "Heating_Natural_Gas_GJ": heating_natural_gas,
+                "Heating_Wood_GJ": heating_wood,
             }
         )
         successful_files_used = len(processed_dfs)
@@ -303,6 +334,8 @@ def select_and_sum_timeseries(community_name):
             community_total["Heating_Propane_GJ"]
             + community_total["Heating_Oil_GJ"]
             + community_total["Heating_Electricity_GJ"]
+            + community_total["Heating_Natural_Gas_GJ"]
+            + community_total["Heating_Wood_GJ"]
         )
         # Truncate or pad to expected rows
         if len(community_total) > EXPECTED_ROWS:
@@ -330,9 +363,21 @@ def select_and_sum_timeseries(community_name):
         total_annual_propane = community_total["Heating_Propane_GJ"].sum()
         total_annual_oil = community_total["Heating_Oil_GJ"].sum()
         total_annual_electricity = community_total["Heating_Electricity_GJ"].sum()
-        total_annual_energy = total_annual_propane + total_annual_oil + total_annual_electricity
+        total_annual_natural_gas = community_total["Heating_Natural_Gas_GJ"].sum()
+        total_annual_wood = community_total["Heating_Wood_GJ"].sum()
+        total_annual_energy = (
+            total_annual_propane
+            + total_annual_oil
+            + total_annual_electricity
+            + total_annual_natural_gas
+            + total_annual_wood
+        )
         max_hourly_energy = community_total["Total_Heating_Energy_GJ"].max()
         avg_hourly_energy = community_total["Total_Heating_Energy_GJ"].mean()
+
+        # Find the timestamp when max hourly energy occurs
+        max_energy_idx = community_total["Total_Heating_Energy_GJ"].idxmax()
+        max_energy_time = community_total.loc[max_energy_idx, "Time"]
 
         # Save the analysis results
         analysis_file = community_folder / "analysis" / f"{community_name}_analysis.md"
@@ -344,15 +389,18 @@ def select_and_sum_timeseries(community_name):
             f.write(f"- Average Hourly Load: {avg_hourly_load:,.3f} GJ\n\n")
             f.write("## Community Heating Energy Use Statistics (what the equipment uses):\n")
             f.write(f"- Total Annual Energy: {total_annual_energy:,.1f} GJ\n")
+            pct = lambda val: (val / total_annual_energy * 100) if total_annual_energy else 0
             f.write(
-                f"  - Propane: {total_annual_propane:,.1f} GJ ({(total_annual_propane/total_annual_energy*100) if total_annual_energy else 0:,.1f}%)\n"
+                f"  - Propane: {total_annual_propane:,.1f} GJ ({pct(total_annual_propane):,.1f}%)\n"
+            )
+            f.write(f"  - Oil: {total_annual_oil:,.1f} GJ ({pct(total_annual_oil):,.1f}%)\n")
+            f.write(
+                f"  - Electricity: {total_annual_electricity:,.1f} GJ ({pct(total_annual_electricity):,.1f}%)\n"
             )
             f.write(
-                f"  - Oil: {total_annual_oil:,.1f} GJ ({(total_annual_oil/total_annual_energy*100) if total_annual_energy else 0:,.1f}%)\n"
+                f"  - Natural Gas: {total_annual_natural_gas:,.1f} GJ ({pct(total_annual_natural_gas):,.1f}%)\n"
             )
-            f.write(
-                f"  - Electricity: {total_annual_electricity:,.1f} GJ ({(total_annual_electricity/total_annual_energy*100) if total_annual_energy else 0:,.1f}%)\n"
-            )
+            f.write(f"  - Wood: {total_annual_wood:,.1f} GJ ({pct(total_annual_wood):,.1f}%)\n")
             f.write(f"- Maximum Hourly Energy: {max_hourly_energy:,.3f} GJ\n")
             f.write(f"- Average Hourly Energy: {avg_hourly_energy:,.3f} GJ\n")
             if error_files:
@@ -367,6 +415,38 @@ def select_and_sum_timeseries(community_name):
         print(f"\nAnalysis results saved to:")
         print(f"  - {analysis_file} (community folder)")
 
+        # Save analysis data as JSON for frontend visualizations
+        analysis_json_file = community_folder / "analysis" / f"{community_name}_analysis.json"
+        analysis_data = {
+            "community_name": community_name,
+            "heating_load": {
+                "total_annual_gj": float(total_annual_load),
+                "max_hourly_gj": float(max_hourly_load),
+                "avg_hourly_gj": float(avg_hourly_load),
+            },
+            "heating_energy": {
+                "total_annual_gj": float(total_annual_energy),
+                "max_hourly_gj": float(max_hourly_energy),
+                "max_hourly_time": str(max_energy_time),
+                "avg_hourly_gj": float(avg_hourly_energy),
+                "by_source": {
+                    "propane_gj": float(total_annual_propane),
+                    "oil_gj": float(total_annual_oil),
+                    "electricity_gj": float(total_annual_electricity),
+                    "natural_gas_gj": float(total_annual_natural_gas),
+                    "wood_gj": float(total_annual_wood),
+                    "propane_percent": float(pct(total_annual_propane)),
+                    "oil_percent": float(pct(total_annual_oil)),
+                    "electricity_percent": float(pct(total_annual_electricity)),
+                    "natural_gas_percent": float(pct(total_annual_natural_gas)),
+                    "wood_percent": float(pct(total_annual_wood)),
+                },
+            },
+        }
+        with open(analysis_json_file, "w", encoding="utf-8") as f:
+            json.dump(analysis_data, f, indent=2)
+        print(f"  - {analysis_json_file} (community folder - JSON)")
+
         print("\nCommunity Heating Load Statistics (what the houses need):")
         print(f"Total Annual Load: {total_annual_load:,.1f} GJ")
         print(f"Maximum Hourly Load: {max_hourly_load:,.3f} GJ")
@@ -374,15 +454,15 @@ def select_and_sum_timeseries(community_name):
 
         print("\nCommunity Heating Energy Use Statistics (what the equipment uses):")
         print(f"Total Annual Energy: {total_annual_energy:,.1f} GJ")
+        print(f"- Propane: {total_annual_propane:,.1f} GJ ({pct(total_annual_propane):,.1f}%)")
+        print(f"- Oil: {total_annual_oil:,.1f} GJ ({pct(total_annual_oil):,.1f}%)")
         print(
-            f"- Propane: {total_annual_propane:,.1f} GJ ({(total_annual_propane/total_annual_energy*100) if total_annual_energy else 0:,.1f}%)"
+            f"- Electricity: {total_annual_electricity:,.1f} GJ ({pct(total_annual_electricity):,.1f}%)"
         )
         print(
-            f"- Oil: {total_annual_oil:,.1f} GJ ({(total_annual_oil/total_annual_energy*100) if total_annual_energy else 0:,.1f}%)"
+            f"- Natural Gas: {total_annual_natural_gas:,.1f} GJ ({pct(total_annual_natural_gas):,.1f}%)"
         )
-        print(
-            f"- Electricity: {total_annual_electricity:,.1f} GJ ({(total_annual_electricity/total_annual_energy*100) if total_annual_energy else 0:,.1f}%)"
-        )
+        print(f"- Wood: {total_annual_wood:,.1f} GJ ({pct(total_annual_wood):,.1f}%)")
         print(f"Maximum Hourly Energy: {max_hourly_energy:,.3f} GJ")
         print(f"Average Hourly Energy: {avg_hourly_energy:,.3f} GJ")
         if error_files:

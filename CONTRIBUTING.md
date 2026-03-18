@@ -148,27 +148,68 @@ def test_my_function(tmp_path, monkeypatch):
     # ... test logic
 ```
 
-## Pre-Push Checklist
+## Development Workflow
 
-Before pushing, run all the same checks that CI/CD runs:
+### Before You Start Coding
+
+1. **Format your code automatically:**
+   ```bash
+   make format
+   ```
+
+2. **Run checks during development** (see all issues at once):
+   ```bash
+   make dev-check
+   ```
+   This shows all linting and test failures without stopping, giving you the full picture.
+
+### Before Pushing
+
+Run the same strict checks that CI/CD will run:
 
 ```bash
-# Format code, then run all linters and tests
 make fix-all
 ```
 
-This single command will:
+This will:
 1. Auto-format code with black and isort
-2. Run all linters (black, isort, pylint, mypy)
-3. Run unit and integration tests with coverage
+2. Run pylint and mypy (strict - stops on first failure)
+3. Run all tests with coverage (strict - stops on first failure)
 
-You can also run checks without auto-formatting:
+**Important:** `make fix-all` uses **fail-fast** mode - it stops at the first error. This matches CI/CD behavior and helps you catch issues early.
 
-```bash
-make check-all
-```
+If you want to see all issues at once during development, use `make dev-check` instead.
 
-See all available Make commands with `make help`.
+### Available Commands
+
+| Command | When to Use | Behavior |
+|---------|-------------|----------|
+| `make format` | Before committing | Auto-format code (black + isort) |
+| `make dev-check` | During development | Show ALL issues without stopping |
+| `make fix-all` | Before pushing | **Strict**: Format + check, stop on first failure |
+| `make check-all` | CI/CD simulation | **Strict**: Check only (no format), stop on first failure |
+| `make test` | Quick test run | Run all tests with coverage |
+| `make lint` | Check formatting | Verify code style without modifying |
+
+**Recommended workflow:**
+1. Code your changes
+2. Run `make dev-check` to see all issues
+3. Fix issues iteratively
+4. Run `make fix-all` before pushing - must pass cleanly
+
+### Troubleshooting Failed Checks
+
+**If `make fix-all` fails:**
+
+1. **Formatting errors**: Run `make format` - it auto-fixes most issues
+2. **Pylint warnings**: Review the specific warnings. Some are informational and acceptable (e.g., "too many local variables")
+3. **Type errors (mypy)**: Add type hints or use `# type: ignore` comments sparingly
+4. **Test failures**: Fix the failing tests. Run individual tests with `uv run pytest path/to/test.py -v` for faster iteration
+
+**Common issues:**
+- Line too long: black should auto-format this, but some strings may need manual breaking
+- Import order: `make format` fixes this automatically
+- Missing type hints: Add them or use `# type: ignore[return-value]` if justified
 
 ## CI/CD Pipeline
 
@@ -185,29 +226,65 @@ Lint checks for pylint, mypy, and isort are set to `continue-on-error` in CI, so
 
 ## Submitting Changes
 
-1. Create a feature branch from `dev`:
+1. **Create a feature branch** from `dev`:
    ```bash
    git checkout dev
    git pull origin dev
    git checkout -b your-feature-name
    ```
 
-2. Make your changes and commit with clear messages.
+2. **Make your changes** and commit with clear messages.
 
-3. Run `make fix-all` to format and verify everything passes.
+3. **Run checks before pushing:**
+   ```bash
+   make fix-all
+   ```
+   This must pass without errors before you push. If it fails, fix the issues and run again.
 
-4. Push and open a pull request against the `dev` branch.
+4. **Push and open a pull request** against the `dev` branch.
 
-5. CI will automatically run all checks on your PR.
+5. **CI will automatically run** all checks on your PR. The same `make fix-all` checks run in CI, so if it passes locally, it should pass in CI.
 
-## Common Make Commands
+### Commit Messages
+
+Write clear, descriptive commit messages:
+- Use present tense ("Add feature" not "Added feature")
+- Keep first line under 72 characters
+- Reference issue numbers where applicable
+
+## Quick Reference
+
+### Make Commands
 
 | Command | Description |
 |---------|-------------|
 | `make help` | List all available commands |
-| `make fix-all` | Auto-format + run all checks (recommended before push) |
-| `make check-all` | Run all checks without formatting |
 | `make format` | Auto-format code with black and isort |
-| `make lint` | Run all linters |
-| `make test` | Run pytest with coverage |
+| `make dev-check` | **Development:** Show all issues (continues on errors) |
+| `make fix-all` | **Pre-push:** Auto-format + strict checks (stops on first failure) |
+| `make check-all` | **CI/CD:** Strict checks without formatting (stops on first failure) |
+| `make lint` | Check code style without modifying files |
+| `make test` | Run all tests with coverage |
 | `make clean` | Remove cache and generated files |
+
+### Testing Quick Reference
+
+```bash
+# Run all tests
+make test
+
+# Run specific test file
+uv run pytest tests/unit/test_outputs.py -v
+
+# Run unit tests only
+uv run pytest tests/unit/ -m unit
+
+# Run integration tests only
+uv run pytest tests/integration/ -m integration
+
+# Run with verbose output
+uv run pytest -v
+
+# Run tests matching a pattern
+uv run pytest -k "test_calculate"
+```

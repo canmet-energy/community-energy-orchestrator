@@ -157,3 +157,9 @@ module = [
     "h2k_hpxml.*",
 ]
 ignore_missing_imports = true
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest-cov>=7.0.0",
+]

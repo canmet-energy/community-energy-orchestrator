@@ -39,7 +39,8 @@ def test_aggregates_multiple_timeseries_files(monkeypatch, tmp_path):
     # Create 3 timeseries files with varying data across rows
     for i in range(3):
         rows = [
-            "Time,Load: Heating: Delivered,End Use: Electricity: Heating,End Use: Fuel Oil: Heating"
+            "Time,Load: Heating: Delivered,End Use: Electricity: Heating,End Use: Fuel Oil: Heating",
+            "time,kBtu,kBtu,kBtu",  # Units row
         ]
         # Create 24 hours of data with different values per file
         for hour in range(24):
@@ -114,7 +115,10 @@ def test_handles_insufficient_files_by_duplicating(monkeypatch, tmp_path, capsys
 
     # Create only 2 unique files with different values
     for i in range(2):
-        rows = ["Time,Load: Heating: Delivered,End Use: Electricity: Heating"]
+        rows = [
+            "Time,Load: Heating: Delivered,End Use: Electricity: Heating",
+            "time,kBtu,kBtu",  # Units row
+        ]
         for hour in range(24):
             rows.append(f"2024-01-01 {hour:02d}:00:00,{100 + i * 10},{10 + i}")
         csv_content = "\n".join(rows)
@@ -164,14 +168,20 @@ def test_handles_multiple_building_types(monkeypatch, tmp_path):
 
     # Create files for each type
     for i in range(2):
-        rows = ["Time,Load: Heating: Delivered,End Use: Electricity: Heating"]
+        rows = [
+            "Time,Load: Heating: Delivered,End Use: Electricity: Heating",
+            "time,kBtu,kBtu",  # Units row
+        ]
         for hour in range(24):
             rows.append(f"2024-01-01 {hour:02d}:00:00,100,10")
         csv_content = "\n".join(rows)
         file_path = timeseries_dir / f"pre-2000-single_EX-{i:04d}-results_timeseries.csv"
         file_path.write_text(csv_content, encoding="utf-8")
 
-    rows = ["Time,Load: Heating: Delivered,End Use: Electricity: Heating"]
+    rows = [
+        "Time,Load: Heating: Delivered,End Use: Electricity: Heating",
+        "time,kBtu,kBtu",  # Units row
+    ]
     for hour in range(24):
         rows.append(f"2024-01-01 {hour:02d}:00:00,50,5")
     csv_content = "\n".join(rows)
@@ -210,7 +220,10 @@ def test_handles_double_files_for_semi_requirements(monkeypatch, tmp_path):
     requirements = {"2001-2015-semi": 2}
 
     # Create 1 semi file and 1 double file (both should match)
-    rows = ["Time,Load: Heating: Delivered,End Use: Electricity: Heating"]
+    rows = [
+        "Time,Load: Heating: Delivered,End Use: Electricity: Heating",
+        "time,kBtu,kBtu",  # Units row
+    ]
     for hour in range(24):
         rows.append(f"2024-01-01 {hour:02d}:00:00,100,10")
     csv_content = "\n".join(rows)
@@ -252,7 +265,10 @@ def test_calculates_correct_statistics(monkeypatch, tmp_path):
     requirements = {"2001-2015-single": 1}
 
     # Create file with simple, known values for easy verification
-    rows = ["Time,Load: Heating: Delivered,End Use: Electricity: Heating,End Use: Propane: Heating"]
+    rows = [
+        "Time,Load: Heating: Delivered,End Use: Electricity: Heating,End Use: Propane: Heating",
+        "time,kBtu,kBtu,kBtu",  # Units row
+    ]
     # 4 rows with known values
     rows.append("2024-01-01 00:00:00,100,10,5")  # Hour 0
     rows.append("2024-01-01 01:00:00,200,20,10")  # Hour 1 (max)
@@ -363,7 +379,10 @@ def test_uses_all_available_files_when_no_requirements(monkeypatch, tmp_path):
     # Create various files
     for building_type in ["pre-2000-single", "2001-2015-semi"]:
         for i in range(2):
-            rows = ["Time,Load: Heating: Delivered,End Use: Electricity: Heating"]
+            rows = [
+                "Time,Load: Heating: Delivered,End Use: Electricity: Heating",
+                "time,kBtu,kBtu",  # Units row
+            ]
             for hour in range(24):
                 rows.append(f"2024-01-01 {hour:02d}:00:00,100,10")
             csv_content = "\n".join(rows)
@@ -402,7 +421,8 @@ def test_parallel_processing_produces_deterministic_results(monkeypatch, tmp_pat
     # Create multiple files with different data
     for i in range(5):
         rows = [
-            "Time,Load: Heating: Delivered,End Use: Electricity: Heating,End Use: Fuel Oil: Heating,End Use: Propane: Heating"
+            "Time,Load: Heating: Delivered,End Use: Electricity: Heating,End Use: Fuel Oil: Heating,End Use: Propane: Heating",
+            "time,kBtu,kBtu,kBtu,kBtu",  # Units row
         ]
         for hour in range(24):
             rows.append(f"2024-01-01 {hour:02d}:00:00,{100 + i * 10},{10 + i},0,0")
@@ -431,6 +451,8 @@ def test_parallel_processing_produces_deterministic_results(monkeypatch, tmp_pat
         df["Heating_Electricity_GJ"].iloc[0]
         + df["Heating_Oil_GJ"].iloc[0]
         + df["Heating_Propane_GJ"].iloc[0]
+        + df["Heating_Natural_Gas_GJ"].iloc[0]
+        + df["Heating_Wood_GJ"].iloc[0]
     )
     assert total == pytest.approx(components, rel=0.01)
 
@@ -450,7 +472,10 @@ def test_semi_requirements_do_not_match_wrong_era_double_files(monkeypatch, tmp_
     requirements = {"2001-2015-semi": 2}
 
     # Create pre-2000-double files (should NOT match 2001-2015-semi requirement)
-    rows = ["Time,Load: Heating: Delivered,End Use: Electricity: Heating"]
+    rows = [
+        "Time,Load: Heating: Delivered,End Use: Electricity: Heating",
+        "time,kBtu,kBtu",  # Units row
+    ]
     for hour in range(24):
         rows.append(f"2024-01-01 {hour:02d}:00:00,100,10")
     csv_content = "\n".join(rows)
@@ -492,10 +517,13 @@ def test_handles_production_size_files_with_8761_rows(monkeypatch, tmp_path):
 
     requirements = {"2001-2015-single": 2}
 
-    # Create 2 production-size files (8761 rows = 365 days × 24 hours + 1)
+    # Create 2 production-size files (8760 rows = 365 days × 24 hours)
     for i in range(2):
-        rows = ["Time,Load: Heating: Delivered,End Use: Electricity: Heating"]
-        for hour in range(8761):
+        rows = [
+            "Time,Load: Heating: Delivered,End Use: Electricity: Heating",
+            "time,kBtu,kBtu",  # Units row
+        ]
+        for hour in range(8760):
             rows.append(f"2024-01-01 {hour % 24:02d}:00:00,100,10")
         csv_content = "\n".join(rows)
         file_path = timeseries_dir / f"2001-2015-single_EX-{i:04d}-results_timeseries.csv"
@@ -503,7 +531,7 @@ def test_handles_production_size_files_with_8761_rows(monkeypatch, tmp_path):
 
     monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
     monkeypatch.setattr(calc, "get_community_requirements", lambda x: requirements)
-    # Don't mock EXPECTED_ROWS - use the real value (8761)
+    # Don't mock EXPECTED_ROWS - use the real value (8760)
 
     # Run aggregation
     calc.select_and_sum_timeseries(community_name)
@@ -515,7 +543,7 @@ def test_handles_production_size_files_with_8761_rows(monkeypatch, tmp_path):
     df = pd.read_csv(output_csv)
 
     # Verify correct row count
-    assert len(df) == 8761, "Should have 8761 rows for production files"
+    assert len(df) == 8760, "Should have 8760 rows for production files"
 
     # Verify aggregation: 2 files × 100 kBTU = 200 kBTU per row
     expected_load = 200 * config.KBTU_TO_GJ

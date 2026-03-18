@@ -6,8 +6,10 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install ALL dependencies (including devDependencies needed for build)
+# Configure npm for environments with SSL issues (like dev containers)
+# Use npm ci for reproducible builds
+RUN npm config set strict-ssl false && npm ci
 
 # Copy source code
 COPY . .

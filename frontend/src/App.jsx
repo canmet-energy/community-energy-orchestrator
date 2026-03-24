@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     fetchCommunities,
     createRun,
@@ -11,6 +11,7 @@ import {
     getAnalysisMarkdownDownloadUrl,
 } from './api';
 import AnalysisVisualization from './AnalysisVisualization';
+import CommunityOverview from './CommunityOverview';
 import DailyEnergyChart from './DailyEnergyChart';
 import PeakDayChart from './PeakDayChart';
 
@@ -23,6 +24,7 @@ function App() {
     const [loadingCommunities, setLoadingCommunities] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCommunity, setSelectedCommunity] = useState('');
+    const [selectedCommunityData, setSelectedCommunityData] = useState(null); // Full community object
     const [showSuggestions, setShowSuggestions] = useState(false);
 
     // Run tracking
@@ -40,11 +42,16 @@ function App() {
         return saved ? JSON.parse(saved) : [];
     });
     const [activeRunId, setActiveRunId] = useState(null); // Which run is being viewed
+    const [copiedRunId, setCopiedRunId] = useState(null); // Track which run ID was just copied
 
     // Results
     const [analysisData, setAnalysisData] = useState(null);
     const [dailyLoadData, setDailyLoadData] = useState(null);
     const [peakDayData, setPeakDayData] = useState(null);
+
+    // Energy category tab: 'heating' or 'total'
+    const [energyCategory, setEnergyCategory] = useState('total');
+    const savedScrollPosition = useRef(null);
 
     // Error handling
     const [error, setError] = useState(null);
@@ -73,6 +80,17 @@ function App() {
     // Toggle dark mode
     function toggleDarkMode() {
         setDarkMode(prev => !prev);
+    }
+
+    // Copy run ID to clipboard
+    function copyRunId(runId, event) {
+        event.stopPropagation(); // Prevent triggering the history item click
+        navigator.clipboard.writeText(runId).then(() => {
+            setCopiedRunId(runId);
+            setTimeout(() => setCopiedRunId(null), 2000); // Reset after 2 seconds
+        }).catch(err => {
+            console.error('Failed to copy run ID:', err);
+        });
     }
     
     // Save run history to localStorage whenever it changes
@@ -103,7 +121,7 @@ function App() {
     }, []); // Run only on mount - we intentionally use initial values
 
     // Helper: Add or update run in history
-    function addToHistory(runId, communityName, status) {
+    function addToHistory(runId, communityName, status, provinceTerritoryName = '') {
         setRunHistory(prevHistory => {
             // Remove any existing run for this community
             let newHistory = prevHistory.filter(run => run.community_name !== communityName);
@@ -112,6 +130,7 @@ function App() {
             newHistory = [{
                 run_id: runId,
                 community_name: communityName,
+                province_territory: provinceTerritoryName,
                 status: status,
                 timestamp: Date.now(),
             }, ...newHistory];
@@ -164,7 +183,7 @@ function App() {
                     setActiveRunId(run.run_id); // Set as active run being viewed
                     
                     // Add to history with initial status
-                    addToHistory(run.run_id, selectedCommunity, run.status);
+                    addToHistory(run.run_id, selectedCommunity, run.status, selectedCommunityData?.province_territory);
                 } catch (err) {
                     // Handle 409 Conflict specifically
                     if (err.status === 409) {
@@ -177,7 +196,7 @@ function App() {
             }
             startRun();
         }
-    }, [view, selectedCommunity, currentRunId, activeRunId]);
+    }, [view, selectedCommunity, currentRunId, activeRunId, selectedCommunityData]);
 
     // Poll for run status when running
     // This continues polling currentRunId in the background even when viewing other runs
@@ -196,20 +215,18 @@ function App() {
                         if (activeRunId === currentRunId) {
                             const data = await getAnalysisData(currentRunId);
                             setAnalysisData(data.data);
-                            // Also fetch daily load data and peak day data
+                            // Also fetch daily load data and peak day data (use 'total' to match default category)
                             try {
-                                const dailyData = await getDailyLoadData(currentRunId);
+                                const dailyData = await getDailyLoadData(currentRunId, 'total');
                                 setDailyLoadData(dailyData);
                             } catch (err) {
                                 console.error('Failed to load daily load data:', err);
-                                // Don't fail the whole view if daily data fails
                             }
                             try {
-                                const peakData = await getPeakDayHourlyData(currentRunId);
+                                const peakData = await getPeakDayHourlyData(currentRunId, 'total');
                                 setPeakDayData(peakData);
                             } catch (err) {
                                 console.error('Failed to load peak day data:', err);
-                                // Don't fail the whole view if peak day data fails
                             }
                             setView('results');
                         }
@@ -248,9 +265,24 @@ function App() {
         }
     }, [view, startTime, activeRunId, currentRunId]);
 
+    // Restore scroll position after category switch (when DOM has fully updated)
+    useEffect(() => {
+        if (savedScrollPosition.current !== null) {
+            // Wait for DOM to fully render with new category data
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    window.scrollTo(0, savedScrollPosition.current);
+                    savedScrollPosition.current = null;
+                });
+            });
+        }
+    }, [dailyLoadData, peakDayData, energyCategory]);
+
     // Handler: Select a community from dropdown
     function handleSelectCommunity(communityName) {
+        const communityData = communities.find(c => c.name === communityName);
         setSelectedCommunity(communityName);
+        setSelectedCommunityData(communityData || null);
         setSearchTerm(communityName);
         setShowSuggestions(false); // Hide dropdown after selection
     }
@@ -278,9 +310,11 @@ function App() {
 
     // Handler: Retry the same analysis
     async function handleRetry() {
-        // Clear previous run state
+        // Clear all previous data immediately to prevent any flashing
         setError(null);
         setAnalysisData(null);
+        setDailyLoadData(null);
+        setPeakDayData(null);
         
         // Reset run tracking for fresh start
         // Don't clear selectedCommunity - we're retrying the same community
@@ -289,6 +323,12 @@ function App() {
         setStartTime(null);
         setElapsedTime(0);
         setActiveRunId(null);
+        
+        // Ensure selectedCommunityData is set (in case it was lost)
+        if (selectedCommunity && !selectedCommunityData) {
+            const communityData = communities.find(c => c.name === selectedCommunity);
+            setSelectedCommunityData(communityData || null);
+        }
         
         // The handleStartAnalysis logic will validate if another run is active
         setView('run');
@@ -305,6 +345,7 @@ function App() {
     function handleNewAnalysis() {
         setView('search');
         setSelectedCommunity('');
+        setSelectedCommunityData(null);
         setSearchTerm('');
         setShowSuggestions(false);
         
@@ -321,47 +362,93 @@ function App() {
         setPeakDayData(null);
         setError(null);
         setActiveRunId(null);
+        setEnergyCategory('total');
+    }
+
+    // Handler: Switch energy category (heating / total) while preserving scroll position
+    async function handleCategorySwitch(runId, newCategory) {
+        if (newCategory === energyCategory) return;
+
+        // Save current scroll position
+        savedScrollPosition.current = window.scrollY;
+
+        // Fetch new data BEFORE switching category to prevent flash
+        let dailyData = dailyLoadData;
+        let peakData = peakDayData;
+        try {
+            dailyData = await getDailyLoadData(runId, newCategory);
+        } catch (err) {
+            console.error('Failed to load daily load data:', err);
+        }
+        try {
+            peakData = await getPeakDayHourlyData(runId, newCategory);
+        } catch (err) {
+            console.error('Failed to load peak day data:', err);
+        }
+
+        // Update category and data together
+        setEnergyCategory(newCategory);
+        setDailyLoadData(dailyData);
+        setPeakDayData(peakData);
+        // Scroll restoration happens in useEffect after DOM updates
     }
 
     // Handler: Click on a history item to view its results
     async function handleHistoryClick(historyRun) {
+        setError(null);
         setActiveRunId(historyRun.run_id);
         setSelectedCommunity(historyRun.community_name);
-        setError(null);
+        // Look up and set the full community data
+        const communityData = communities.find(c => c.name === historyRun.community_name);
+        setSelectedCommunityData(communityData || null);
 
         // If the run is queued or running, show the run view
         if (historyRun.status === 'queued' || historyRun.status === 'running') {
+            setAnalysisData(null);
+            setDailyLoadData(null);
+            setPeakDayData(null);
             // Set this as the current run to resume tracking/polling
             setCurrentRunId(historyRun.run_id);
             setRunStatus(historyRun.status);
+            setEnergyCategory('total');
             // Don't set startTime - we don't know when it started after refresh
             setView('run');
         } else if (historyRun.status === 'completed') {
-            // Load and show results
+            // Load ALL data before switching view to prevent flash
             try {
                 const data = await getAnalysisData(historyRun.run_id);
-                setAnalysisData(data.data);
-                // Also fetch daily load data and peak day data
+                let dailyData = null;
+                let peakData = null;
                 try {
-                    const dailyData = await getDailyLoadData(historyRun.run_id);
-                    setDailyLoadData(dailyData);
+                    dailyData = await getDailyLoadData(historyRun.run_id, 'total');
                 } catch (err) {
                     console.error('Failed to load daily load data:', err);
-                    // Don't fail the whole view if daily data fails
                 }
                 try {
-                    const peakData = await getPeakDayHourlyData(historyRun.run_id);
-                    setPeakDayData(peakData);
+                    peakData = await getPeakDayHourlyData(historyRun.run_id, 'total');
                 } catch (err) {
                     console.error('Failed to load peak day data:', err);
-                    // Don't fail the whole view if peak day data fails
                 }
+                // Update all state at once after data is ready
+                setEnergyCategory('total');
+                setAnalysisData(data.data);
+                setDailyLoadData(dailyData);
+                setPeakDayData(peakData);
                 setView('results');
             } catch (err) {
-                setError(`Failed to load results: ${err.message}`);
+                // Run not found on server (e.g. server restarted) - mark as stale
+                console.error('Failed to load analysis data:', err);
+                updateHistoryStatus(historyRun.run_id, 'failed');
+                setAnalysisData(null);
+                setDailyLoadData(null);
+                setPeakDayData(null);
+                setError('Server lost track of this run (it may have restarted). Please re-run the analysis.');
                 setView('error');
             }
         } else if (historyRun.status === 'failed') {
+            setAnalysisData(null);
+            setDailyLoadData(null);
+            setPeakDayData(null);
             setError('This run failed. Please start a new analysis.');
             setView('error');
         }
@@ -398,13 +485,49 @@ function App() {
                                 onClick={() => handleHistoryClick(run)}
                             >
                                 <div className="history-item-header">
-                                    <span className="community-name">{run.community_name}</span>
+                                    <span className="community-name">
+                                        {run.community_name}{run.province_territory && (
+                                            <span className="province-badge">, {run.province_territory}</span>
+                                        )}
+                                    </span>
                                     <span className={`status-indicator ${statusClass}`}></span>
                                 </div>
                                 <div className="history-item-meta">
-                                    <span className="run-id-short">{run.run_id.slice(0, 8)}...</span>
+                                    <button 
+                                        className="run-id-copy-btn"
+                                        onClick={(e) => copyRunId(run.run_id, e)}
+                                        title={run.run_id}
+                                        aria-label="Copy run ID"
+                                    >
+                                        {copiedRunId === run.run_id ? (
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        ) : (
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeWidth={2}></rect>
+                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" strokeWidth={2}></path>
+                                            </svg>
+                                        )}
+                                    </button>
                                     <span className="status-text">{run.status}</span>
                                 </div>
+                                {isActive && run.status === 'completed' && (
+                                    <div className="category-tabs" onClick={(e) => e.stopPropagation()}>
+                                        <button
+                                            className={`category-tab ${energyCategory === 'total' ? 'active' : ''}`}
+                                            onClick={() => handleCategorySwitch(run.run_id, 'total')}
+                                        >
+                                            Total
+                                        </button>
+                                        <button
+                                            className={`category-tab ${energyCategory === 'heating' ? 'active' : ''}`}
+                                            onClick={() => handleCategorySwitch(run.run_id, 'heating')}
+                                        >
+                                            Heating
+                                        </button>
+                                    </div>
+                                )}
                             </li>
                         );
                     })}
@@ -617,19 +740,24 @@ function App() {
                             Analyze Another Community
                         </button>
 
+                        {/* Community Overview */}
+                        {analysisData?.community_info && (
+                            <CommunityOverview communityInfo={analysisData.community_info} />
+                        )}
+
                         {/* Visualizations */}
                         {analysisData && (
-                            <AnalysisVisualization analysisData={analysisData} />
+                            <AnalysisVisualization analysisData={analysisData} category={energyCategory} />
                         )}
 
                         {/* Daily Energy Chart */}
                         {dailyLoadData && analysisData && (
-                            <DailyEnergyChart dailyLoadData={dailyLoadData} analysisData={analysisData} />
+                            <DailyEnergyChart dailyLoadData={dailyLoadData} analysisData={analysisData} category={energyCategory} />
                         )}
 
                         {/* Peak Day Hourly Chart */}
                         {peakDayData && (
-                            <PeakDayChart peakDayData={peakDayData} />
+                            <PeakDayChart peakDayData={peakDayData} category={energyCategory} />
                         )}
 
                         <div className="bottom-download">

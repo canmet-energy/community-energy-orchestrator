@@ -63,44 +63,31 @@ export async function getAnalysisData(runId) {
         throw new Error(errorData.detail || `Failed to fetch analysis data: ${response.statusText}`);
     }
 
-    const result = await response.json();
-    // Parse the JSON string from the data field
-    return {
-        ...result,
-        data: JSON.parse(result.data)
-    };
+    return response.json();
 }
 
-export async function getDailyLoadData(runId) {
-    const response = await fetch(`${API_BASE_URL}/runs/${runId}/daily-load-data`);
+export async function getDailyLoadData(runId, category = 'heating') {
+    const params = category !== 'heating' ? `?category=${category}` : '';
+    const response = await fetch(`${API_BASE_URL}/runs/${runId}/daily-load-data${params}`);
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.detail || `Failed to fetch daily load data: ${response.statusText}`);
     }
 
-    const result = await response.json();
-    // Parse the JSON string from the data field
-    return {
-        ...result,
-        data: JSON.parse(result.data)
-    };
+    return response.json();
 }
 
-export async function getPeakDayHourlyData(runId) {
-    const response = await fetch(`${API_BASE_URL}/runs/${runId}/peak-day-hourly-data`);
+export async function getPeakDayHourlyData(runId, category = 'heating') {
+    const params = category !== 'heating' ? `?category=${category}` : '';
+    const response = await fetch(`${API_BASE_URL}/runs/${runId}/peak-day-hourly-data${params}`);
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.detail || `Failed to fetch peak day hourly data: ${response.statusText}`);
     }
 
-    const result = await response.json();
-    // Parse the JSON string from the data field
-    return {
-        ...result,
-        data: JSON.parse(result.data)
-    };
+    return response.json();
 }
 
 export function getCommunityTotalDownloadUrl(runId) {

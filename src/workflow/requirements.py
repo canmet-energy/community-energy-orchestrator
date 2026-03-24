@@ -199,3 +199,33 @@ def get_all_communities():
         )
 
     return communities
+
+
+def get_community_info(community_name):
+    """
+    Get metadata for a single community from CSV files.
+
+    Reuses :func:`get_all_communities` for base metadata and
+    :func:`get_community_requirements` for the housing distribution.
+
+    Args:
+        community_name: Name of the community
+
+    Returns:
+        Dict with keys: name, province_territory, population,
+        total_houses, hdd, weather_location, housing_distribution.
+        Returns None if community not found.
+    """
+    comm_upper = community_name.upper()
+    all_communities = get_all_communities()
+    match = next(
+        (c for c in all_communities if c["name"].upper() == comm_upper),
+        None,
+    )
+    if match is None:
+        return None
+
+    # Add housing distribution from requirements (already parsed by type)
+    requirements = get_community_requirements(community_name)
+    match["housing_distribution"] = requirements if requirements else {}
+    return match

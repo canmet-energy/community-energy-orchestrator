@@ -1,23 +1,28 @@
 /* eslint-disable react/prop-types */
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { convertEnergyToReadable, convertToUnit, getBestUnitForRange } from './units';
+import { convertPowerToReadable, convertToPowerUnit, getBestPowerUnitForRange } from './units';
 
-function PeakDayChart({ peakDayData }) {
+const GJ_TO_KW = 277.778;
+
+function PeakDayChart({ peakDayData, category = 'heating' }) {
     if (!peakDayData || !peakDayData.data) {
         return <div>Loading peak day data...</div>;
     }
 
+    const categoryLabel = category === 'heating' ? 'Heating' : 'Total';
+
     const { peak_day, peak_hour, peak_value_gj, hourly_data } = peakDayData.data;
 
-    // Determine the best unit for the y-axis based on all values
-    const allValues = hourly_data.map(d => d.energy_gj);
-    const bestUnit = getBestUnitForRange(allValues);
+    // Convert energy (GJ/hour) to power (kW)
+    const allValuesKW = hourly_data.map(d => d.energy_gj * GJ_TO_KW);
+    const bestUnit = getBestPowerUnitForRange(allValuesKW);
 
-    // Convert all data to the best unit
+    // Convert all data to the best power unit
     const chartData = hourly_data.map(d => ({
         hour: d.hour,
-        energy: convertToUnit(d.energy_gj, bestUnit),
-        original_gj: d.energy_gj
+        power: convertToPowerUnit(d.energy_gj * GJ_TO_KW, bestUnit),
+        original_gj: d.energy_gj,
+        original_kw: d.energy_gj * GJ_TO_KW
     }));
 
     // Helper function to convert day number to "Month Day" format
@@ -61,12 +66,12 @@ function PeakDayChart({ peakDayData }) {
     const CustomTooltip = ({ active, payload }) => {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
-            const { value: displayValue, unit } = convertEnergyToReadable(data.original_gj);
+            const { value: displayValue, unit } = convertPowerToReadable(data.original_kw);
             return (
                 <div className="custom-tooltip">
                     <p className="label"><strong>{formatHour(data.hour)}</strong></p>
-                    <p className="value" style={{ color: '#10B981' }}>
-                        Energy: {displayValue.toFixed(3)} {unit}
+                    <p className="value" style={{ color: 'var(--chart-line-energy)' }}>
+                        Power: {displayValue.toFixed(1)} {unit}
                     </p>
                 </div>
             );
@@ -74,15 +79,15 @@ function PeakDayChart({ peakDayData }) {
         return null;
     };
 
-    // Format peak value
-    const { value: peakDisplayValue, unit: peakUnit } = convertEnergyToReadable(peak_value_gj);
+    // Format peak value in power units
+    const { value: peakDisplayValue, unit: peakUnit } = convertPowerToReadable(peak_value_gj * GJ_TO_KW);
 
     return (
         <div className="peak-day-chart">
-            <h3>Peak Day Hourly Energy Profile</h3>
+            <h3>Peak Day Hourly {categoryLabel} Power Profile</h3>
             <p className="chart-description">
-                This chart shows the hourly heating energy profile for {dayToMonthDay(peak_day)}, 
-                the day with the highest single-hour energy demand of the year.
+                This chart shows the hourly {categoryLabel.toLowerCase()} power profile for {dayToMonthDay(peak_day)}, 
+                the day with the highest single-hour power demand of the year.
             </p>
             
             <div className="chart-container">
@@ -107,7 +112,7 @@ function PeakDayChart({ peakDayData }) {
                         />
                         <YAxis 
                             label={{ 
-                                value: `Heating Energy (${bestUnit})`, 
+                                value: `${categoryLabel} Power (${bestUnit})`, 
                                 angle: -90, 
                                 position: 'insideLeft',
                                 dx: -10,
@@ -122,9 +127,9 @@ function PeakDayChart({ peakDayData }) {
                         />
                         <Line 
                             type="monotone" 
-                            dataKey="energy" 
-                            stroke="#10B981" 
-                            name="Hourly Energy"
+                            dataKey="power" 
+                            stroke="var(--chart-line-energy)" 
+                            name="Hourly Power"
                             strokeWidth={2}
                             dot={{ r: 3 }}
                             activeDot={{ r: 5 }}
@@ -147,8 +152,8 @@ function PeakDayChart({ peakDayData }) {
                         <div className="stat-value">{formatHour(peak_hour)}</div>
                     </div>
                     <div className="stat-card">
-                        <div className="stat-label">Peak Energy Value</div>
-                        <div className="stat-value">{peakDisplayValue.toFixed(3)} {peakUnit}</div>
+                        <div className="stat-label">Peak Power Value</div>
+                        <div className="stat-value">{peakDisplayValue.toFixed(1)} {peakUnit}</div>
                     </div>
                 </div>
             </div>

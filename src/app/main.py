@@ -28,6 +28,7 @@ Endpoints:
     - GET  /runs/{run_id}/download/dwelling-timeseries
 """
 
+import json
 import re
 import threading
 from typing import Dict, List, Literal, Optional
@@ -311,10 +312,12 @@ def get_run_analysis_data(run_id: str):
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
+    with open(analysis_json_path, encoding="utf-8") as f:
+        data = json.load(f)
+
     return {
         "community_name": community_name,
-        "path": str(analysis_json_path),
-        "data": analysis_json_path.read_text(encoding="utf-8", errors="replace"),
+        "data": data,
     }
 
 
@@ -322,17 +325,18 @@ def get_run_analysis_data(run_id: str):
     "/runs/{run_id}/daily-load-data",
     summary="Get daily load data",
     description=(
-        "Returns daily average and peak heating load data (365 days) "
+        "Returns daily average and peak energy data (365 days) "
         "processed from the hourly community-total CSV. "
+        "Use ?category=heating (default) or ?category=total. "
         "If the file is not present yet, returns 404."
     ),
 )
-def get_run_daily_load_data(run_id: str):
-    """Return daily heating load data for visualization."""
+def get_run_daily_load_data(run_id: str, category: str = "heating"):
+    """Return daily energy data for visualization."""
     community_name = _get_run_community(run_id)
 
     try:
-        daily_data_json = get_daily_load_data(community_name)
+        daily_data_json = get_daily_load_data(community_name, category=category)
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
     except ValueError as e:
@@ -350,15 +354,16 @@ def get_run_daily_load_data(run_id: str):
     description=(
         "Returns hourly energy data (24 hours) for the day containing "
         "the highest single-hour energy peak in the year. "
+        "Use ?category=heating (default) or ?category=total. "
         "If the file is not present yet, returns 404."
     ),
 )
-def get_run_peak_day_hourly_data(run_id: str):
+def get_run_peak_day_hourly_data(run_id: str, category: str = "heating"):
     """Return hourly data for the peak day for visualization."""
     community_name = _get_run_community(run_id)
 
     try:
-        peak_day_data_json = get_peak_day_hourly_data(community_name)
+        peak_day_data_json = get_peak_day_hourly_data(community_name, category=category)
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
     except ValueError as e:

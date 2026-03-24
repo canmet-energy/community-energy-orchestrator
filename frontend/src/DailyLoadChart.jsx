@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { formatPower } from './units';
 
 function DailyEnergyChart({ dailyLoadData, analysisData }) {
     if (!dailyLoadData || !dailyLoadData.data) {
@@ -47,10 +48,10 @@ function DailyEnergyChart({ dailyLoadData, analysisData }) {
             return (
                 <div className="custom-tooltip">
                     <p className="label"><strong>{dayToMonthDay(data.day)}</strong></p>
-                    <p className="value" style={{ color: '#3B82F6' }}>
+                    <p className="value" style={{ color: 'var(--chart-line-average)' }}>
                         Average: {data.avg_energy.toFixed(3)} GJ
                     </p>
-                    <p className="value" style={{ color: '#EF4444' }}>
+                    <p className="value" style={{ color: 'var(--chart-line-peak)' }}>
                         Peak: {data.peak_energy.toFixed(3)} GJ
                     </p>
                 </div>
@@ -70,7 +71,7 @@ function DailyEnergyChart({ dailyLoadData, analysisData }) {
     const avgDay = chartData.find(d => d.avg_energy === highestAvg)?.day || 1;
 
     // Get peak hourly energy from analysis data
-    const peakHourlyEnergy = analysisData?.heating_energy?.max_hourly_gj || 0;
+    const peakHourlyKw = analysisData?.heating_energy?.max_hourly_kw || 0;
     const peakHourlyTime = analysisData?.heating_energy?.max_hourly_time || '';
 
     // Format timestamp to "Jan 16, 7:00 PM" format
@@ -108,9 +109,9 @@ function DailyEnergyChart({ dailyLoadData, analysisData }) {
                             dataKey="day"
                             ticks={boundaries}
                             domain={[1, 366]}
-                            tickLine={{ stroke: '#666', size: 6 }}
+                            tickLine={{ stroke: 'var(--chart-axis)', size: 6 }}
                             tick={{ fontSize: 0 }}
-                            axisLine={{ stroke: '#666' }}
+                            axisLine={{ stroke: 'var(--chart-axis)' }}
                         />
                         {/* Month labels centered between boundaries */}
                         <XAxis
@@ -145,7 +146,7 @@ function DailyEnergyChart({ dailyLoadData, analysisData }) {
                             xAxisId="boundary"
                             type="monotone" 
                             dataKey="avg_energy" 
-                            stroke="#3B82F6" 
+                            stroke="var(--chart-line-average)" 
                             name="Average Energy"
                             dot={false}
                             strokeWidth={2}
@@ -154,7 +155,7 @@ function DailyEnergyChart({ dailyLoadData, analysisData }) {
                             xAxisId="boundary"
                             type="monotone" 
                             dataKey="peak_energy" 
-                            stroke="#EF4444" 
+                            stroke="var(--chart-line-peak)" 
                             name="Peak Energy"
                             dot={false}
                             strokeWidth={2}
@@ -169,7 +170,7 @@ function DailyEnergyChart({ dailyLoadData, analysisData }) {
                 <div className="stat-cards">
                     <div className="stat-card">
                         <div className="stat-label">Peak Hourly Energy</div>
-                        <div className="stat-value">{peakHourlyEnergy.toFixed(3)} GJ</div>
+                        <div className="stat-value">{formatPower(peakHourlyKw)}</div>
                         {peakHourlyTime && (
                             <div className="stat-meta">on {formatTimestamp(peakHourlyTime)}</div>
                         )}

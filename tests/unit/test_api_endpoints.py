@@ -346,11 +346,9 @@ def test_get_analysis_data_returns_json_when_file_exists(client, tmp_path):
         assert response.status_code == 200
         data = response.json()
         assert data["community_name"] == "TestCommunity"
-        assert "path" in data
         assert "data" in data
-        # The data field contains a JSON string
-        parsed_data = json.loads(data["data"])
-        assert parsed_data == test_data
+        # Data is now a dict directly (no JSON string)
+        assert data["data"] == test_data
     finally:
         workflow.outputs.communities_dir = original_communities_dir
         with app.main._lock:
@@ -503,10 +501,8 @@ def test_get_daily_load_data_returns_json_when_file_exists(client, tmp_path):
         assert data["community_name"] == "TestCommunity"
         assert "data" in data
 
-        # Parse the data JSON string
-        import json
-
-        daily_data = json.loads(data["data"])
+        # Data is now a list of dicts directly (no JSON string)
+        daily_data = data["data"]
 
         # Should have 2 days
         assert len(daily_data) == 2

@@ -1,22 +1,37 @@
 /* eslint-disable react/prop-types */
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { formatEnergy, formatEnergyWithThousandsSep } from './units';
+import { formatEnergy, formatEnergyWithThousandsSep, formatPower } from './units';
 
-const COLORS = {
-    propane: '#10B981',
-    oil: '#3B82F6',
-    electricity: '#FBBF24',
-    'natural gas': '#EF4444',
-    wood: '#8B5CF6'
+// Get colors from CSS variables
+const getColors = () => {
+    const style = getComputedStyle(document.documentElement);
+    return {
+        propane: style.getPropertyValue('--fuel-propane').trim(),
+        oil: style.getPropertyValue('--fuel-oil').trim(),
+        electricity: style.getPropertyValue('--fuel-electricity').trim(),
+        'natural gas': style.getPropertyValue('--fuel-natural-gas').trim(),
+        wood: style.getPropertyValue('--fuel-wood').trim()
+    };
 };
 
-function AnalysisVisualization({ analysisData }) {
+function AnalysisVisualization({ analysisData, category = 'heating' }) {
     if (!analysisData) {
         return <div>Loading analysis data...</div>;
     }
 
-    const { heating_load, heating_energy } = analysisData;
-    const { by_source } = heating_energy;
+    const COLORS = getColors();
+    const isHeating = category === 'heating';
+    const categoryLabel = isHeating ? 'Heating' : 'Total';
+
+    // Select the right data keys based on category
+    const loadData = isHeating ? analysisData.heating_load : null;
+    const energyData = isHeating ? analysisData.heating_energy : analysisData.total_energy;
+
+    if (!energyData) {
+        return <div>No {categoryLabel.toLowerCase()} energy data available.</div>;
+    }
+
+    const { by_source } = energyData;
 
     // Prepare data for pie chart
     const pieData = [
@@ -44,23 +59,23 @@ function AnalysisVisualization({ analysisData }) {
 
     return (
         <div className="analysis-visualization">
-            <h3>Energy Analysis Results</h3>
+            <h3>{categoryLabel} Energy Analysis Results</h3>
 
             {/* Total Annual Energy and Peak Hour Energy Display */}
             <div className="total-metrics-grid">
                 <div className="total-energy-display">
                     <h4>Total Annual Energy Use</h4>
-                    <p className="total-value">{formatEnergyWithThousandsSep(heating_energy.total_annual_gj)}</p>
+                    <p className="total-value">{formatEnergyWithThousandsSep(energyData.total_annual_gj)}</p>
                 </div>
                 <div className="total-energy-display peak-energy">
                     <h4>Peak Hourly Energy</h4>
-                    <p className="total-value">{formatEnergy(heating_energy.max_hourly_gj)}</p>
+                    <p className="total-value">{formatPower(energyData.max_hourly_kw)}</p>
                 </div>
             </div>
 
             {/* Pie Chart for Energy Sources */}
             <div className="chart-container">
-                <h4>Heating Energy by Source</h4>
+                <h4>{categoryLabel} Energy by Source</h4>
                 <ResponsiveContainer width="100%" height={350}>
                     <PieChart>
                         <Pie
@@ -70,7 +85,7 @@ function AnalysisVisualization({ analysisData }) {
                             labelLine={false}
                             label={({ name }) => name}
                             outerRadius={100}
-                            fill="#8884d8"
+                            fill={getComputedStyle(document.documentElement).getPropertyValue('--chart-fill-default').trim()}
                             dataKey="value"
                         >
                             {pieData.map((entry, index) => (
@@ -105,40 +120,54 @@ function AnalysisVisualization({ analysisData }) {
 
             {/* Statistics Grid */}
             <div className="stats-grid">
+                {loadData && (
                 <div className="stat-section">
-                    <h4>Heating Load Statistics</h4>
+                    <h4>{categoryLabel} Load Statistics</h4>
                     <p className="stat-description">(What the houses need)</p>
                     <div className="stat-cards">
                         <div className="stat-card">
                             <div className="stat-label">Total Annual Load</div>
-                            <div className="stat-value">{formatEnergyWithThousandsSep(heating_load.total_annual_gj)}</div>
+                            <div className="stat-value">
+                                <span className="stat-value-primary">{formatEnergyWithThousandsSep(loadData.total_annual_gj)}</span>
+                            </div>
                         </div>
                         <div className="stat-card">
                             <div className="stat-label">Peak Hourly Load</div>
-                            <div className="stat-value">{formatEnergy(heating_load.max_hourly_gj)}</div>
+                            <div className="stat-value">
+                                <span className="stat-value-primary">{formatPower(loadData.max_hourly_kw)}</span>
+                            </div>
                         </div>
                         <div className="stat-card">
                             <div className="stat-label">Average Hourly Load</div>
-                            <div className="stat-value">{formatEnergy(heating_load.avg_hourly_gj)}</div>
+                            <div className="stat-value">
+                                <span className="stat-value-primary">{formatEnergy(loadData.avg_hourly_gj)}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
+                )}
 
                 <div className="stat-section">
-                    <h4>Heating Energy Statistics</h4>
-                    <p className="stat-description">(What the equipment uses)</p>
+                    <h4>{categoryLabel} Energy Statistics</h4>
+                    <p className="stat-description">{loadData ? '(What the equipment uses)' : ''}</p>
                     <div className="stat-cards">
                         <div className="stat-card">
                             <div className="stat-label">Total Annual Energy</div>
-                            <div className="stat-value">{formatEnergyWithThousandsSep(heating_energy.total_annual_gj)}</div>
+                            <div className="stat-value">
+                                <span className="stat-value-primary">{formatEnergyWithThousandsSep(energyData.total_annual_gj)}</span>
+                            </div>
                         </div>
                         <div className="stat-card">
                             <div className="stat-label">Peak Hourly Energy</div>
-                            <div className="stat-value">{formatEnergy(heating_energy.max_hourly_gj)}</div>
+                            <div className="stat-value">
+                                <span className="stat-value-primary">{formatPower(energyData.max_hourly_kw)}</span>
+                            </div>
                         </div>
                         <div className="stat-card">
                             <div className="stat-label">Average Hourly Energy</div>
-                            <div className="stat-value">{formatEnergy(heating_energy.avg_hourly_gj)}</div>
+                            <div className="stat-value">
+                                <span className="stat-value-primary">{formatEnergy(energyData.avg_hourly_gj)}</span>
+                            </div>
                         </div>
                     </div>
                 </div>

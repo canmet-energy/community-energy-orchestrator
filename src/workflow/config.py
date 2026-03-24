@@ -1,10 +1,133 @@
 """Configuration management for the workflow."""
 
 import os
+from typing import Any
 
 # Conversion constants
-KBTU_TO_GJ = 0.001055056
+# Primary units: GJ (gigajoules) for energy values
+KBTU_TO_GJ = 0.00105505585  # 1 kBtu = 0.001055... GJ
+KWH_TO_GJ = 0.0036  # 1 kWh = 0.0036 GJ
+GJ_TO_KW = 277.778  # 1 GJ/hour = 277.778 kW (for hourly power values)
 EXPECTED_ROWS = 8760  # 365 days × 24 hours/day
+
+# ---------------------------------------------------------------------------
+# Energy analysis categories
+# ---------------------------------------------------------------------------
+# Each category defines which CSV columns to extract and how to convert them.
+# - "load": Optional thermal load column (only meaningful for heating).
+# - "sources": Fuel-type breakdown. Each source has:
+#       "output_col" – column name in the community-total CSV
+#       "csv_cols"   – list of *fallback groups*.  Each element is either a
+#                      plain string (single column) or a list of alternative
+#                      column names for the same measurement (first match wins).
+#                      Different groups are summed (e.g. wood-cord + wood-pellets).
+#       "unit"       – "kWh" or "kBtu"
+#       "additive_cols" (optional) – extra CSV columns to ADD to the value
+# - "total_col": Name of the summed column in the community-total CSV.
+#
+# Adding a new category (e.g. "hot_water") only requires a new entry here;
+# read_timeseries, aggregation, and output logic all adapt automatically.
+# ---------------------------------------------------------------------------
+ENERGY_CATEGORIES: dict[str, dict[str, Any]] = {
+    "heating": {
+        "label": "Heating",
+        "load": {
+            "output_col": "Heating_Load_GJ",
+            "csv_col": "Load: Heating: Delivered",
+            "unit": "kBtu",
+        },
+        "sources": {
+            "propane": {
+                "output_col": "Heating_Propane_GJ",
+                "csv_cols": [
+                    ["End Use: Propane: Heating", "System Use: HeatingSystem1: Propane: Heating"],
+                ],
+                "unit": "kBtu",
+            },
+            "oil": {
+                "output_col": "Heating_Oil_GJ",
+                "csv_cols": [
+                    ["End Use: Fuel Oil: Heating", "System Use: HeatingSystem1: Fuel Oil: Heating"],
+                ],
+                "unit": "kBtu",
+            },
+            "electricity": {
+                "output_col": "Heating_Electricity_GJ",
+                "csv_cols": [
+                    [
+                        "End Use: Electricity: Heating",
+                        "System Use: HeatingSystem1: Electricity: Heating",
+                    ],
+                ],
+                "unit": "kWh",
+                "additive_cols": [
+                    "End Use: Electricity: Heating Fans/Pumps",
+                    "End Use: Electricity: Heating Heat Pump Backup",
+                ],
+            },
+            "natural_gas": {
+                "output_col": "Heating_Natural_Gas_GJ",
+                "csv_cols": [
+                    [
+                        "End Use: Natural Gas: Heating",
+                        "System Use: HeatingSystem1: Natural Gas: Heating",
+                    ],
+                ],
+                "unit": "kBtu",
+            },
+            "wood": {
+                "output_col": "Heating_Wood_GJ",
+                "csv_cols": [
+                    [
+                        "End Use: Wood Cord: Heating",
+                        "System Use: SupplHeatingSystem1: Wood Cord: Heating",
+                    ],
+                    [
+                        "End Use: Wood Pellets: Heating",
+                        "System Use: SupplHeatingSystem1: Wood Pellets: Heating",
+                    ],
+                ],
+                "unit": "kBtu",
+            },
+        },
+        "total_col": "Total_Heating_Energy_GJ",
+    },
+    "total": {
+        "label": "Total",
+        "load": None,
+        "sources": {
+            "propane": {
+                "output_col": "Total_Propane_GJ",
+                "csv_cols": ["Fuel Use: Propane: Total"],
+                "unit": "kBtu",
+            },
+            "oil": {
+                "output_col": "Total_Oil_GJ",
+                "csv_cols": ["Fuel Use: Fuel Oil: Total"],
+                "unit": "kBtu",
+            },
+            "electricity": {
+                "output_col": "Total_Electricity_GJ",
+                "csv_cols": ["Fuel Use: Electricity: Total"],
+                "unit": "kWh",
+            },
+            "natural_gas": {
+                "output_col": "Total_Natural_Gas_GJ",
+                "csv_cols": ["Fuel Use: Natural Gas: Total"],
+                "unit": "kBtu",
+            },
+            "wood": {
+                "output_col": "Total_Wood_GJ",
+                "csv_cols": [
+                    "Fuel Use: Wood Cord: Total",
+                    "Fuel Use: Wood Pellets: Total",
+                ],
+                "unit": "kBtu",
+            },
+        },
+        "total_col": "Total_Energy_GJ",
+    },
+}
 
 # Archetype patterns for matching housing types
 ARCHETYPE_TYPE_PATTERNS = {

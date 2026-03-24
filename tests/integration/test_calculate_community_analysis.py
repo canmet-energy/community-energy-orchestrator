@@ -72,9 +72,9 @@ def test_aggregates_multiple_timeseries_files(monkeypatch, tmp_path):
     df = pd.read_csv(output_csv)
     assert len(df) == 24, "Should have 24 rows"
 
-    # Verify first row: sum of (100 + 110 + 120) = 330 kBTU
+    # Verify first row: sum of (100 + 110 + 120) = 330 kBTU → GJ for load
     expected_load_first = 330 * config.KBTU_TO_GJ
-    expected_elec_first = (10 + 11 + 12) * config.KBTU_TO_GJ
+    expected_elec_first = (10 + 11 + 12) * config.KWH_TO_GJ  # Electricity kWh → GJ
     expected_oil_first = (5 + 6 + 7) * config.KBTU_TO_GJ
 
     assert df["Heating_Load_GJ"].iloc[0] == pytest.approx(expected_load_first, rel=0.01)
@@ -294,8 +294,8 @@ def test_calculates_correct_statistics(monkeypatch, tmp_path):
     avg_load_kbtu = 450 / 4  # 112.5
     avg_load_gj = avg_load_kbtu * config.KBTU_TO_GJ
 
-    total_elec_kbtu = 10 + 20 + 5 + 10  # 45 kBTU
-    total_elec_gj = total_elec_kbtu * config.KBTU_TO_GJ
+    total_elec = 10 + 20 + 5 + 10  # 45 (read as-is, no conversion)
+    total_elec_gj = total_elec * config.KWH_TO_GJ
     total_propane_kbtu = 5 + 10 + 2.5 + 5  # 22.5 kBTU
     total_propane_gj = total_propane_kbtu * config.KBTU_TO_GJ
     total_energy_gj = total_elec_gj + total_propane_gj
@@ -311,8 +311,10 @@ def test_calculates_correct_statistics(monkeypatch, tmp_path):
     assert (
         f"{total_load_gj:,.1f}" in md_content
     ), f"Should contain total load {total_load_gj:,.1f} GJ"
-    assert f"{max_load_gj:,.3f}" in md_content, f"Should contain max load {max_load_gj:,.3f} GJ"
-    assert f"{avg_load_gj:,.3f}" in md_content, f"Should contain avg load {avg_load_gj:,.3f} GJ"
+    # Max hourly shown as kW (power), avg hourly shown as GJ (energy)
+    max_load_kw = max_load_gj * config.GJ_TO_KW
+    assert f"{max_load_kw:,.1f}" in md_content, f"Should contain max load {max_load_kw:,.1f} kW"
+    assert f"{avg_load_gj:,.1f}" in md_content, f"Should contain avg load {avg_load_gj:,.1f} GJ"
 
     # Verify energy statistics
     assert (

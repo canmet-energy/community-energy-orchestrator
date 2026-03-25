@@ -253,3 +253,20 @@ pytest tests/
 ```
 
 Pull requests are automatically tested on Python 3.10-3.12 via GitHub Actions. Please ensure tests pass locally before submitting.
+
+## Licensing and Relationship to Other Software
+
+This project is licensed under the GNU Affero General Public License
+v3.0 or later (AGPL‑3.0+).
+
+It is designed to interoperate with [btap_batch](https://github.com/canmet-energy/btap_batch), which is released under the same AGPL‑3.0+ licence. Modifications to either project are subject to the same copyleft obligations under AGPL‑3.0+.
+
+## Citing This Work 
+
+If you use the Community Energy Orchestrator in your research, please cite it as:
+
+```text
+Natural Resources Canada
+Community Energy Orchestrator
+https://github.com/canmet-energy/community-energy-orchestrator
+```

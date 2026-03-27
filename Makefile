@@ -1,14 +1,17 @@
-.PHONY: help test lint static-analysis format check-all fix-all dev-check clean
+.PHONY: help test lint static-analysis format check-all fix-all dev-check clean docker-clean docker-reset docker-disk
 
 help:
 	@echo "Available commands:"
-	@echo "  make test        - Run pytest with coverage"
-	@echo "  make lint        - Run all linters (black, isort, pylint, mypy)"
-	@echo "  make format      - Auto-format code with black and isort"
-	@echo "  make check-all   - Run all checks (strict, stops on first failure)"
-	@echo "  make fix-all     - Auto-format then run strict checks (recommended before push)"
-	@echo "  make dev-check   - Show all issues without stopping (local development)"
-	@echo "  make clean       - Remove cache and coverage files"
+	@echo "  make test         - Run pytest with coverage"
+	@echo "  make lint         - Run all linters (black, isort, pylint, mypy)"
+	@echo "  make format       - Auto-format code with black and isort"
+	@echo "  make check-all    - Run all checks (strict, stops on first failure)"
+	@echo "  make fix-all      - Auto-format then run strict checks (recommended before push)"
+	@echo "  make dev-check    - Show all issues without stopping (local development)"
+	@echo "  make clean        - Remove cache and coverage files"
+	@echo "  make docker-disk  - Show Docker disk usage"
+	@echo "  make docker-clean - Remove dangling images, stopped containers, build cache"
+	@echo "  make docker-reset - Full Docker system prune (keeps named volumes)"
 
 # Auto-format, then run strict checks (fail fast - recommended before push)
 fix-all: format static-analysis test
@@ -104,3 +107,23 @@ clean:
 	rm -rf __pycache__ .pytest_cache .mypy_cache .coverage htmlcov/ coverage.xml
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
+
+# Show Docker disk usage
+docker-disk:
+	@echo "Docker disk usage:"
+	docker system df
+
+# Remove dangling images, stopped containers, and build cache
+docker-clean:
+	@echo "Cleaning Docker resources..."
+	docker container prune -f
+	docker image prune -f
+	docker builder prune -f
+	docker volume prune -f --filter "label!=keep"
+	@echo "Done. Run 'make docker-disk' to verify."
+
+# Full system prune (removes all unused images, not just dangling)
+docker-reset:
+	@echo "WARNING: This removes ALL unused Docker images, containers, networks, and build cache."
+	docker system prune -a -f --volumes
+	@echo "Done. Run 'make docker-disk' to verify."

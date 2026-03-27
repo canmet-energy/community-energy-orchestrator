@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Post-create setup script for Community Energy Orchestrator devcontainer
+# Runs once after the container is created to set up the development environment
+set -euo pipefail
+
+# Fix workspace ownership — Windows Docker Desktop mounts files as root:root
+echo "==> Fixing workspace file ownership..."
+sudo chown -R vscode:vscode .
+
+echo "==> Installing uv package manager..."
+sudo pip install --no-cache-dir uv
+
+echo "==> Installing Python dependencies (editable, with dev tools)..."
+sudo uv pip install --system -e ".[dev]"
+
+echo "==> Installing OpenStudio/EnergyPlus..."
+os-setup --install-quiet
+
+echo "==> Making h2k_hpxml utils writable for weather lock files..."
+sudo find /usr/local/lib -path "*/h2k_hpxml/utils" -type d -exec chmod -R a+w {} +
+
+echo "==> Installing frontend dependencies..."
+cd frontend
+npm config set cafile /etc/ssl/certs/ca-certificates.crt
+npm ci
+
+echo "==> Dev container ready!"

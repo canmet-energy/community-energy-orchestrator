@@ -1,7 +1,7 @@
 services:
   api:
     build:
-      context: .
+      context: ..
       dockerfile: .devcontainer/Dockerfile
       args:
         GIT_API_TOKEN: ${GIT_API_TOKEN:-nothing}
@@ -9,15 +9,9 @@ services:
     image: community-energy-orchestrator-dev:latest
     user: vscode
     volumes:
-      - .:/workspaces/community-energy-orchestrator:cached
+      - ..:/workspaces/community-energy-orchestrator:cached
     command: sleep infinity
     restart: "no"
     healthcheck:
       disable: true
-
-  frontend:
-    image: hello-world:latest
-    entrypoint: ["true"]
-    profiles:
-      - production-only
 

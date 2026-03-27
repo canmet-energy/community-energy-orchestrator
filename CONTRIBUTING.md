@@ -190,6 +190,9 @@ If you want to see all issues at once during development, use `make dev-check` i
 | `make check-all` | CI/CD simulation | **Strict**: Check only (no format), stop on first failure |
 | `make test` | Quick test run | Run all tests with coverage |
 | `make lint` | Check formatting | Verify code style without modifying |
+| `make docker-disk` | Check disk usage | Show Docker disk usage |
+| `make docker-clean` | Free disk space | Remove dangling images, stopped containers, build cache |
+| `make docker-reset` | Full cleanup | Full Docker system prune (removes all unused resources) |
 
 **Recommended workflow:**
 1. Code your changes
@@ -266,6 +269,9 @@ Write clear, descriptive commit messages:
 | `make lint` | Check code style without modifying files |
 | `make test` | Run all tests with coverage |
 | `make clean` | Remove cache and generated files |
+| `make docker-disk` | Show Docker disk usage |
+| `make docker-clean` | Remove dangling images, stopped containers, build cache |
+| `make docker-reset` | Full Docker system prune (removes all unused resources) |
 
 ### Testing Quick Reference
 

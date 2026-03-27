@@ -1,5 +1,5 @@
 # Frontend Dockerfile for production build
-FROM node:18-bookworm AS build
+FROM node:22-bookworm AS build
 
 WORKDIR /app
 
@@ -7,9 +7,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install ALL dependencies (including devDependencies needed for build)
-# Configure npm for environments with SSL issues (like dev containers)
 # Use npm ci for reproducible builds
-RUN npm config set strict-ssl false && npm ci
+RUN npm ci
 
 # Copy source code
 COPY . .
@@ -18,7 +17,7 @@ COPY . .
 RUN npm run build
 
 # Production stage - serve with nginx
-FROM nginx:alpine
+FROM nginx:alpine3.21
 
 # Copy built assets from build stage
 COPY --from=build /app/dist /usr/share/nginx/html

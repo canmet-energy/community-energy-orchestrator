@@ -6,6 +6,7 @@ Complete guide for running community workflows and understanding outputs.
 ## Table of Contents
 - [Installation](#installation)
 - [Command Reference](#command-reference)
+- [Frontend](#frontend)
 - [Common Workflows](#common-workflows)
 - [Outputs](#outputs)
 - [Troubleshooting](#troubleshooting)
@@ -43,7 +44,7 @@ docker build -t community-energy-orchestrator .
 # Run the API server
 docker run -p 8000:8000 community-energy-orchestrator
 
-# OR use docker-compose (recommended)
+# OR use docker-compose (recommended - starts API + frontend)
 docker-compose up
 
 # Stop and clean up
@@ -73,6 +74,8 @@ docker run -p 8000:8000 `
 ```
 
 Access the API at http://localhost:8000/docs
+
+With docker-compose, the frontend is also available at http://localhost:5173
 
 **Note:** The Docker container runs the FastAPI server by default. To run the CLI script (`process_community_workflow.py`), you can:
 
@@ -160,6 +163,34 @@ Notes:
 - Run state is stored in memory (restarting the server clears run history).
 - The API enforces a single active run per server process.
 - **Import path:** Use `src.app.main:app` in dev environments. Docker uses `app.main:app` (see [Docker Guide](DOCKER.md)).
+
+## Frontend
+
+The web frontend provides a visual interface for selecting communities, running workflows, and viewing energy analysis results with interactive charts.
+
+### Running with Docker Compose (easiest)
+
+```bash
+docker-compose up
+```
+
+The frontend is available at http://localhost:5173 (API starts automatically on port 8000).
+
+### Running locally
+
+Requires Node.js 18+ and the API running on port 8000.
+
+```bash
+# Start the API first (in one terminal)
+python -m uvicorn src.app.main:app --host 0.0.0.0
+
+# Start the frontend (in another terminal)
+cd frontend
+npm install
+npm run dev
+```
+
+Then open http://localhost:5173
 
 ### Supporting scripts
 

@@ -35,6 +35,3 @@ services:
     depends_on:
       - api
     restart: unless-stopped
-    environment:
-      # API endpoint for production (accessed from browser, not container)
-      - VITE_API_URL=http://localhost:8000

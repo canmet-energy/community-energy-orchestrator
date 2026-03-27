@@ -3,7 +3,8 @@
 # Runs once after the container is created to set up the development environment
 set -euo pipefail
 
-# Fix workspace ownership — Windows Docker Desktop mounts files as root:root
+# Fix workspace ownership — Windows Docker Desktop can mount files as root:root,
+# which prevents non-sudo commands (npm ci, os-setup) from writing to the workspace.
 echo "==> Fixing workspace file ownership..."
 sudo chown -R vscode:vscode .
 
@@ -23,5 +24,12 @@ echo "==> Installing frontend dependencies..."
 cd frontend
 npm config set cafile /etc/ssl/certs/ca-certificates.crt
 npm ci
+cd ..
+
+# Fix ownership again — sudo commands above create root-owned files
+# (e.g. egg-info from editable install). Ensures vscode user can run
+# uv sync, pytest, etc. without permission errors.
+echo "==> Fixing workspace file ownership..."
+sudo chown -R vscode:vscode .
 
 echo "==> Dev container ready!"

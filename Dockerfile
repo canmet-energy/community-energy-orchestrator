@@ -30,9 +30,6 @@ RUN pip install --no-cache-dir uv
 # Install Python dependencies using uv (respects uv.lock if present)
 RUN uv pip install --system --no-cache .
 
-# Install OpenStudio/EnergyPlus dependencies
-RUN os-setup --install-quiet && os-setup --check-only
-
 # Make h2k_hpxml utils dir writable so non-root user can create weather .lock files
 RUN find /usr/local/lib -path "*/h2k_hpxml/utils" -type d -exec chmod -R a+w {} +
 
@@ -44,19 +41,22 @@ COPY csv/ ./csv/
 # Or download into the container after starting
 
 # Create non-root user for security (UID 1000 for compatibility with host volume mounts)
-RUN groupadd -g 1000 appuser && useradd -u 1000 -g appuser -d /app appuser
+# Use --create-home so appuser owns /app and can write to ~/.local, ~/.config, etc.
+RUN groupadd -g 1000 appuser && useradd -u 1000 -g appuser -d /app --no-create-home appuser \
+    && chown -R appuser:appuser /app
 
 # Create runtime directories for outputs and logs
-RUN mkdir -p output logs communities && chown -R appuser:appuser output logs communities
+RUN mkdir -p output logs communities
+
+# Install OpenStudio/EnergyPlus as appuser so binaries land in /app/.local/share/
+USER appuser
+RUN os-setup --install-quiet && os-setup --check-only
 
 # Set Python to run in unbuffered mode (better for Docker logs)
 ENV PYTHONUNBUFFERED=1
 
 # Set APP_ROOT so installed package can find csv/, communities/, etc.
 ENV APP_ROOT=/app
-
-# Switch to non-root user
-USER appuser
 
 # Expose the default FastAPI port
 EXPOSE 8000

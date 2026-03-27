@@ -9,7 +9,7 @@ services:
     image: community-energy-orchestrator-dev:latest
     user: vscode
     volumes:
-      - ..:/workspaces/community-energy-orchestrator:cached
+      - ../..:/workspaces:cached
     command: sleep infinity
     restart: "no"
     healthcheck:

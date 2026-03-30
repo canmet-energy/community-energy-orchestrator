@@ -1,6 +1,7 @@
 """Integration tests for Docker container functionality."""
 
 import json
+import os
 import shutil
 import subprocess
 import time
@@ -24,7 +25,7 @@ def test_docker_compose_builds_successfully():
     - The image builds successfully in CI environment
     """
     result = subprocess.run(
-        ["docker", "compose", "build"],
+        ["docker", "compose", "build", "api"],
         capture_output=True,
         text=True,
         timeout=300,
@@ -46,6 +47,11 @@ def test_docker_compose_builds_successfully():
     assert check_image.stdout.strip(), "Docker image was not created"
 
 
+@pytest.mark.slow
+@pytest.mark.skipif(
+    os.path.exists("/.dockerenv") or os.environ.get("REMOTE_CONTAINERS") is not None,
+    reason="Skipped inside dev containers — starting the API container exhausts memory",
+)
 def test_docker_container_starts_and_responds():
     """Test that container starts and health endpoint responds correctly.
 
@@ -54,8 +60,8 @@ def test_docker_container_starts_and_responds():
     - Health endpoint is accessible and returns expected response
     - Service is properly configured and running
     """
-    # Start container
-    subprocess.run(["docker", "compose", "up", "-d"], check=True, timeout=60)
+    # Start container (only the api service)
+    subprocess.run(["docker", "compose", "up", "-d", "api"], check=True, timeout=60)
 
     try:
         # Wait for Docker healthcheck to pass (more reliable than fixed sleep)

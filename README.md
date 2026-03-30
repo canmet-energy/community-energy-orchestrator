@@ -11,7 +11,7 @@ This repository orchestrates the workflow for processing community energy models
 Changing the weather reference drives downstream model behavior because heating/cooling loads depend on climate.
 
 ## Interface
-This repo supports two interfaces:
+This repo supports three interfaces:
 
 1) **CLI workflow script** (runs one community end-to-end)
 
@@ -47,13 +47,13 @@ python src\workflow\process_community_workflow.py "Old Crow"
 Linux/macOS:
 
 ```bash
-python3 -m uvicorn src.app.main:app
+python3 -m uvicorn src.app.main:app --host 0.0.0.0
 ```
 
 Windows (PowerShell):
 
 ```powershell
-python -m uvicorn src.app.main:app
+python -m uvicorn src.app.main:app --host 0.0.0.0
 ```
 
 Then open the Swagger UI at:
@@ -62,11 +62,22 @@ Then open the Swagger UI at:
 
 > **Note:** Dev environments use `src.app.main:app`. Docker uses `app.main:app` (see [Docker Guide](docs/DOCKER.md)).
 
+3) **Web Frontend** (React + Vite) for visualizing results in a browser
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Then open http://localhost:5173 — requires the API to be running on port 8000.
+
 ## Documentation
 - [Installation Guide](docs/INSTALLATION.md) - Complete setup instructions for all platforms
 - [Docker Guide](docs/DOCKER.md) - Complete Docker deployment guide
 - [User Guide](docs/USER_GUIDE.md) - Complete guide to using the program
 - [Communities](docs/COMMUNITIES.md) - List of all available communities to test
+- [Contributing](CONTRIBUTING.md) - Development setup, testing, and code style
 
 ## Docker Quick Start (Recommended for Sharing)
 
@@ -77,7 +88,7 @@ If you prefer containerized deployment:
 git clone https://github.com/canmet-energy/community-energy-orchestrator.git
 cd community-energy-orchestrator
 
-# 2) CRITICAL: Download the archetype library BEFORE building
+# 2) Download the archetype library (needed before running, not building)
 # Go to https://github.com/canmet-energy/housing-archetypes.git
 # Navigate to data/h2k_files/existing-stock
 # Download: retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities
@@ -87,24 +98,25 @@ cd community-energy-orchestrator
 # 3) Build the Docker image
 docker build -t community-energy-orchestrator .
 
-# 4) Run with docker-compose (recommended - auto-mounts volumes):
+# 4) Run with docker-compose (recommended - starts API + frontend):
 docker-compose up
 
-# OR run directly:
+# OR run the API only:
 docker run -p 8000:8000 community-energy-orchestrator
 ```
 
-Then open the Swagger UI at http://localhost:8000/docs
+Then open:
+- Frontend: http://localhost:5173
+- API Swagger UI: http://localhost:8000/docs
 
 **Note:** Docker installation automatically handles all dependencies (Python, uv, OpenStudio, EnergyPlus) inside the container. You only need Docker installed on your system.
 
-**Important:** The build validates that `source-archetypes/` exists and contains files. If you skip step 2, the build will fail with a clear error message.
+**Important:** The archetype library (`src/source-archetypes/`) is not baked into the Docker image — it's mounted as a volume at runtime via docker-compose. You need it before running `docker-compose up`, not before building.
 
 ## Repository Layout
 - `src/workflow/process_community_workflow.py`: end-to-end workflow driver
 - `src/workflow/service.py`: public API for workflow operations
-- `src/h2k-hpxml/`: converter used to generate HPXML + run simulations (git submodule)
-- `src/source-archetypes/`: Hot2000 `.H2K` archetype library (local/downloaded)
+- `src/source-archetypes/`: Hot2000 `.H2K` archetype library (local/downloaded, mounted into container)
 - `communities/<Community Name>/`: per-run working directory and outputs (generated locally)
 - `csv/`: community requirements + weather mapping inputs
 
@@ -157,7 +169,7 @@ os-setup --test-installation
 python3 src/workflow/process_community_workflow.py "Old Crow"
 
 # Optional: run the API instead
-# python3 -m uvicorn src.app.main:app
+# python3 -m uvicorn src.app.main:app --host 0.0.0.0
 ```
 
 ### Windows (PowerShell)
@@ -198,7 +210,7 @@ os-setup --test-installation
 python src\workflow\process_community_workflow.py "Old Crow"
 
 # Optional: run the API instead
-# python -m uvicorn src.app.main:app
+# python -m uvicorn src.app.main:app --host 0.0.0.0
 ```
 
 For first-time setup on a new machine (OpenStudio/EnergyPlus dependencies), follow: [Installation Guide](docs/INSTALLATION.md)
@@ -234,26 +246,17 @@ Note: the workflow currently deletes the existing `communities/<Community Name>/
 
 ## Contributing
 
-Contributions are welcome! For full setup instructions, see the [Installation Guide](docs/INSTALLATION.md).
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, code style, and submission guidelines.
 
-Quick setup for running tests:
+Quick start:
 
 ```bash
-# Fork and clone
-git clone https://github.com/YOUR_USERNAME/community-energy-orchestrator.git
-cd community-energy-orchestrator
 
-# Install dependencies
+
 pip install uv
 uv sync --all-extras
-source .venv/bin/activate  # or .venv\Scripts\Activate.ps1 on Windows
-
-# Run tests
-pytest tests/
+make fix-all          # Format, lint, and test before pushing
 ```
-
-Pull requests are automatically tested on Python 3.10-3.12 via GitHub Actions. Please ensure tests pass locally before submitting.
-
 ## Licensing and Relationship to Other Software
 
 This project is licensed under the GNU Affero General Public License

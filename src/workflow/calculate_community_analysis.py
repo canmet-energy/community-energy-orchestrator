@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 import argparse
 import glob
+import json
 import os
 import random
 import sys
 import traceback
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -21,59 +23,259 @@ if sys.platform == "win32":
         sys.stdout.reconfigure(encoding="utf-8")
         sys.stderr.reconfigure(encoding="utf-8")
 
-from workflow.config import EXPECTED_ROWS, KBTU_TO_GJ, get_analysis_random_seed, get_max_workers
+from workflow.config import (
+    ENERGY_CATEGORIES,
+    EXPECTED_ROWS,
+    GJ_TO_KW,
+    KBTU_TO_GJ,
+    KWH_TO_GJ,
+    get_analysis_random_seed,
+    get_max_workers,
+)
 from workflow.core import communities_dir, csv_dir
-from workflow.requirements import get_community_requirements
+from workflow.requirements import get_community_info, get_community_requirements
+
+
+def _extract_column(df, csv_cols, unit):
+    """Find matching CSV columns and return their summed values in GJ.
+
+    *csv_cols* is a list of **fallback groups**.  Each element can be:
+    - a plain string – treated as a single-element group, or
+    - a list of strings – alternatives for the same measurement;
+      only the **first** column found in the DataFrame is used.
+
+    Different groups are **summed** (e.g. wood-cord + wood-pellets).
+    Converts kBtu or kWh → GJ based on *unit* parameter.
+    Returns a zero Series when none of the candidate columns exist.
+    """
+    result = pd.Series(0, index=df.index)
+    for col_group in csv_cols:
+        # Treat a bare string as a single-element fallback group
+        if isinstance(col_group, str):
+            col_group = [col_group]
+        # Use only the first matching column from the fallback group
+        for col in col_group:
+            if col in df.columns:
+                value = pd.to_numeric(df[col], errors="coerce").fillna(0)
+                if unit == "kBtu":
+                    value = value * KBTU_TO_GJ
+                elif unit == "kWh":
+                    value = value * KWH_TO_GJ
+                result += value
+                break
+    return result
 
 
 def read_timeseries(file_path):
-    """Load and process timeseries data from CSV file."""
+    """Load and process timeseries data from CSV file.
+
+    Extracts energy columns for every category defined in
+    :data:`~workflow.config.ENERGY_CATEGORIES` (heating, total, etc.)
+    in a single pass over the CSV.
+    """
     file_path_obj = Path(file_path)
     if not file_path_obj.exists():
         raise FileNotFoundError(f"Timeseries file not found: {file_path}")
 
-    # Load timeseries data - low_memory=False prevents DtypeWarning for mixed types
-    df = pd.read_csv(file_path, low_memory=False, encoding="utf-8")
+    # Load timeseries data - skip row 1 (units row) to avoid misalignment
+    # Row 0: header, Row 1: units (kBtu, kWh, etc.), Row 2+: actual data
+    # low_memory=False prevents DtypeWarning for mixed types
+    df = pd.read_csv(file_path, skiprows=[1], low_memory=False, encoding="utf-8")
 
-    # Get heating load (what the house needs)
-    df["Heating_Load_GJ"] = (
-        pd.to_numeric(df["Load: Heating: Delivered"], errors="coerce") * KBTU_TO_GJ
-    )
+    for category in ENERGY_CATEGORIES.values():
+        # Extract load column if the category defines one (e.g. heating load)
+        load_cfg = category.get("load")
+        if load_cfg:
+            df[load_cfg["output_col"]] = _extract_column(
+                df, [load_cfg["csv_col"]], load_cfg["unit"]
+            )
 
-    # Get heating fuel use (what equipment uses)
-    # Try to find electricity, propane, and oil columns
-    elec_cols = [
-        "End Use: Electricity: Heating",
-        "System Use: HeatingSystem1: Electricity: Heating",
-    ]
-    oil_cols = ["End Use: Fuel Oil: Heating", "System Use: HeatingSystem1: Fuel Oil: Heating"]
-    propane_cols = ["End Use: Propane: Heating", "System Use: HeatingSystem1: Propane: Heating"]
-
-    # Electricity
-    for col in elec_cols:
-        if col in df.columns:
-            df["Heating_Electricity_GJ"] = pd.to_numeric(df[col], errors="coerce") * KBTU_TO_GJ
-            break
-    else:
-        df["Heating_Electricity_GJ"] = 0
-
-    # Fuel Oil
-    for col in oil_cols:
-        if col in df.columns:
-            df["Heating_Oil_GJ"] = pd.to_numeric(df[col], errors="coerce") * KBTU_TO_GJ
-            break
-    else:
-        df["Heating_Oil_GJ"] = 0
-
-    # Propane
-    for col in propane_cols:
-        if col in df.columns:
-            df["Heating_Propane_GJ"] = pd.to_numeric(df[col], errors="coerce") * KBTU_TO_GJ
-            break
-    else:
-        df["Heating_Propane_GJ"] = 0
+        # Extract each fuel-source column
+        for source in category["sources"].values():
+            df[source["output_col"]] = _extract_column(df, source["csv_cols"], source["unit"])
+            # Add any auxiliary columns (e.g. fans/pumps for heating electricity)
+            # Auxiliary columns use the same unit as the main source
+            for aux_col in source.get("additive_cols", []):
+                if aux_col in df.columns:
+                    aux_value = pd.to_numeric(df[aux_col], errors="coerce").fillna(0)
+                    # Convert auxiliary column to GJ using source's unit
+                    if source["unit"] == "kBtu":
+                        aux_value = aux_value * KBTU_TO_GJ
+                    elif source["unit"] == "kWh":
+                        aux_value = aux_value * KWH_TO_GJ
+                    df[source["output_col"]] += aux_value
 
     return df
+
+
+def _get_output_columns():
+    """Build the ordered list of community-total CSV columns from ENERGY_CATEGORIES."""
+    cols = ["Time"]
+    for cat in ENERGY_CATEGORIES.values():
+        if cat.get("load"):
+            cols.append(cat["load"]["output_col"])
+        for source in cat["sources"].values():
+            cols.append(source["output_col"])
+        cols.append(cat["total_col"])
+    return cols
+
+
+def _get_aggregate_columns():
+    """Return columns that must be summed across dwelling files (excludes totals)."""
+    cols = []
+    for cat in ENERGY_CATEGORIES.values():
+        if cat.get("load"):
+            cols.append(cat["load"]["output_col"])
+        for source in cat["sources"].values():
+            cols.append(source["output_col"])
+    return cols
+
+
+def _compute_category_stats(community_total, category):
+    """Compute summary statistics for one energy category.
+
+    Returns a dict with optional ``"load"`` and required ``"energy"`` sub-dicts,
+    matching the structure used in the analysis JSON.
+    """
+    stats: dict[str, Any] = {}
+
+    # Load stats (only categories with a load concept, e.g. heating)
+    if category.get("load"):
+        load_col = category["load"]["output_col"]
+        total_gj = community_total[load_col].sum()
+        max_gj_per_hour = community_total[load_col].max()
+        avg_gj_per_hour = community_total[load_col].mean()
+        stats["load"] = {
+            "total_annual_gj": float(total_gj),
+            "max_hourly_kw": float(max_gj_per_hour * GJ_TO_KW),
+            "avg_hourly_gj": float(avg_gj_per_hour),
+        }
+
+    # Energy stats (total + per-source breakdown)
+    total_col = category["total_col"]
+    total_gj = community_total[total_col].sum()
+    max_gj_per_hour = community_total[total_col].max()
+    avg_gj_per_hour = community_total[total_col].mean()
+    max_idx = community_total[total_col].idxmax()
+    max_time = str(community_total.loc[max_idx, "Time"])
+
+    def pct(val):
+        return (val / total_gj * 100) if total_gj else 0
+
+    by_source: dict[str, float] = {}
+    for source_key, source in category["sources"].items():
+        source_gj = community_total[source["output_col"]].sum()
+        by_source[f"{source_key}_gj"] = float(source_gj)
+        by_source[f"{source_key}_percent"] = round(pct(source_gj), 1)
+
+    stats["energy"] = {
+        "total_annual_gj": float(total_gj),
+        "max_hourly_kw": float(max_gj_per_hour * GJ_TO_KW),
+        "max_hourly_time": max_time,
+        "avg_hourly_gj": float(avg_gj_per_hour),
+        "by_source": by_source,
+    }
+
+    return stats
+
+
+def _write_category_markdown(f, category, stats):
+    """Write a markdown section for one energy category's statistics."""
+    label = category["label"]
+
+    # Load section (only for categories with a load concept)
+    if "load" in stats:
+        load = stats["load"]
+        f.write(f"## Community {label} Load Statistics (what the houses need):\n")
+        f.write(f"- Total Annual Load: {load['total_annual_gj']:,.1f} GJ\n")
+        f.write(f"- Maximum Hourly Load: {load['max_hourly_kw']:,.1f} kW\n")
+        f.write(f"- Average Hourly Load: {load['avg_hourly_gj']:,.1f} GJ\n\n")
+
+    # Energy section
+    energy = stats["energy"]
+    heading = f"## Community {label} Energy Use Statistics"
+    if "load" in stats:
+        heading += " (what the equipment uses)"
+    f.write(f"{heading}:\n")
+    f.write(f"- Total Annual Energy: {energy['total_annual_gj']:,.1f} GJ\n")
+
+    for source_key in category["sources"]:
+        display_name = source_key.replace("_", " ").title()
+        gj = energy["by_source"][f"{source_key}_gj"]
+        pct = energy["by_source"][f"{source_key}_percent"]
+        f.write(f"  - {display_name}: {gj:,.1f} GJ ({pct:,.1f}%)\n")
+
+    f.write(f"- Maximum Hourly Power: {energy['max_hourly_kw']:,.1f} kW\n")
+    f.write(f"- Average Hourly Energy: {energy['avg_hourly_gj']:,.1f} GJ\n")
+
+
+def _format_community_info_lines(community_info):
+    """Return formatted community metadata lines as a list of strings."""
+    lines = []
+    lines.append(f"Province/Territory: {community_info.get('province_territory', 'N/A')}")
+
+    pop = community_info.get("population")
+    lines.append(f"Population: {pop:,}" if pop else "Population: N/A")
+
+    hdd = community_info.get("hdd")
+    lines.append(f"Heating Degree Days (HDD): {hdd:,}" if hdd else "Heating Degree Days (HDD): N/A")
+
+    weather = community_info.get("weather_location")
+    lines.append(f"Weather Station: {weather}" if weather else "Weather Station: N/A")
+
+    total = community_info.get("total_houses")
+    lines.append(f"Total Homes: {total:,}" if total else "Total Homes: N/A")
+
+    dist = community_info.get("housing_distribution", {})
+    if dist:
+        lines.append("Housing Distribution:")
+        for housing_type, count in dist.items():
+            if count > 0:
+                lines.append(f"  - {housing_type}: {count}")
+
+    return lines
+
+
+def _write_community_info_markdown(f, community_info):
+    """Write a markdown section summarizing community metadata."""
+    f.write("## Community Overview\n")
+    for line in _format_community_info_lines(community_info):
+        f.write(f"- {line}\n")
+
+
+def _print_community_info(community_info):
+    """Print community metadata summary to console."""
+    print("\nCommunity Overview:")
+    for line in _format_community_info_lines(community_info):
+        print(line)
+
+
+def _print_category_stats(category, stats):
+    """Print summary statistics for one energy category to console."""
+    label = category["label"]
+
+    if "load" in stats:
+        load = stats["load"]
+        print(f"\nCommunity {label} Load Statistics (what the houses need):")
+        print(f"Total Annual Load: {load['total_annual_gj']:,.1f} GJ")
+        print(f"Maximum Hourly Load: {load['max_hourly_kw']:,.1f} kW")
+        print(f"Average Hourly Load: {load['avg_hourly_gj']:,.1f} GJ")
+
+    energy = stats["energy"]
+    section_title = f"\nCommunity {label} Energy Use Statistics"
+    if "load" in stats:
+        section_title += " (what the equipment uses)"
+    print(f"{section_title}:")
+    print(f"Total Annual Energy: {energy['total_annual_gj']:,.1f} GJ")
+
+    for source_key in category["sources"]:
+        display_name = source_key.replace("_", " ").title()
+        gj = energy["by_source"][f"{source_key}_gj"]
+        pct = energy["by_source"][f"{source_key}_percent"]
+        print(f"- {display_name}: {gj:,.1f} GJ ({pct:,.1f}%)")
+
+    print(f"Maximum Hourly Power: {energy['max_hourly_kw']:,.1f} kW")
+    print(f"Average Hourly Energy: {energy['avg_hourly_gj']:,.1f} GJ")
 
 
 def select_and_sum_timeseries(community_name):
@@ -227,14 +429,10 @@ def select_and_sum_timeseries(community_name):
     print("\nProcessing selected files...")
     processed_dfs = []
     error_files = []
-    expected_columns = [
-        "Time",
-        "Heating_Load_GJ",
-        "Heating_Propane_GJ",
-        "Heating_Oil_GJ",
-        "Heating_Electricity_GJ",
-        "Total_Heating_Energy_GJ",
-    ]
+
+    # Build column lists from configuration
+    output_columns = _get_output_columns()
+    aggregate_columns = _get_aggregate_columns()
 
     max_workers = min(get_max_workers(), len(selected_files))
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
@@ -250,15 +448,12 @@ def select_and_sum_timeseries(community_name):
                     print(
                         f"[WARNING] File {current_file} has {len(df)} rows, expected {EXPECTED_ROWS}."
                     )
-                # Only process if Time and Heating_Load_GJ exist
-                if "Time" not in df.columns or "Heating_Load_GJ" not in df.columns:
-                    print(
-                        f"[ERROR] File {current_file} missing required columns (Time, Heating_Load_GJ). Skipping."
-                    )
+                if "Time" not in df.columns:
+                    print(f"[ERROR] File {current_file} missing required Time column. Skipping.")
                     error_files.append(current_file)
                     continue
-                # Fill missing columns with zeros
-                for col in ["Heating_Propane_GJ", "Heating_Oil_GJ", "Heating_Electricity_GJ"]:
+                # Safety net: fill any missing aggregate columns with zeros
+                for col in aggregate_columns:
                     if col not in df.columns:
                         df[col] = 0
 
@@ -272,47 +467,38 @@ def select_and_sum_timeseries(community_name):
     # Aggregate results after parallel processing
     if processed_dfs:
         n_rows = len(processed_dfs[0])
-        heating_load = np.zeros(n_rows)
-        heating_propane = np.zeros(n_rows)
-        heating_oil = np.zeros(n_rows)
-        heating_electricity = np.zeros(n_rows)
 
+        # Sum each aggregate column across all dwelling DataFrames
+        accumulators = {col: np.zeros(n_rows) for col in aggregate_columns}
         for df in processed_dfs:
-            heating_load += df["Heating_Load_GJ"].values
-            heating_propane += df["Heating_Propane_GJ"].values
-            heating_oil += df["Heating_Oil_GJ"].values
-            heating_electricity += df["Heating_Electricity_GJ"].values
+            for col in aggregate_columns:
+                accumulators[col] += df[col].values
 
-        community_total = pd.DataFrame(
-            {
-                "Time": processed_dfs[0]["Time"].values,
-                "Heating_Load_GJ": heating_load,
-                "Heating_Propane_GJ": heating_propane,
-                "Heating_Oil_GJ": heating_oil,
-                "Heating_Electricity_GJ": heating_electricity,
-            }
-        )
+        # Build community total DataFrame
+        data = {"Time": processed_dfs[0]["Time"].values}
+        data.update(accumulators)
+        community_total = pd.DataFrame(data)
+
+        # Compute total-energy column for each category (sum of sources)
+        for cat in ENERGY_CATEGORIES.values():
+            source_cols = [s["output_col"] for s in cat["sources"].values()]
+            community_total[cat["total_col"]] = sum(community_total[c] for c in source_cols)
+
         successful_files_used = len(processed_dfs)
     else:
         community_total = None
         successful_files_used = 0
 
     if community_total is not None:
-        # Always ensure correct columns and row count
-        community_total["Total_Heating_Energy_GJ"] = (
-            community_total["Heating_Propane_GJ"]
-            + community_total["Heating_Oil_GJ"]
-            + community_total["Heating_Electricity_GJ"]
-        )
-        # Truncate or pad to expected rows
+        # Truncate to expected rows if needed
         if len(community_total) > EXPECTED_ROWS:
             print(
                 f"[WARNING] Output has {len(community_total)} rows, truncating to {EXPECTED_ROWS}."
             )
             community_total = community_total.iloc[:EXPECTED_ROWS]
-        community_total = community_total[expected_columns]
+        community_total = community_total[output_columns]
 
-        # Save the results
+        # Save the aggregated CSV
         base_communities_path = communities_dir()
         community_folder = base_communities_path / community_name
         community_folder.mkdir(parents=True, exist_ok=True)
@@ -322,41 +508,37 @@ def select_and_sum_timeseries(community_name):
         print(f"\nCommunity total energy use saved to:")
         print(f"  - {output_file} (community folder)")
 
-        # Calculate statistics in GJ
-        total_annual_load = community_total["Heating_Load_GJ"].sum()
-        max_hourly_load = community_total["Heating_Load_GJ"].max()
-        avg_hourly_load = community_total["Heating_Load_GJ"].mean()
+        # Compute statistics for every category
+        all_stats = {}
+        for cat_key, cat in ENERGY_CATEGORIES.items():
+            all_stats[cat_key] = _compute_category_stats(community_total, cat)
 
-        total_annual_propane = community_total["Heating_Propane_GJ"].sum()
-        total_annual_oil = community_total["Heating_Oil_GJ"].sum()
-        total_annual_electricity = community_total["Heating_Electricity_GJ"].sum()
-        total_annual_energy = total_annual_propane + total_annual_oil + total_annual_electricity
-        max_hourly_energy = community_total["Total_Heating_Energy_GJ"].max()
-        avg_hourly_energy = community_total["Total_Heating_Energy_GJ"].mean()
+        # Build analysis JSON from computed stats
+        analysis_data = {"community_name": community_name}
+        for cat_key, cat in ENERGY_CATEGORIES.items():
+            stats = all_stats[cat_key]
+            if "load" in stats:
+                analysis_data[f"{cat_key}_load"] = stats["load"]
+            analysis_data[f"{cat_key}_energy"] = stats["energy"]
 
-        # Save the analysis results
+        # Fetch community metadata for the report
+        community_info = get_community_info(community_name)
+
+        # Save analysis markdown
         analysis_file = community_folder / "analysis" / f"{community_name}_analysis.md"
         with open(analysis_file, "w", encoding="utf-8") as f:
             f.write(f"# {community_name} Community Analysis\n\n")
-            f.write("## Community Heating Load Statistics (what the houses need):\n")
-            f.write(f"- Total Annual Load: {total_annual_load:,.1f} GJ\n")
-            f.write(f"- Maximum Hourly Load: {max_hourly_load:,.3f} GJ\n")
-            f.write(f"- Average Hourly Load: {avg_hourly_load:,.3f} GJ\n\n")
-            f.write("## Community Heating Energy Use Statistics (what the equipment uses):\n")
-            f.write(f"- Total Annual Energy: {total_annual_energy:,.1f} GJ\n")
-            f.write(
-                f"  - Propane: {total_annual_propane:,.1f} GJ ({(total_annual_propane/total_annual_energy*100) if total_annual_energy else 0:,.1f}%)\n"
-            )
-            f.write(
-                f"  - Oil: {total_annual_oil:,.1f} GJ ({(total_annual_oil/total_annual_energy*100) if total_annual_energy else 0:,.1f}%)\n"
-            )
-            f.write(
-                f"  - Electricity: {total_annual_electricity:,.1f} GJ ({(total_annual_electricity/total_annual_energy*100) if total_annual_energy else 0:,.1f}%)\n"
-            )
-            f.write(f"- Maximum Hourly Energy: {max_hourly_energy:,.3f} GJ\n")
-            f.write(f"- Average Hourly Energy: {avg_hourly_energy:,.3f} GJ\n")
+
+            if community_info:
+                _write_community_info_markdown(f, community_info)
+                f.write("\n")
+
+            for cat_key, cat in ENERGY_CATEGORIES.items():
+                _write_category_markdown(f, cat, all_stats[cat_key])
+                f.write("\n")
+
             if error_files:
-                f.write(f"\n## Warnings and Errors Encountered:\n")
+                f.write(f"## Warnings and Errors Encountered:\n")
                 for ef in error_files:
                     f.write(f"- Issue with file: {ef}\n")
 
@@ -367,24 +549,35 @@ def select_and_sum_timeseries(community_name):
         print(f"\nAnalysis results saved to:")
         print(f"  - {analysis_file} (community folder)")
 
-        print("\nCommunity Heating Load Statistics (what the houses need):")
-        print(f"Total Annual Load: {total_annual_load:,.1f} GJ")
-        print(f"Maximum Hourly Load: {max_hourly_load:,.3f} GJ")
-        print(f"Average Hourly Load: {avg_hourly_load:,.3f} GJ")
+        # Include community metadata in JSON output
+        if community_info:
+            analysis_data["community_info"] = {
+                k: community_info[k]
+                for k in (
+                    "province_territory",
+                    "population",
+                    "hdd",
+                    "weather_location",
+                    "total_houses",
+                )
+            }
+            analysis_data["community_info"]["housing_distribution"] = {
+                k: v for k, v in community_info.get("housing_distribution", {}).items() if v > 0
+            }
 
-        print("\nCommunity Heating Energy Use Statistics (what the equipment uses):")
-        print(f"Total Annual Energy: {total_annual_energy:,.1f} GJ")
-        print(
-            f"- Propane: {total_annual_propane:,.1f} GJ ({(total_annual_propane/total_annual_energy*100) if total_annual_energy else 0:,.1f}%)"
-        )
-        print(
-            f"- Oil: {total_annual_oil:,.1f} GJ ({(total_annual_oil/total_annual_energy*100) if total_annual_energy else 0:,.1f}%)"
-        )
-        print(
-            f"- Electricity: {total_annual_electricity:,.1f} GJ ({(total_annual_electricity/total_annual_energy*100) if total_annual_energy else 0:,.1f}%)"
-        )
-        print(f"Maximum Hourly Energy: {max_hourly_energy:,.3f} GJ")
-        print(f"Average Hourly Energy: {avg_hourly_energy:,.3f} GJ")
+        # Save analysis JSON for frontend visualizations
+        analysis_json_file = community_folder / "analysis" / f"{community_name}_analysis.json"
+        with open(analysis_json_file, "w", encoding="utf-8") as f:
+            json.dump(analysis_data, f, indent=2)
+        print(f"  - {analysis_json_file} (community folder - JSON)")
+
+        # Print summary to console
+        if community_info:
+            _print_community_info(community_info)
+
+        for cat_key, cat in ENERGY_CATEGORIES.items():
+            _print_category_stats(cat, all_stats[cat_key])
+
         if error_files:
             print(
                 "\n[ALERT] Some input files had issues and were skipped or partially processed. See analysis markdown for details."

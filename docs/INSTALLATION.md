@@ -56,11 +56,16 @@ This will:
 ### Step 5) Run the container
 
 ```bash
-# Run the FastAPI server
+# Recommended: Start both API and frontend
+docker-compose up
+
+# OR run the API only
 docker run -p 8000:8000 community-energy-orchestrator
 ```
 
-Then open http://localhost:8000/docs to access the API.
+Then open:
+- Frontend: http://localhost:5173
+- API Swagger UI: http://localhost:8000/docs
 
 **Docker vs Dev Container:** The Dockerfile creates a production-ready container for running the API. If you're developing in VS Code with the dev container (`.devcontainer/`), that's for development purposes and includes additional dev tools.
 
@@ -241,13 +246,13 @@ Optional: run the API instead of the CLI workflow:
 Linux/macOS:
 
 ```bash
-python3 -m uvicorn src.app.main:app
+python3 -m uvicorn src.app.main:app --host 0.0.0.0
 ```
 
 Windows (PowerShell):
 
 ```powershell
-python -m uvicorn src.app.main:app
+python -m uvicorn src.app.main:app --host 0.0.0.0
 ```
 
 Then open:
@@ -255,6 +260,18 @@ Then open:
 - http://localhost:8000/docs
 
 > **Note:** This uses `src.app.main:app` because of the editable install. Docker environments use `app.main:app` instead.
+
+### Step 7b) Run the frontend (optional)
+
+The web frontend provides a visual interface for running communities and viewing results. It requires the API to be running (Step 7).
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Then open http://localhost:5173
 
 If a run fails during conversion/simulation, start by re-running:
 

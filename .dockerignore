@@ -86,6 +86,11 @@ Dockerfile
 docker-compose.yml
 
 # ============================================
+# CDK infrastructure (not needed in app container)
+# ============================================
+cdk/
+
+# ============================================
 # Environment and sensitive files
 # ============================================
 .env

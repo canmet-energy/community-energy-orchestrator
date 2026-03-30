@@ -5,16 +5,15 @@ FROM python:3.10-bookworm
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies needed for building Python packages and OpenStudio
-RUN apt-get update && apt-get install -y \
-    git \
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    wget \
-    curl \
     ca-certificates \
-    unzip \
-    libgomp1 \
+    curl \
     libgfortran5 \
+    libgomp1 \
+    unzip \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files first
@@ -31,12 +30,8 @@ RUN pip install --no-cache-dir uv
 # Install Python dependencies using uv (respects uv.lock if present)
 RUN uv pip install --system --no-cache .
 
-# Verify h2k-hpxml is installed and attempt to install OpenStudio/EnergyPlus
-# Note: OpenStudio may not install correctly in all container environments
-# Actual validation happens at runtime when processing communities
-RUN h2k-hpxml --version && \
-    (os-setup --auto-install || echo "WARNING: os-setup auto-install failed, manual setup may be required") && \
-    (os-setup --test-installation || echo "WARNING: OpenStudio verification failed in container, but may work at runtime")
+# Make h2k_hpxml utils dir writable so non-root user can create weather .lock files
+RUN find /usr/local/lib -path "*/h2k_hpxml/utils" -type d -exec chmod -R a+w {} +
 
 # Copy CSV data files (required for community requirements and weather mapping)
 COPY csv/ ./csv/
@@ -45,11 +40,23 @@ COPY csv/ ./csv/
 # Either mount as a volume: -v ./src/source-archetypes:/app/src/source-archetypes
 # Or download into the container after starting
 
+# Create non-root user for security (UID 1000 for compatibility with host volume mounts)
+# Use --create-home so appuser owns /app and can write to ~/.local, ~/.config, etc.
+RUN groupadd -g 1000 appuser && useradd -u 1000 -g appuser -d /app --no-create-home appuser \
+    && chown -R appuser:appuser /app
+
 # Create runtime directories for outputs and logs
 RUN mkdir -p output logs communities
 
+# Install OpenStudio/EnergyPlus as appuser so binaries land in /app/.local/share/
+USER appuser
+RUN os-setup --install-quiet && os-setup --check-only
+
 # Set Python to run in unbuffered mode (better for Docker logs)
 ENV PYTHONUNBUFFERED=1
+
+# Set APP_ROOT so installed package can find csv/, communities/, etc.
+ENV APP_ROOT=/app
 
 # Expose the default FastAPI port
 EXPOSE 8000

@@ -63,8 +63,10 @@ docker run -p 8000:8000 community-energy-orchestrator
 
 ### Option 2: Using Docker Compose (Recommended)
 
+Starts both the API and the web frontend:
+
 ```bash
-# Start services
+# Start services (API on port 8000, frontend on port 5173)
 docker-compose up
 
 # Run in background (detached mode)
@@ -78,6 +80,7 @@ docker-compose down
 ```
 
 **Benefits of docker-compose:**
+- Starts both API and frontend together
 - Automatic volume mounting for outputs
 - Easy restart policies
 - Health checks configured
@@ -312,7 +315,7 @@ docker-compose build --no-cache
 
 ## Security Notes
 
-- Container runs as root by default (consider adding USER directive for production)
+- Container runs as a non-root user (`appuser`) for security
 - No secrets should be baked into the image
 - Use environment variables or secrets management for sensitive data
 - The API has no authentication - add a reverse proxy with auth for production

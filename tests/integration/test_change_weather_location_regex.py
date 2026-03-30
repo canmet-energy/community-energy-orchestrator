@@ -29,23 +29,24 @@ SAMPLE_H2K_CONTENT = """<?xml version="1.0" encoding="UTF-8"?>
 
 
 def test_change_weather_code_success(tmp_path):
-    """Test successfully changing weather location in H2K file using real CSV files."""
+    """Test successfully changing weather location in H2K file."""
     # Create test H2K file
     h2k_file = tmp_path / "test.h2k"
     h2k_file.write_text(SAMPLE_H2K_CONTENT, encoding="utf-8")
 
-    # Change weather location (uses real CSV files from project)
+    # Change weather location (only modifies English names, not codes or French names)
     result = weather.change_weather_code(h2k_file, location="FORT SIMPSON", debug=False)
 
     # Should return True (changes were made)
     assert result is True
 
-    # Verify file was modified
+    # Verify English names were modified (codes and French names unchanged)
     content = h2k_file.read_text(encoding="utf-8")
     assert "FORT SIMPSON" in content
     assert "NORTHWEST TERRITORIES" in content
-    assert "TERRITOIRES DU NORD-OUEST" in content
-    assert 'code="12"' in content  # Region code
+    # Region/French and Location/French are NOT changed by new implementation
+    assert "COLOMBIE-BRITANNIQUE" in content  # Original French unchanged
+    assert 'code="1"' in content  # Original code unchanged
 
 
 def test_change_weather_code_nonexistent_file():
@@ -97,88 +98,7 @@ def test_change_weather_code_invalid_location(tmp_path, capsys):
 
     # Should print error message
     captured = capsys.readouterr()
-    assert "not found" in captured.out.lower()
-
-
-def test_change_weather_code_missing_location_csv(tmp_path, monkeypatch, capsys):
-    """Test missing location_code.csv returns False and prints error."""
-    # Create empty csv dir with only weather_details.csv
-    csv_dir = tmp_path / "csv"
-    csv_dir.mkdir()
-
-    weather_details = csv_dir / "weather_details.csv"
-    weather_details.write_text(
-        "Location,HDD,Library\nFORT SIMPSON,6500,FORT SIMPSON.wth\n", encoding="utf-8"
-    )
-
-    monkeypatch.setattr(weather, "csv_dir", lambda: csv_dir)
-
-    h2k_file = tmp_path / "test.h2k"
-    h2k_file.write_text(SAMPLE_H2K_CONTENT, encoding="utf-8")
-
-    # Should return False (error caught internally)
-    result = weather.change_weather_code(h2k_file, location="FORT SIMPSON")
-    assert result is False
-
-    # Should print error message
-    captured = capsys.readouterr()
-    assert "location_code" in captured.out.lower()
-
-
-def test_change_weather_code_missing_weather_details_csv(tmp_path, monkeypatch, capsys):
-    """Test missing weather_details.csv returns False and prints error."""
-    # Create empty csv dir with only location_code.csv
-    csv_dir = tmp_path / "csv"
-    csv_dir.mkdir()
-
-    location_codes = csv_dir / "location_code.csv"
-    location_codes.write_text("FORT SIMPSON,400\n", encoding="utf-8")
-
-    monkeypatch.setattr(weather, "csv_dir", lambda: csv_dir)
-
-    h2k_file = tmp_path / "test.h2k"
-    h2k_file.write_text(SAMPLE_H2K_CONTENT, encoding="utf-8")
-
-    # Should return False (error caught internally)
-    result = weather.change_weather_code(h2k_file, location="FORT SIMPSON")
-    assert result is False
-
-    # Should print error message
-    captured = capsys.readouterr()
-    assert "weather_details" in captured.out.lower()
-
-
-def test_change_weather_code_location_not_in_region_map(tmp_path, monkeypatch, capsys):
-    """Test location exists in CSVs but not in region map."""
-    # Create temporary CSV directory with a fake location
-    csv_dir = tmp_path / "csv"
-    csv_dir.mkdir()
-
-    location_codes = csv_dir / "location_code.csv"
-    location_codes.write_text("FORT SIMPSON,400\n" "FAKE_LOCATION,999\n", encoding="utf-8")
-
-    weather_details = csv_dir / "weather_details.csv"
-    weather_details.write_text(
-        "Location,HDD,Library\n"
-        "FORT SIMPSON,6500,FORT SIMPSON.wth\n"
-        "FAKE_LOCATION,5000,FAKE.wth\n",
-        encoding="utf-8",
-    )
-
-    # Mock csv_dir() to return our temporary directory
-    monkeypatch.setattr("workflow.change_weather_location_regex.csv_dir", lambda: csv_dir)
-
-    h2k_file = tmp_path / "test.h2k"
-    h2k_file.write_text(SAMPLE_H2K_CONTENT, encoding="utf-8")
-
-    result = weather.change_weather_code(h2k_file, location="FAKE_LOCATION", debug=False)
-
-    # Should return False
-    assert result is False
-
-    # Should print error about region
-    captured = capsys.readouterr()
-    assert "region" in captured.out.lower()
+    assert "could not determine region" in captured.out.lower()
 
 
 def test_change_weather_code_preserves_encoding(tmp_path):

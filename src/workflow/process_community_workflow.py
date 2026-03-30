@@ -10,6 +10,7 @@ import random
 import re
 import shutil
 import stat
+import subprocess
 import sys
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
@@ -57,21 +58,33 @@ def normalize_community_name(community_name):
     return normalized
 
 
-def remove_readonly(func, path, exc):
+def remove_readonly(func, path, exc):  # pylint: disable=unused-argument
     """Error handler for shutil.rmtree to handle read-only files."""
-    if not os.access(path, os.W_OK):
-        os.chmod(path, stat.S_IWUSR | stat.S_IRUSR | stat.S_IXUSR)
-        func(path)
-    else:
-        raise
+    # Clear read-only bit and retry
+    os.chmod(path, stat.S_IWUSR | stat.S_IRUSR | stat.S_IXUSR)
+    func(path)
 
 
 def safe_rmtree(path):
-    """Remove directory tree with read-only file handling, compatible with all Python versions."""
-    if sys.version_info >= (3, 12):
-        shutil.rmtree(path, onexc=remove_readonly)
-    else:
-        shutil.rmtree(path, onerror=remove_readonly)
+    """Remove directory tree with read-only file handling, compatible with all Python versions.
+    Falls back to sudo rm -rf when files are owned by another user (e.g. root)."""
+    try:
+        if sys.version_info >= (3, 12):
+            shutil.rmtree(path, onexc=remove_readonly)  # pylint: disable=unexpected-keyword-arg
+        else:
+            shutil.rmtree(path, onerror=remove_readonly)
+    except PermissionError:
+        # Files may be owned by root (e.g. from a previous Docker build).
+        # Fall back to sudo rm -rf which is available in the dev container.
+        result = subprocess.run(
+            ["sudo", "rm", "-rf", str(path)],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            raise PermissionError(
+                f"Failed to remove {path} even with sudo: {result.stderr.strip()}"
+            )
 
 
 def create_manifest(community_name, requirements):

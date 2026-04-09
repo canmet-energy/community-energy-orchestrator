@@ -3,9 +3,6 @@ services:
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
-      args:
-        GIT_API_TOKEN: ${GIT_API_TOKEN:-nothing}
-        LOCALNRCAN: ${LOCALNRCAN:-}
     image: community-energy-orchestrator-dev:latest
     user: vscode
     volumes:

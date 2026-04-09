@@ -6,7 +6,8 @@
 	"containerUser": "vscode",
 	"remoteUser": "vscode",
 	"containerEnv": {
-		"APP_ROOT": "/workspaces/${localWorkspaceFolderBasename}"
+		"APP_ROOT": "/workspaces/${localWorkspaceFolderBasename}",
+		"UV_PROJECT_ENVIRONMENT": "/workspaces/${localWorkspaceFolderBasename}/.venv"
 	},
 	"features": {
 		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {

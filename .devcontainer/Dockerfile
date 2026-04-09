@@ -19,32 +19,36 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && ln -sf /usr/bin/python3.10 /usr/local/bin/python3 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv package manager (no pip required)
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
-    && ln -sf /root/.local/bin/uv /usr/local/bin/uv
+# Install certificate management (follows bluesky pattern)
+COPY .devcontainer/certs/ /tmp/certs/
+COPY .devcontainer/scripts/certctl-safe.sh /tmp/
+RUN chmod +x /tmp/certctl-safe.sh && \
+    /tmp/certctl-safe.sh install && \
+    /tmp/certctl-safe.sh certs-refresh && \
+    rm -rf /tmp/certctl-safe.sh /tmp/certs/
 
-# Without this, the -k flag on curl and strict-ssl=false on npm are used as fallbacks.
-ARG GIT_API_TOKEN='nothing'
-ARG LOCALNRCAN=''
-RUN if [ -n "$LOCALNRCAN" ] ; then \
-      echo "Installing NRCan certificates from private repo..." \
-      && git clone https://${GIT_API_TOKEN}:x-oauth-basic@github.com/canmet-energy/linux_nrcan_certs.git \
-         --depth 1 --single-branch /tmp/linux_nrcan_certs \
-      && cd /tmp/linux_nrcan_certs \
-      && ./install_nrcan_certs.sh \
-      && echo "NRCan certs installed (revision: $(git rev-parse --short HEAD))" \
-      && rm -rf /tmp/linux_nrcan_certs; \
-    fi
+# Install uv package manager to /usr/local/bin (available to all users, no sudo needed)
+RUN bash -c '. /usr/local/bin/certctl && \
+    certctl_load && \
+    curl $CURL_FLAGS -Lo /tmp/uv.tar.gz https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-unknown-linux-gnu.tar.gz && \
+    tar xzf /tmp/uv.tar.gz -C /tmp/ && \
+    mv /tmp/uv-*/uv /usr/local/bin/uv && \
+    mv /tmp/uv-*/uvx /usr/local/bin/uvx && \
+    rm -rf /tmp/uv.tar.gz /tmp/uv-*'
 
 # Install Node.js LTS (direct binary)
-# Note: uses -k as fallback when NRCan certs are not installed (corporate proxy)
 ARG NODE_VERSION=22.14.0
-RUN curl -fsSL$(if [ -z "$LOCALNRCAN" ]; then echo "k"; fi) \
+RUN bash -c '. /usr/local/bin/certctl && \
+    certctl_load && \
+    curl $CURL_FLAGS \
         "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz" \
-        -o /tmp/node.tar.gz \
-    && tar -xzf /tmp/node.tar.gz -C /usr/local --strip-components=1 \
-    && rm /tmp/node.tar.gz \
-    && node --version && npm --version
+        -o /tmp/node.tar.gz && \
+    tar -xzf /tmp/node.tar.gz -C /usr/local --strip-components=1 && \
+    rm /tmp/node.tar.gz && \
+    node --version && npm --version'
+
+# Ensure /workspaces exists and is owned by vscode for "Clone in Container Volume"
+RUN mkdir -p /workspaces && chown vscode:vscode /workspaces
 
 # Default command for development
 CMD ["/bin/bash"]

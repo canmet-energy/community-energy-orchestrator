@@ -161,6 +161,12 @@ ENV/
 env.bak/
 venv.bak/
 
+# Corporate SSL certificates (for Docker builds in corporate environments)
+# Users should add their own certificates locally - never commit to repo
+.devcontainer/certs/*.crt
+.devcontainer/certs/*.pem
+.devcontainer/certs/*.key
+
 # Spyder project settings
 .spyderproject
 .spyproject

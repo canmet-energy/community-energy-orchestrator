@@ -23,6 +23,7 @@ def test_health_endpoint_returns_status(client):
     assert "warning" in data
     assert "active_runs" in data
     assert isinstance(data["active_runs"], int)
+    assert "cert_status" in data, "Health response should include cert_status"
 
 
 # =============================================================================

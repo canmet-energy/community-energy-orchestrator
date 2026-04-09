@@ -18,7 +18,7 @@ if sys.platform == "win32":
     # Reconfigure stdout/stderr to use UTF-8
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
-        sys.stderr.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
 
 
 def debug_timeseries_outputs(community_name):

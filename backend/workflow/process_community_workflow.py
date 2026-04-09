@@ -21,7 +21,7 @@ if sys.platform == "win32":
     # Reconfigure stdout/stderr to use UTF-8
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
-        sys.stderr.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
 
 from workflow.calculate_community_analysis import select_and_sum_timeseries
 from workflow.change_weather_location_regex import change_weather_code
@@ -508,10 +508,11 @@ def main(community_name):
     try:
         requirements = get_community_requirements(community_name)
         if not requirements:
-            print(f"Community '{community_name}' not found in database.")
-            print(f"Please check the spelling and try again.")
-            print(f"Refer to data/json/communities.json for valid community names.")
-            return 0
+            raise ValueError(
+                f"Community '{community_name}' not found in database. "
+                f"Please check the spelling and try again. "
+                f"Refer to data/json/communities.json for valid community names."
+            )
         if all(count == 0 for count in requirements.values()):
             print(f"Community '{community_name}' exists in database but has 0 houses.")
             print(f"No analysis can be performed.")
@@ -618,9 +619,14 @@ def main(community_name):
 
 def cli():
     """CLI entry point for running the workflow."""
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 2 or sys.argv[1] in ("--help", "-h"):
         print("Usage: process-community <community_name>")
-        sys.exit(1)
+        print()
+        print("Run the community energy analysis workflow for a given community.")
+        print()
+        print("Arguments:")
+        print("  community_name  Name of the community to process (from communities.json)")
+        sys.exit(0 if len(sys.argv) == 2 else 1)
 
     community_name = sys.argv[1]
 

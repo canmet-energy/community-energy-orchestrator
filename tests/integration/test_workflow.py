@@ -95,19 +95,41 @@ def test_api_handles_nonexistent_community_gracefully(client):
     """Test that API+workflow handles nonexistent community without crashing.
 
     Integration point: API â†’ Workflow â†’ JSON validation â†’ Graceful failure
+    The workflow raises ValueError for unknown communities, which the API
+    background task catches and records as a failed run.
     """
+    import app.main
+
     fake_community = "NonExistentCommunity999"
 
     # Verify it doesn't exist
     requirements = req.get_community_requirements(fake_community)
     assert not requirements, "Test community should not exist in JSON"
 
-    # API should accept the request (background task will handle gracefully)
+    # API should accept the request (validation happens in background task)
     response = client.post("/runs", json={"community_name": fake_community})
-    assert response.status_code in [
-        200,
-        409,
-    ], "API should accept request even for nonexistent community"
+    if response.status_code == 409:
+        with app.main._lock:
+            app.main._current_run_id = None
+            app.main._runs.clear()
+        response = client.post("/runs", json={"community_name": fake_community})
+
+    assert response.status_code == 200, "API should accept request even for nonexistent community"
+    run_id = response.json()["run_id"]
+
+    # Wait for background task to complete
+    time.sleep(0.5)
+
+    # Run should be marked as failed with a meaningful error
+    status_response = client.get(f"/runs/{run_id}")
+    data = status_response.json()
+    assert data["status"] == "failed", "Nonexistent community should fail"
+    assert "not found in database" in data["error"], "Error should mention community not found"
+
+    # Cleanup
+    with app.main._lock:
+        app.main._current_run_id = None
+        app.main._runs.clear()
 
 
 # =============================================================================

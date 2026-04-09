@@ -26,6 +26,13 @@ Complete guide for building and running the Community Energy Orchestrator using 
 docker build -t community-energy-orchestrator .
 ```
 
+**For NRCan network:** Place your corporate certificate files (`.crt` or `.pem`) in the `.devcontainer/certs/` folder before building. The build process will:
+- Automatically detect and validate certificates
+- Display security status (SECURE or INSECURE mode)
+- Set appropriate SSL settings for all tools
+
+See `.devcontainer/certs/README.md` for detailed instructions.
+
 **Build time:** ~5-10 minutes
 **Image size:** ~2-3 GB (includes Python, dependencies, OpenStudio, EnergyPlus)
 
@@ -33,15 +40,25 @@ docker build -t community-energy-orchestrator .
 
 The Dockerfile:
 1. Installs Python 3.10 (compatible with your project's 3.10-3.12 range)
-2. Copies application source code (app/ and workflow/ directories)
-3. Installs `uv` package manager for fast, reproducible dependency installation
-4. Installs all Python dependencies (using your `uv.lock` if present)
-5. Installs OpenStudio/EnergyPlus via `os-setup`
-6. Copies JSON configuration files
-7. Creates runtime directories
+2. Installs certificate management (`certctl`) and any certificates from `certs/`
+3. Copies application source code (app/ and workflow/ directories)
+4. Installs `uv` package manager for fast, reproducible dependency installation
+5. Installs all Python dependencies (using your `uv.lock` if present)
+6. Installs OpenStudio/EnergyPlus via `os-setup`
+7. Copies JSON configuration files
+8. Creates runtime directories
 
 
 ### Common Build Issues
+
+**Error: "SSL certificate problem: self-signed certificate in certificate chain"**
+- Cause: Corporate network with SSL inspection
+- Solution: Place your corporate certificate files in `.devcontainer/certs/` folder and rebuild. See `.devcontainer/certs/README.md`
+
+**Build shows "⚠️ Certificates: Insecure mode"**
+- This is acceptable for development/testing or building outside corporate networks
+- For production in NRCan network, add certificates to `.devcontainer/certs/` folder
+- The build will automatically use insecure mode (-k flags) as a fallback
 
 **Error: "os-setup command not found"**
 - Solution: The h2k-hpxml package may not have installed. Check that pyproject.toml is correct.

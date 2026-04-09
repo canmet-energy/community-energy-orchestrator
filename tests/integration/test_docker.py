@@ -144,6 +144,9 @@ def test_docker_container_starts_and_responds():
         assert isinstance(
             health_data["active_runs"], int
         ), f"active_runs should be int, got {type(health_data['active_runs'])}"
+        assert (
+            "cert_status" in health_data
+        ), "Health response missing 'cert_status' field for security status reporting"
 
     finally:
         # Clean up - capture errors for debugging but don't fail test

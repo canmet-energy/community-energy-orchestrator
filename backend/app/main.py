@@ -90,6 +90,7 @@ class HealthResponse(BaseModel):
     status: str
     warning: Optional[str] = None
     active_runs: int = 0
+    cert_status: Optional[str] = None
 
 
 class CommunityInfo(BaseModel):
@@ -157,6 +158,21 @@ def _get_run_community(run_id: str) -> str:
         return str(run["community_name"])
 
 
+def _read_cert_status() -> str:
+    """Read certificate status from environment or /etc/environment."""
+    status = os.getenv("CERT_STATUS")
+    if status:
+        return status
+    try:
+        with open("/etc/environment", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("CERT_STATUS="):
+                    return line.strip().split("=", 1)[1]
+    except (FileNotFoundError, PermissionError):
+        pass
+    return "UNKNOWN"
+
+
 @app.get(
     "/health",
     response_model=HealthResponse,
@@ -169,10 +185,19 @@ def health():
             1 for run in _runs.values() if run.get("status") in ("queued", "running")
         )
 
+    cert_status = _read_cert_status()
+    warnings = ["Using in-memory state storage. Run history will be lost on restart."]
+    if cert_status == "INSECURE":
+        warnings.append(
+            "Running in INSECURE mode (SSL verification disabled). "
+            "Place valid certificates in .devcontainer/certs/ and rebuild."
+        )
+
     return {
         "status": "ok",
-        "warning": "Using in-memory state storage. Run history will be lost on restart.",
+        "warning": " | ".join(warnings),
         "active_runs": active_count,
+        "cert_status": cert_status,
     }
 
 

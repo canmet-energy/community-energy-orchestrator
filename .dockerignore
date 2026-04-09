@@ -80,7 +80,11 @@ communities/
 # ============================================
 # Dev container and Docker files
 # ============================================
-.devcontainer/
+.devcontainer/Dockerfile
+.devcontainer/devcontainer.json
+.devcontainer/docker-compose.yml
+.devcontainer/scripts/post-create.sh
+# Keep .devcontainer/certs/ and .devcontainer/scripts/certctl-safe.sh for builds
 Dockerfile
 .dockerignore
 docker-compose.yml

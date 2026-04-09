@@ -36,7 +36,7 @@ from uuid import uuid4
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel
 
 from workflow.outputs import (
@@ -186,7 +186,11 @@ def get_communities():
     """List all available communities with metadata from CSV files."""
     try:
         communities_data = get_all_communities()
-        return [CommunityInfo(**comm) for comm in communities_data]
+        communities = [CommunityInfo(**comm) for comm in communities_data]
+        return JSONResponse(
+            content=[c.model_dump() for c in communities],
+            media_type="application/json; charset=utf-8",
+        )
     except FileNotFoundError as e:
         raise HTTPException(status_code=500, detail=str(e))
 

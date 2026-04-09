@@ -3,6 +3,9 @@ services:
     build: .
     image: community-energy-orchestrator:latest
     container_name: community-energy-api
+    # Run as root so entrypoint.sh can fix volume mount permissions,
+    # then it drops to appuser (UID 1000) via setpriv before starting uvicorn
+    user: "0:0"
     ports:
       - "8000:8000"
     volumes:

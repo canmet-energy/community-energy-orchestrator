@@ -1,4 +1,4 @@
-"""Unit tests for API endpoints - HTTP contract only, no workflow logic.
+﻿"""Unit tests for API endpoints - HTTP contract only, no workflow logic.
 
 Tests focus on API behavior: validation, status codes, response structure.
 Workflow execution logic is tested in integration tests.
@@ -654,8 +654,8 @@ def test_download_dwelling_timeseries_returns_zip(client, tmp_path):
     # Create fake timeseries files
     ts_dir = tmp_path / "TestCommunity" / "timeseries"
     ts_dir.mkdir(parents=True)
-    (ts_dir / "pre-2000-single_EX-001-results_timeseries.csv").write_text("a,b\n1,2\n")
-    (ts_dir / "pre-2000-single_EX-002-results_timeseries.csv").write_text("a,b\n3,4\n")
+    (ts_dir / "pre-2002-single_EX-001-results_timeseries.csv").write_text("a,b\n1,2\n")
+    (ts_dir / "pre-2002-single_EX-002-results_timeseries.csv").write_text("a,b\n3,4\n")
 
     try:
         response = client.get(f"/runs/{run_id}/download/dwelling-timeseries")
@@ -670,3 +670,4 @@ def test_download_dwelling_timeseries_returns_zip(client, tmp_path):
         workflow.outputs.communities_dir = original_communities_dir
         with app.main._lock:
             app.main._runs.clear()
+

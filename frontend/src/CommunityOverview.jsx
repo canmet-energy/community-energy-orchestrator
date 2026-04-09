@@ -1,8 +1,8 @@
 /* eslint-disable react/prop-types */
 
 /**
- * Formats a housing type key like "pre-2000-single" into a readable label.
- * e.g. "pre-2000-single" → "Pre-2000 Single"
+ * Formats a housing type key like "pre-2002-single" into a readable label.
+ * e.g. "pre-2002-single" → "Pre-2002 Single"
  */
 function formatHousingType(key) {
     return key
@@ -14,7 +14,7 @@ function formatHousingType(key) {
             return part.charAt(0).toUpperCase() + part.slice(1);
         })
         .join(' ')
-        // Rejoin year ranges: "Pre 2000" → "Pre-2000", "2001 2015" → "2001-2015"
+        // Rejoin year ranges: "Pre 2002" → "Pre-2002", "2002 2016" → "2002-2016"
         .replace(/(\d+)\s+(\d+)/g, '$1-$2')
         .replace(/(Pre|Post)\s+(\d+)/g, '$1-$2')
         // Clean up type labels

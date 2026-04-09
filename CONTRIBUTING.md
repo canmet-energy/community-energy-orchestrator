@@ -50,13 +50,13 @@ npm run lint     # ESLint
 The frontend expects the API to be running at `http://localhost:8000`. Start the API with:
 
 ```bash
-python3 -m uvicorn src.app.main:app --host 0.0.0.0
+python3 -m uvicorn app.main:app --host 0.0.0.0
 ```
 
 ## Project Structure
 
 ```
-src/
+backend/
   app/
     main.py                              # FastAPI REST API
   workflow/
@@ -64,17 +64,21 @@ src/
     service.py                           # Public API for workflow operations
     calculate_community_analysis.py      # Aggregates timeseries into community outputs
     change_weather_location_regex.py     # Updates weather reference in .H2K files
-    requirements.py                      # Reads community requirements from CSV
+    requirements.py                      # Reads community requirements from JSON
     outputs.py                           # Output file management (paths, ZIP creation)
     config.py                            # Environment-based configuration
-    core.py                              # Shared paths (communities_dir, csv_dir, etc.)
+    paths.py                             # Shared paths (communities_dir, json_dir, etc.)
     debug_outputs.py                     # Output validation and debug logs
 tests/
   conftest.py                            # Shared fixtures
   unit/                                  # Unit tests (fast, no external deps)
   integration/                           # Integration tests (may need full environment)
 frontend/                                # React + Vite frontend
-csv/                                     # Community requirements and weather mapping data
+data/
+  json/                                  # Community requirements and weather mapping configuration
+  source-archetypes/                     # H2K archetype library (gitignored)
+tools/
+  data-scrubbing/                        # Data preparation scripts
 communities/                             # Generated per-run (gitignored)
 docs/                                    # User-facing documentation
 ```
@@ -123,7 +127,7 @@ uv run pytest tests/integration/ -m integration
 Tests use [pytest](https://docs.pytest.org/) with the following conventions:
 
 - **Unit tests** (`tests/unit/`): Fast, isolated tests. Use `monkeypatch` and `tmp_path` to avoid filesystem dependencies. Marked with `@pytest.mark.unit`.
-- **Integration tests** (`tests/integration/`): May depend on CSV data or real directory structures. Marked with `@pytest.mark.integration`.
+- **Integration tests** (`tests/integration/`): May depend on JSON configuration data or real directory structures. Marked with `@pytest.mark.integration`.
 - **Fixtures**: Shared fixtures live in `tests/conftest.py`. Test-specific fixtures go in the test file itself.
 
 Test files follow the pattern `test_<module_name>.py`, mirroring the source module they test.
@@ -144,7 +148,7 @@ pytestmark = pytest.mark.unit
 
 
 def test_my_function(tmp_path, monkeypatch):
-    monkeypatch.setattr("workflow.core.communities_dir", lambda: tmp_path)
+    monkeypatch.setattr("workflow.paths.communities_dir", lambda: tmp_path)
     # ... test logic
 ```
 

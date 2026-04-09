@@ -7,10 +7,7 @@ Processes housing archetypes, runs simulations, and generates community-level en
 import math
 import os
 import random
-import re
 import shutil
-import stat
-import subprocess
 import sys
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
@@ -29,62 +26,16 @@ if sys.platform == "win32":
 from workflow.calculate_community_analysis import select_and_sum_timeseries
 from workflow.change_weather_location_regex import change_weather_code
 from workflow.config import (
-    ARCHETYPE_TYPE_PATTERNS,
     get_archetype_selection_seed,
     get_max_workers,
 )
-from workflow.core import communities_dir, logs_dir, source_archetypes_dir
+from workflow.paths import communities_dir, logs_dir, source_archetypes_dir
 from workflow.debug_outputs import main as debug_main
-from workflow.requirements import get_community_requirements, get_weather_location
-
-
-def normalize_community_name(community_name):
-    """
-    Normalize community name by stripping whitespace and converting to title case.
-
-    Args:
-        community_name: Raw community name input
-
-    Returns:
-        Normalized community name with proper capitalization
-    """
-    # Strip leading/trailing whitespace
-    normalized = community_name.strip()
-    # Split by spaces and capitalize first letter of each word
-    # This avoids .title() which capitalizes after apostrophes
-    words = normalized.split()
-    capitalized_words = [word[0].upper() + word[1:].lower() if word else word for word in words]
-    normalized = " ".join(capitalized_words)
-    return normalized
-
-
-def remove_readonly(func, path, exc):  # pylint: disable=unused-argument
-    """Error handler for shutil.rmtree to handle read-only files."""
-    # Clear read-only bit and retry
-    os.chmod(path, stat.S_IWUSR | stat.S_IRUSR | stat.S_IXUSR)
-    func(path)
-
-
-def safe_rmtree(path):
-    """Remove directory tree with read-only file handling, compatible with all Python versions.
-    Falls back to sudo rm -rf when files are owned by another user (e.g. root)."""
-    try:
-        if sys.version_info >= (3, 12):
-            shutil.rmtree(path, onexc=remove_readonly)  # pylint: disable=unexpected-keyword-arg
-        else:
-            shutil.rmtree(path, onerror=remove_readonly)
-    except PermissionError:
-        # Files may be owned by root (e.g. from a previous Docker build).
-        # Fall back to sudo rm -rf which is available in the dev container.
-        result = subprocess.run(
-            ["sudo", "rm", "-rf", str(path)],
-            capture_output=True,
-            text=True,
-        )
-        if result.returncode != 0:
-            raise PermissionError(
-                f"Failed to remove {path} even with sudo: {result.stderr.strip()}"
-            )
+from workflow.requirements import (
+    get_community_requirements,
+    get_weather_location,
+    normalize_community_name,
+)
 
 
 def create_manifest(community_name, requirements):
@@ -103,7 +54,7 @@ def create_manifest(community_name, requirements):
     )
     # Ensure parent directory exists
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    # Use weather location from CSV
+    # Use weather location from JSON
     weather_location = get_weather_location(community_name)
 
     # Helper to get count or 0
@@ -117,17 +68,17 @@ Using weather data from: {weather_location}
 
 ## Housing Requirements
 
-### Pre-2000
-- Single Detached: {get_count('pre-2000','single')}
-- Semi-Detached: {get_count('pre-2000','semi')}
-- Row House Middle: {get_count('pre-2000','row-mid')}
-- Row House End: {get_count('pre-2000','row-end')}
+### Pre-2002
+- Single Detached: {get_count('pre-2002','single')}
+- Semi-Detached: {get_count('pre-2002','semi')}
+- Row House Middle: {get_count('pre-2002','row-mid')}
+- Row House End: {get_count('pre-2002','row-end')}
 
-### 2001-2015
-- Single Detached: {get_count('2001-2015','single')}
-- Semi-Detached: {get_count('2001-2015','semi')}
-- Row House Middle: {get_count('2001-2015','row-mid')}
-- Row House End: {get_count('2001-2015','row-end')}
+### 2002-2016
+- Single Detached: {get_count('2002-2016','single')}
+- Semi-Detached: {get_count('2002-2016','semi')}
+- Row House Middle: {get_count('2002-2016','row-mid')}
+- Row House End: {get_count('2002-2016','row-end')}
 
 ### Post-2016
 - Single Detached: {get_count('post-2016','single')}
@@ -156,7 +107,7 @@ def duplicate_missing_timeseries(timeseries_dir, building_type, required_count):
 
     Args:
         timeseries_dir: Path to directory containing timeseries files
-        building_type: Type prefix to match (e.g., 'pre-2000-single')
+        building_type: Type prefix to match (e.g., 'pre-2002-single')
         required_count: Exact number of files needed
 
     Returns:
@@ -239,15 +190,6 @@ def copy_archetype_files(community_name, requirements):
     base_path = communities_dir() / community_name / "archetypes"
     if not base_path.exists():
         base_path.mkdir(parents=True, exist_ok=True)
-    # Find all H2K files in the source directory
-    all_files = os.listdir(archetypes_source)
-    h2k_files = [f for f in all_files if f.endswith(".H2K")]
-
-    # Compile regex patterns once to avoid repeated compilation work.
-    compiled_patterns_by_type = {
-        req_type: [re.compile(pat) for pat in patterns]
-        for req_type, patterns in ARCHETYPE_TYPE_PATTERNS.items()
-    }
 
     debug_log_path = logs_dir() / "archetype_copy_debug.log"
     debug_log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -262,32 +204,45 @@ def copy_archetype_files(community_name, requirements):
                 continue
             # Enforce N+20% rule (always round up for safety)
             num_to_copy = math.ceil(count * 1.2) if count > 0 else 0
-            if req_type not in ARCHETYPE_TYPE_PATTERNS:
-                print(
-                    f"[WARNING] Requirement type '{req_type}' not found in ARCHETYPE_TYPE_PATTERNS. "
-                )
-            patterns = compiled_patterns_by_type.get(req_type)
-            if patterns is None:
-                patterns = [re.compile(rf"{req_type}_.*\.H2K$")]
-
-            matched_files = [f for f in h2k_files if any(regex.match(f) for regex in patterns)]
-            matched_files = sorted(set(matched_files))  # Canonical order for reproducible shuffling
-            rng.shuffle(matched_files)
-            # Copy up to num_to_copy files (or fewer if we run out of matches).
-            files_to_copy = matched_files[:num_to_copy]
-
-            # Copy whatever is available (no duplication). If nothing matches, warn and move on.
-            if not files_to_copy:
-                msg = f"[WARNING] No archetype files found for '{req_type}'. Skipping copy for this type."
+            
+            # Subdirectory name matches the requirement type
+            subdir_path = archetypes_source / req_type
+            if not subdir_path.exists() or not subdir_path.is_dir():
+                msg = f"[WARNING] Subdirectory not found: {subdir_path}. Skipping '{req_type}'."
+                print(msg)
+                debug_log.write(msg + "\n")
+                continue
+            
+            # Get all H2K files from the subdirectory
+            # Since files are organized by type in subdirectories, we trust all files in the directory
+            try:
+                h2k_files = [
+                    f.name for f in subdir_path.iterdir() 
+                    if f.is_file() and f.name.endswith(".H2K")
+                ]
+            except Exception as e:
+                msg = f"[ERROR] Failed to list files in {subdir_path}: {e}"
                 print(msg)
                 debug_log.write(msg + "\n")
                 continue
 
+            if not h2k_files:
+                msg = f"[WARNING] No .H2K files found in {subdir_path} for '{req_type}'."
+                print(msg)
+                debug_log.write(msg + "\n")
+                continue
+            
+            # Sort for deterministic ordering, then shuffle with seed for random selection
+            h2k_files = sorted(h2k_files)
+            rng.shuffle(h2k_files)
+            # Copy up to num_to_copy files (or fewer if we run out)
+            files_to_copy = h2k_files[:num_to_copy]
+
             debug_log.write(
-                f"[DEBUG] Copying {len(files_to_copy)} of {len(matched_files)} files for '{req_type}' to {base_path}\n"
+                f"[DEBUG] Copying {len(files_to_copy)} of {len(h2k_files)} files for '{req_type}' from {subdir_path}\n"
             )
             for file_name in files_to_copy:
-                src_file = archetypes_source / file_name
+                src_file = subdir_path / file_name
                 dst_file = base_path / file_name
                 copy_tasks.append((src_file, dst_file))
                 debug_log.write(f"[DEBUG] Copying {src_file} -> {dst_file}\n")
@@ -549,14 +504,14 @@ def main(community_name):
     community_name = normalize_community_name(community_name)
     print(f"\n[WORKFLOW] Starting workflow for community: {community_name}")
 
-    # Validate community name exists in requirements CSV before any operations
+    # Validate community name exists in requirements JSON before any operations
     print(f"[WORKFLOW] Validating community name...")
     try:
         requirements = get_community_requirements(community_name)
         if not requirements:
             print(f"Community '{community_name}' not found in database.")
             print(f"Please check the spelling and try again.")
-            print(f"Refer to communities-number-of-houses.csv for valid community names.")
+            print(f"Refer to data/json/communities.json for valid community names.")
             return 0
         if all(count == 0 for count in requirements.values()):
             print(f"Community '{community_name}' exists in database but has 0 houses.")
@@ -564,8 +519,8 @@ def main(community_name):
             return 0
         print(f"[WORKFLOW] Community validated: {community_name}")
     except FileNotFoundError as e:
-        print(f"Required CSV file not found: {e}")
-        print(f"Please ensure the csv directory contains the necessary files.")
+        print(f"Required JSON file not found: {e}")
+        print(f"Please ensure the data/json directory contains communities.json.")
         return 0
 
     # 0. Clean existing community directory to ensure fresh run
@@ -577,7 +532,7 @@ def main(community_name):
         communities_base = communities_dir()
         try:
             cleanup_dir.resolve().relative_to(communities_base.resolve())
-            safe_rmtree(cleanup_dir)
+            shutil.rmtree(cleanup_dir)
             print(f"[CLEANUP] Removed existing: {cleanup_dir}")
         except PermissionError as e:
             print(f"[ERROR] Could not remove {cleanup_dir}: {e}")
@@ -645,7 +600,7 @@ def main(community_name):
         expected_base = communities_dir() / community_name
         try:
             output_dir.resolve().relative_to(expected_base.resolve())
-            safe_rmtree(output_dir)
+            shutil.rmtree(output_dir)
             print(f"Removed directory: {output_dir}")
         except PermissionError as e:
             print(f"[ERROR] Could not remove {output_dir}: {e}")

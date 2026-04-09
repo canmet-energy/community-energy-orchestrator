@@ -11,13 +11,14 @@ services:
       - ./output:/app/output
       - ./logs:/app/logs
       # Mount source-archetypes (not in git - add manually if needed)
-      - ./src/source-archetypes:/app/src/source-archetypes
+      - ./data/source-archetypes:/app/data/source-archetypes
     environment:
       # Optional: Set environment variables for configuration
       # - MAX_PARALLEL_WORKERS=4
       # - ANALYSIS_RANDOM_SEED=42
       # - ARCHETYPE_SELECTION_SEED=12345
       - PYTHONUNBUFFERED=1
+      - ALLOWED_ORIGINS=http://localhost:5173
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]

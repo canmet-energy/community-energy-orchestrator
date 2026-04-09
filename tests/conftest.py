@@ -1,4 +1,4 @@
-import pytest
+﻿import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -13,3 +13,4 @@ def sample_data():
 def client():
     """FastAPI test client for integration tests"""
     return TestClient(app)
+

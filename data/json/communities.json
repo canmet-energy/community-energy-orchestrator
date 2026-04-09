@@ -1,0 +1,2039 @@
+﻿{
+  "communities": {
+    "Aklavik": {
+      "province_territory": "NT",
+      "hdd": 9247,
+      "weather_location": "OLD CROW",
+      "population": 536,
+      "housing_requirements": {
+        "pre-2002-single": 110,
+        "pre-2002-semi": 30,
+        "2002-2016-semi": 15,
+        "post-2016-semi": 10,
+        "pre-2002-row-mid": 15,
+        "2002-2016-row-mid": 9,
+        "pre-2002-row-end": 10,
+        "2002-2016-row-end": 6
+      }
+    },
+    "Akulivik": {
+      "province_territory": "QC",
+      "hdd": 8283,
+      "weather_location": "INUKJUAK",
+      "population": 642,
+      "housing_requirements": {
+        "pre-2002-single": 45,
+        "post-2016-single": 5,
+        "pre-2002-semi": 35,
+        "2002-2016-semi": 65
+      }
+    },
+    "Anahim Lake": {
+      "province_territory": "BC",
+      "hdd": 5572,
+      "weather_location": "PUNTZI MOUNTAIN",
+      "population": 116,
+      "housing_requirements": {
+        "2002-2016-single": 25,
+        "post-2016-semi": 5
+      }
+    },
+    "Arctic Bay": {
+      "province_territory": "NU",
+      "hdd": 11002,
+      "weather_location": "ARCTIC BAY",
+      "population": 994,
+      "housing_requirements": {
+        "pre-2002-single": 120,
+        "2002-2016-single": 10,
+        "pre-2002-semi": 15,
+        "2002-2016-semi": 10,
+        "2002-2016-row-mid": 24,
+        "post-2016-row-mid": 9,
+        "2002-2016-row-end": 16,
+        "post-2016-row-end": 6
+      }
+    },
+    "Armstrong": {
+      "province_territory": "ON",
+      "hdd": 5635,
+      "weather_location": "ARMSTRONG",
+      "population": 297,
+      "housing_requirements": {
+        "2002-2016-single": 60,
+        "2002-2016-row-mid": 18,
+        "2002-2016-row-end": 12
+      }
+    },
+    "Arviat": {
+      "province_territory": "NU",
+      "hdd": 9648,
+      "weather_location": "ARVIAT CLIMATE",
+      "population": 2864,
+      "housing_requirements": {
+        "pre-2002-single": 300,
+        "2002-2016-single": 35,
+        "post-2016-single": 5,
+        "2002-2016-semi": 20,
+        "pre-2002-row-mid": 45,
+        "2002-2016-row-mid": 63,
+        "post-2016-row-mid": 21,
+        "pre-2002-row-end": 30,
+        "2002-2016-row-end": 42,
+        "post-2016-row-end": 14
+      }
+    },
+    "Aupaluk": {
+      "province_territory": "QC",
+      "hdd": 8022,
+      "weather_location": "KUUJJUAQ",
+      "population": 233,
+      "housing_requirements": {
+        "pre-2002-single": 10,
+        "2002-2016-single": 5,
+        "pre-2002-semi": 20,
+        "2002-2016-semi": 20,
+        "post-2016-semi": 5
+      }
+    },
+    "Baker Lake": {
+      "province_territory": "NU",
+      "hdd": 10235,
+      "weather_location": "BAKER LAKE",
+      "population": 2061,
+      "housing_requirements": {
+        "pre-2002-single": 245,
+        "2002-2016-single": 35,
+        "post-2016-single": 5,
+        "pre-2002-semi": 40,
+        "2002-2016-semi": 15,
+        "pre-2002-row-mid": 36,
+        "2002-2016-row-mid": 33,
+        "pre-2002-row-end": 24,
+        "2002-2016-row-end": 22
+      }
+    },
+    "Barren Lands": {
+      "province_territory": "MB",
+      "hdd": 7509,
+      "weather_location": "COLLINS BAY",
+      "population": 506,
+      "housing_requirements": {
+        "pre-2002-single": 20,
+        "2002-2016-single": 55,
+        "2002-2016-row-mid": 3,
+        "2002-2016-row-end": 2
+      }
+    },
+    "Beaver Creek": {
+      "province_territory": "YT",
+      "hdd": 7672,
+      "weather_location": "BURWASH",
+      "population": 78,
+      "housing_requirements": {
+        "pre-2002-single": 20,
+        "2002-2016-single": 10,
+        "2002-2016-semi": 10
+      }
+    },
+    "Biscotasing": {
+      "province_territory": "ON",
+      "hdd": 5826,
+      "weather_location": "TIMMINS",
+      "population": 22,
+      "housing_requirements": {
+        "2002-2016-single": 5
+      }
+    },
+    "Black Tickle": {
+      "province_territory": "NL",
+      "hdd": 6106,
+      "weather_location": "MARY'S HARBOUR",
+      "population": 87,
+      "housing_requirements": {
+        "2002-2016-single": 35
+      }
+    },
+    "Brochet": {
+      "province_territory": "MB",
+      "hdd": 7509,
+      "weather_location": "COLLINS BAY",
+      "population": 64,
+      "housing_requirements": {
+        "pre-2002-single": 20,
+        "2002-2016-single": 55,
+        "2002-2016-row-mid": 3,
+        "pre-2002-row-end": 2
+      }
+    },
+    "Burwash Landing": {
+      "province_territory": "YK",
+      "hdd": 7672,
+      "weather_location": "BURWASH",
+      "population": 64,
+      "housing_requirements": {
+        "pre-2002-single": 25,
+        "2002-2016-single": 10,
+        "2002-2016-semi": 5
+      }
+    },
+    "Cambridge Bay": {
+      "province_territory": "NU",
+      "hdd": 11204,
+      "weather_location": "CAMBRIDGE BAY",
+      "population": 1760,
+      "housing_requirements": {
+        "pre-2002-single": 215,
+        "2002-2016-single": 30,
+        "pre-2002-semi": 25,
+        "2002-2016-semi": 20,
+        "pre-2002-row-mid": 45,
+        "2002-2016-row-mid": 72,
+        "pre-2002-row-end": 30,
+        "2002-2016-row-end": 48
+      }
+    },
+    "Cape Dorset": {
+      "province_territory": "NU",
+      "hdd": 9258,
+      "weather_location": "CAPE DORSET CLIMATE",
+      "population": 1396,
+      "housing_requirements": {
+        "pre-2002-single": 165,
+        "pre-2002-semi": 10,
+        "2002-2016-semi": 10,
+        "pre-2002-row-mid": 51,
+        "2002-2016-row-mid": 45,
+        "post-2016-row-mid": 3,
+        "pre-2002-row-end": 34,
+        "2002-2016-row-end": 30,
+        "post-2016-row-end": 2
+      }
+    },
+    "Cartwright": {
+      "province_territory": "NL",
+      "hdd": 6296,
+      "weather_location": "CARTWRIGHT",
+      "population": 439,
+      "housing_requirements": {
+        "pre-2002-single": 170,
+        "2002-2016-semi": 10,
+        "pre-2002-row-mid": 9,
+        "pre-2002-row-end": 6
+      }
+    },
+    "Charlottetown": {
+      "province_territory": "NL",
+      "hdd": 6106,
+      "weather_location": "MARY'S HARBOUR",
+      "population": 292,
+      "housing_requirements": {
+        "pre-2002-single": 95,
+        "2002-2016-single": 10,
+        "2002-2016-semi": 5
+      }
+    },
+    "Chesterfield Inlet": {
+      "province_territory": "NU",
+      "hdd": 9999,
+      "weather_location": "RANKIN INLET",
+      "population": 397,
+      "housing_requirements": {
+        "pre-2002-single": 65,
+        "2002-2016-single": 10,
+        "2002-2016-semi": 20,
+        "pre-2002-row-mid": 6,
+        "2002-2016-row-mid": 3,
+        "post-2016-row-mid": 3,
+        "pre-2002-row-end": 4,
+        "2002-2016-row-end": 2,
+        "post-2016-row-end": 2
+      }
+    },
+    "Chipewyan Lake": {
+      "province_territory": "AB",
+      "hdd": 8407,
+      "weather_location": "TADOULE LAKE",
+      "population": 72,
+      "housing_requirements": {
+        "post-2016-single": 5
+      }
+    },
+    "Clova": {
+      "province_territory": "QC",
+      "hdd": 5782,
+      "weather_location": "VAL-D'OR",
+      "population": 100,
+      "housing_requirements": {
+        "pre-2002-single": 16,
+        "2002-2016-single": 3,
+        "2002-2016-semi": 2,
+        "post-2016-semi": 2
+      }
+    },
+    "Clyde River": {
+      "province_territory": "NU",
+      "hdd": 10723,
+      "weather_location": "CLYDE RIVER CLIMATE",
+      "population": 1181,
+      "housing_requirements": {
+        "pre-2002-single": 145,
+        "2002-2016-single": 45
+      }
+    },
+    "Collins": {
+      "province_territory": "ON",
+      "hdd": 6462,
+      "weather_location": "ARMSTRONG",
+      "population": 30,
+      "housing_requirements": {
+        "pre-2002-single": 6,
+        "2002-2016-single": 1
+      }
+    },
+    "Colville Lake": {
+      "province_territory": "NT",
+      "hdd": 8351,
+      "weather_location": "FORT GOOD HOPE",
+      "population": 110,
+      "housing_requirements": {
+        "pre-2002-single": 15,
+        "2002-2016-single": 10,
+        "post-2016-semi": 5
+      }
+    },
+    "Coral Harbour": {
+      "province_territory": "NU",
+      "hdd": 10173,
+      "weather_location": "CORAL HARBOUR",
+      "population": 1035,
+      "housing_requirements": {
+        "pre-2002-single": 115,
+        "2002-2016-single": 10,
+        "pre-2002-semi": 15,
+        "2002-2016-semi": 15,
+        "pre-2002-row-mid": 9,
+        "2002-2016-row-mid": 24,
+        "pre-2002-row-end": 6,
+        "2002-2016-row-end": 16
+      }
+    },
+    "Crescent Spur": {
+      "province_territory": "BC",
+      "hdd": 4965,
+      "weather_location": "PRINCE GEORGE",
+      "population": 24,
+      "housing_requirements": {
+        "pre-2002-single": 6
+      }
+    },
+    "Da'naxda'xw First Nation": {
+      "province_territory": "BC",
+      "hdd": 3595,
+      "weather_location": "SALMON ARM",
+      "population": 22,
+      "housing_requirements": {
+        "pre-2002-single": 5
+      }
+    },
+    "Dease River 4": {
+      "province_territory": "BC",
+      "hdd": 7199,
+      "weather_location": "WATSON LAKE",
+      "population": 39,
+      "housing_requirements": {
+        "pre-2002-single": 25
+      }
+    },
+    "DÃ©line": {
+      "province_territory": "NT",
+      "hdd": 8602,
+      "weather_location": "DÃ‰LINE",
+      "population": 40,
+      "housing_requirements": {
+        "pre-2002-single": 110,
+        "2002-2016-single": 10,
+        "post-2016-single": 10,
+        "pre-2002-semi": 15,
+        "2002-2016-semi": 15,
+        "pre-2002-row-mid": 9,
+        "2002-2016-row-mid": 3,
+        "pre-2002-row-end": 6,
+        "2002-2016-row-end": 2
+      }
+    },
+    "Destruction Bay": {
+      "province_territory": "YT",
+      "hdd": 7672,
+      "weather_location": "BURWASH",
+      "population": 573,
+      "housing_requirements": {
+        "2002-2016-single": 10
+      }
+    },
+    "Fort Chipewyan": {
+      "province_territory": "AB",
+      "hdd": 7037,
+      "weather_location": "FORT SMITH",
+      "population": 996,
+      "housing_requirements": {
+        "2002-2016-single": 240,
+        "post-2016-single": 65,
+        "2002-2016-semi": 25,
+        "2002-2016-row-mid": 15,
+        "2002-2016-row-end": 10
+      }
+    },
+    "Fort Good Hope": {
+      "province_territory": "NT",
+      "hdd": 8351,
+      "weather_location": "FORT GOOD HOPE",
+      "population": 507,
+      "housing_requirements": {
+        "pre-2002-single": 145,
+        "2002-2016-single": 15,
+        "post-2016-single": 5,
+        "2002-2016-semi": 10
+      }
+    },
+    "Fort Hope": {
+      "province_territory": "ON",
+      "hdd": 6805,
+      "weather_location": "LANSDOWNE HOUSE",
+      "population": 977,
+      "housing_requirements": {
+        "pre-2002-single": 205,
+        "2002-2016-single": 30,
+        "2002-2016-semi": 10,
+        "pre-2002-row-mid": 3,
+        "pre-2002-row-end": 2
+      }
+    },
+    "Fort Liard": {
+      "province_territory": "NT",
+      "hdd": 6713,
+      "weather_location": "FORT LIARD",
+      "population": 468,
+      "housing_requirements": {
+        "pre-2002-single": 140,
+        "pre-2002-semi": 10
+      }
+    },
+    "Fort McPherson": {
+      "province_territory": "NT",
+      "hdd": 8716,
+      "weather_location": "LITTLE CHICAGO",
+      "population": 647,
+      "housing_requirements": {
+        "pre-2002-single": 150,
+        "2002-2016-single": 5,
+        "pre-2002-semi": 25,
+        "2002-2016-semi": 5,
+        "pre-2002-row-mid": 21,
+        "2002-2016-row-mid": 12,
+        "pre-2002-row-end": 14,
+        "2002-2016-row-end": 8
+      }
+    },
+    "Fort Providence": {
+      "province_territory": "NT",
+      "hdd": 7285,
+      "weather_location": "FORT PROVIDENCE",
+      "population": 618,
+      "housing_requirements": {
+        "pre-2002-single": 180,
+        "pre-2002-semi": 20,
+        "2002-2016-semi": 10,
+        "pre-2002-row-mid": 12,
+        "2002-2016-row-mid": 3,
+        "post-2016-row-mid": 6,
+        "pre-2002-row-end": 8,
+        "2002-2016-row-end": 2,
+        "post-2016-row-end": 4
+      }
+    },
+    "Fort Severn": {
+      "province_territory": "ON",
+      "hdd": 7794,
+      "weather_location": "PEAWANUCK",
+      "population": 364,
+      "housing_requirements": {
+        "pre-2002-single": 75,
+        "2002-2016-row-mid": 3,
+        "post-2016-row-mid": 3,
+        "2002-2016-row-end": 2,
+        "post-2016-row-end": 2
+      }
+    },
+    "Fort Simpson": {
+      "province_territory": "NT",
+      "hdd": 7360,
+      "weather_location": "FORT SIMPSON",
+      "population": 1100,
+      "housing_requirements": {
+        "pre-2002-single": 265,
+        "2002-2016-single": 35,
+        "post-2016-single": 5,
+        "pre-2002-semi": 30,
+        "2002-2016-semi": 25,
+        "pre-2002-row-mid": 15,
+        "2002-2016-row-mid": 12,
+        "pre-2002-row-end": 10,
+        "2002-2016-row-end": 8
+      }
+    },
+    "FranÃ§ois": {
+      "province_territory": "NL",
+      "hdd": 4629,
+      "weather_location": "BURGEO",
+      "population": 64,
+      "housing_requirements": {
+        "2002-2016-single": 30
+      }
+    },
+    "GamÃ¨tÃ¬": {
+      "province_territory": "NT",
+      "hdd": 8111,
+      "weather_location": "LAC LA MARTRE",
+      "population": 252,
+      "housing_requirements": {
+        "2002-2016-single": 60,
+        "2002-2016-semi": 10,
+        "post-2016-semi": 5
+      }
+    },
+    "Gilford Island": {
+      "province_territory": "BC",
+      "hdd": 3451,
+      "weather_location": "PORT HARDY",
+      "population": 38,
+      "housing_requirements": {
+        "pre-2002-single": 9
+      }
+    },
+    "Gjoa Haven": {
+      "province_territory": "NU",
+      "hdd": 11322,
+      "weather_location": "GJOA HAVEN CLIMATE",
+      "population": 1349,
+      "housing_requirements": {
+        "pre-2002-single": 140,
+        "pre-2002-semi": 25,
+        "2002-2016-semi": 10,
+        "pre-2002-row-mid": 18,
+        "2002-2016-row-mid": 42,
+        "post-2016-row-mid": 9,
+        "pre-2002-row-end": 12,
+        "2002-2016-row-end": 28,
+        "post-2016-row-end": 6
+      }
+    },
+    "Good Hope Lake": {
+      "province_territory": "BC",
+      "hdd": 6732,
+      "weather_location": "DEASE LAKE",
+      "population": 39,
+      "housing_requirements": {
+        "pre-2002-single": 25
+      }
+    },
+    "Grey River": {
+      "province_territory": "NL",
+      "hdd": 4629,
+      "weather_location": "BURGEO",
+      "population": 95,
+      "housing_requirements": {
+        "2002-2016-single": 40
+      }
+    },
+    "Grise Fiord": {
+      "province_territory": "NU",
+      "hdd": 12964,
+      "weather_location": "EUREKA",
+      "population": 144,
+      "housing_requirements": {
+        "pre-2002-single": 35,
+        "2002-2016-single": 5,
+        "post-2016-single": 10,
+        "pre-2002-semi": 5,
+        "2002-2016-semi": 10,
+        "2002-2016-row-mid": 3,
+        "post-2016-row-mid": 3,
+        "2002-2016-row-end": 2,
+        "post-2016-row-end": 2
+      }
+    },
+    "Grosse-ÃŽle": {
+      "province_territory": "QC",
+      "hdd": 4494,
+      "weather_location": "ÃŽLES DE LA MADELEINE",
+      "population": 464,
+      "housing_requirements": {
+        "pre-2002-single": 180,
+        "2002-2016-single": 30
+      }
+    },
+    "Gull Bay": {
+      "province_territory": "ON",
+      "hdd": 6462,
+      "weather_location": "ARMSTRONG",
+      "population": 393,
+      "housing_requirements": {
+        "2002-2016-single": 50
+      }
+    },
+    "Gwawaenuk": {
+      "province_territory": "BC",
+      "hdd": 3451,
+      "weather_location": "PORT HARDY",
+      "population": 16,
+      "housing_requirements": {
+        "pre-2002-single": 4
+      }
+    },
+    "Hall Beach": {
+      "province_territory": "NU",
+      "hdd": 11059,
+      "weather_location": "HALL BEACH",
+      "population": 891,
+      "housing_requirements": {
+        "pre-2002-single": 95,
+        "post-2016-single": 5,
+        "pre-2002-semi": 10,
+        "2002-2016-semi": 15,
+        "2002-2016-row-mid": 42,
+        "2002-2016-row-end": 28
+      }
+    },
+    "Hesquiaht": {
+      "province_territory": "BC",
+      "hdd": 3054,
+      "weather_location": "ESTEVAN POINT",
+      "population": 44,
+      "housing_requirements": {
+        "pre-2002-single": 15,
+        "2002-2016-single": 5,
+        "2002-2016-row-mid": 3,
+        "2002-2016-row-end": 2
+      }
+    },
+    "Hopedale": {
+      "province_territory": "NL",
+      "hdd": 6296,
+      "weather_location": "CARTWRIGHT",
+      "population": 596,
+      "housing_requirements": {
+        "pre-2002-single": 110,
+        "2002-2016-single": 35,
+        "2002-2016-semi": 5,
+        "post-2016-semi": 5
+      }
+    },
+    "Igloolik": {
+      "province_territory": "NU",
+      "hdd": 11059,
+      "weather_location": "HALL BEACH",
+      "population": 2049,
+      "housing_requirements": {
+        "pre-2002-single": 190,
+        "post-2016-single": 10,
+        "2002-2016-semi": 45,
+        "pre-2002-row-mid": 12,
+        "2002-2016-row-mid": 78,
+        "pre-2002-row-end": 8,
+        "2002-2016-row-end": 52
+      }
+    },
+    "Inukjuak": {
+      "province_territory": "QC",
+      "hdd": 8283,
+      "weather_location": "INUKJUAK",
+      "population": 1821,
+      "housing_requirements": {
+        "pre-2002-single": 125,
+        "2002-2016-single": 25,
+        "pre-2002-semi": 85,
+        "2002-2016-semi": 140,
+        "post-2016-semi": 30
+      }
+    },
+    "Iqaluit": {
+      "province_territory": "NU",
+      "hdd": 9483,
+      "weather_location": "IQALUIT",
+      "population": 7429,
+      "housing_requirements": {
+        "pre-2002-single": 585,
+        "2002-2016-single": 105,
+        "pre-2002-semi": 130,
+        "2002-2016-semi": 65,
+        "post-2016-semi": 15,
+        "pre-2002-row-mid": 252,
+        "2002-2016-row-mid": 141,
+        "pre-2002-row-end": 168,
+        "2002-2016-row-end": 94
+      }
+    },
+    "Ivujivik": {
+      "province_territory": "QC",
+      "hdd": 9258,
+      "weather_location": "CAPE DORSET CLIMATE",
+      "population": 412,
+      "housing_requirements": {
+        "pre-2002-single": 40,
+        "pre-2002-semi": 10,
+        "2002-2016-semi": 40,
+        "post-2016-semi": 15
+      }
+    },
+    "Jade City": {
+      "province_territory": "BC",
+      "hdd": 6732,
+      "weather_location": "DEASE LAKE",
+      "population": 25,
+      "housing_requirements": {
+        "pre-2002-single": 6
+      }
+    },
+    "Jean Marie River": {
+      "province_territory": "NT",
+      "hdd": 7360,
+      "weather_location": "FORT SIMPSON",
+      "population": 63,
+      "housing_requirements": {
+        "2002-2016-single": 5
+      }
+    },
+    "Kakisa": {
+      "province_territory": "NT",
+      "hdd": 7285,
+      "weather_location": "FORT PROVIDENCE",
+      "population": 39,
+      "housing_requirements": {
+        "pre-2002-single": 15
+      }
+    },
+    "Kangiqsualujjuaq": {
+      "province_territory": "QC",
+      "hdd": 8022,
+      "weather_location": "KUUJJUAQ",
+      "population": 956,
+      "housing_requirements": {
+        "pre-2002-single": 70,
+        "2002-2016-single": 20,
+        "pre-2002-semi": 30,
+        "2002-2016-semi": 45,
+        "post-2016-semi": 35,
+        "post-2016-row-mid": 3,
+        "post-2016-row-end": 2
+      }
+    },
+    "Kangiqsujuaq": {
+      "province_territory": "QC",
+      "hdd": 9483,
+      "weather_location": "IQALUIT",
+      "population": 837,
+      "housing_requirements": {
+        "pre-2002-single": 60,
+        "pre-2002-semi": 25,
+        "2002-2016-semi": 75,
+        "post-2016-semi": 50
+      }
+    },
+    "Kangirsuk": {
+      "province_territory": "QC",
+      "hdd": 8022,
+      "weather_location": "KUUJJUAQ",
+      "population": 561,
+      "housing_requirements": {
+        "pre-2002-single": 60,
+        "pre-2002-semi": 25,
+        "2002-2016-semi": 60
+      }
+    },
+    "Kimmirut": {
+      "province_territory": "NU",
+      "hdd": 9483,
+      "weather_location": "IQALUIT",
+      "population": 426,
+      "housing_requirements": {
+        "pre-2002-single": 60,
+        "pre-2002-semi": 25,
+        "2002-2016-semi": 10,
+        "post-2016-semi": 55,
+        "pre-2002-row-mid": 9,
+        "2002-2016-row-mid": 6,
+        "post-2016-row-mid": 6,
+        "pre-2002-row-end": 6,
+        "2002-2016-row-end": 4,
+        "post-2016-row-end": 4
+      }
+    },
+    "Kingcome Inlet": {
+      "province_territory": "BC",
+      "hdd": 3451,
+      "weather_location": "PORT HARDY",
+      "population": 111,
+      "housing_requirements": {
+        "pre-2002-single": 35
+      }
+    },
+    "Kinoosao": {
+      "province_territory": "SK",
+      "hdd": 7509,
+      "weather_location": "COLLINS BAY",
+      "population": 10,
+      "housing_requirements": {
+        "2002-2016-single": 5
+      }
+    },
+    "Kluskus": {
+      "province_territory": "BC",
+      "hdd": 5572,
+      "weather_location": "PUNTZI MOUNTAIN",
+      "population": 38,
+      "housing_requirements": {
+        "pre-2002-single": 10
+      }
+    },
+    "Knight Inlet": {
+      "province_territory": "BC",
+      "hdd": 3451,
+      "weather_location": "PORT HARDY",
+      "population": 50,
+      "housing_requirements": {
+        "pre-2002-single": 12
+      }
+    },
+    "Kugaaruk": {
+      "province_territory": "NU",
+      "hdd": 11047,
+      "weather_location": "KUGAARUK CLIMATE",
+      "population": 1033,
+      "housing_requirements": {
+        "pre-2002-single": 85,
+        "pre-2002-semi": 10,
+        "2002-2016-semi": 15,
+        "pre-2002-row-mid": 6,
+        "2002-2016-row-mid": 24,
+        "post-2016-row-mid": 30,
+        "pre-2002-row-end": 4,
+        "2002-2016-row-end": 16,
+        "post-2016-row-end": 20
+      }
+    },
+    "Kugluktuk": {
+      "province_territory": "NU",
+      "hdd": 9967,
+      "weather_location": "KUGLUKTUK",
+      "population": 1382,
+      "housing_requirements": {
+        "pre-2002-single": 175,
+        "2002-2016-single": 5,
+        "pre-2002-semi": 5,
+        "pre-2002-row-mid": 63,
+        "2002-2016-row-mid": 39,
+        "post-2016-row-mid": 24,
+        "pre-2002-row-end": 42,
+        "2002-2016-row-end": 26,
+        "post-2016-row-end": 16
+      }
+    },
+    "Kulkayu": {
+      "province_territory": "BC",
+      "hdd": 3454,
+      "weather_location": "BONILLA ISLAND",
+      "population": 124,
+      "housing_requirements": {
+        "pre-2002-single": 20,
+        "2002-2016-single": 15,
+        "post-2016-single": 5
+      }
+    },
+    "Kuujjuaq": {
+      "province_territory": "QC",
+      "hdd": 8022,
+      "weather_location": "KUUJJUAQ",
+      "population": 2668,
+      "housing_requirements": {
+        "pre-2002-single": 255,
+        "2002-2016-single": 25,
+        "pre-2002-semi": 125,
+        "2002-2016-semi": 265,
+        "post-2016-semi": 15,
+        "2002-2016-row-mid": 27,
+        "2002-2016-row-end": 18
+      }
+    },
+    "Kuujjuarapik": {
+      "province_territory": "QC",
+      "hdd": 7577,
+      "weather_location": "KUUJJUARAPIK",
+      "population": 792,
+      "housing_requirements": {
+        "pre-2002-single": 50,
+        "2002-2016-single": 40,
+        "pre-2002-semi": 40,
+        "2002-2016-semi": 40,
+        "pre-2002-row-mid": 3,
+        "pre-2002-row-end": 2
+      }
+    },
+    "Kwadacha": {
+      "province_territory": "BC",
+      "hdd": 6572,
+      "weather_location": "FORT NELSON",
+      "population": 242,
+      "housing_requirements": {
+        "pre-2002-single": 15,
+        "2002-2016-single": 45,
+        "2002-2016-row-mid": 3,
+        "post-2016-row-mid": 9,
+        "2002-2016-row-end": 2,
+        "post-2016-row-end": 6
+      }
+    },
+    "Lac Brochet": {
+      "province_territory": "MB",
+      "hdd": 7509,
+      "weather_location": "COLLINS BAY",
+      "population": 641,
+      "housing_requirements": {
+        "pre-2002-single": 120,
+        "2002-2016-single": 15,
+        "pre-2002-semi": 10,
+        "post-2016-semi": 5,
+        "2002-2016-row-mid": 3,
+        "2002-2016-row-end": 2
+      }
+    },
+    "Les ÃŽles-a-la-Madeleine": {
+      "province_territory": "QC",
+      "hdd": 4494,
+      "weather_location": "ÃŽLES DE LA MADELEINE",
+      "population": 12190,
+      "housing_requirements": {
+        "pre-2002-single": 4205,
+        "2002-2016-single": 505,
+        "post-2016-single": 25,
+        "pre-2002-semi": 110,
+        "2002-2016-semi": 75,
+        "post-2016-semi": 15,
+        "pre-2002-row-mid": 30,
+        "2002-2016-row-mid": 33,
+        "pre-2002-row-end": 20,
+        "2002-2016-row-end": 22
+      }
+    },
+    "Liard First Nation": {
+      "province_territory": "YT",
+      "hdd": 7199,
+      "weather_location": "WATSON LAKE",
+      "population": 119,
+      "housing_requirements": {
+        "pre-2002-single": 35,
+        "post-2016-single": 15
+      }
+    },
+    "L'ÃŽle d'Anticosti": {
+      "province_territory": "QC",
+      "hdd": 5757,
+      "weather_location": "NATASHQUAN",
+      "population": 177,
+      "housing_requirements": {
+        "pre-2002-single": 30,
+        "2002-2016-single": 40,
+        "pre-2002-semi": 10,
+        "2002-2016-semi": 5
+      }
+    },
+    "Lodge Bay": {
+      "province_territory": "NL",
+      "hdd": 6106,
+      "weather_location": "MARY'S HARBOUR",
+      "population": 61,
+      "housing_requirements": {
+        "2002-2016-single": 25,
+        "post-2016-single": 5
+      }
+    },
+    "Lower Post": {
+      "province_territory": "BC",
+      "hdd": 7199,
+      "weather_location": "WATSON LAKE",
+      "population": 119,
+      "housing_requirements": {
+        "pre-2002-single": 35
+      }
+    },
+    "Lutselk'e": {
+      "province_territory": "NT",
+      "hdd": 8098,
+      "weather_location": "LUTSELK'E",
+      "population": 333,
+      "housing_requirements": {
+        "pre-2002-single": 50,
+        "2002-2016-single": 40,
+        "post-2016-single": 5,
+        "pre-2002-semi": 10,
+        "2002-2016-semi": 10,
+        "pre-2002-row-mid": 6,
+        "pre-2002-row-end": 4
+      }
+    },
+    "Makkovik": {
+      "province_territory": "NL",
+      "hdd": 6296,
+      "weather_location": "CARTWRIGHT",
+      "population": 365,
+      "housing_requirements": {
+        "pre-2002-single": 105,
+        "2002-2016-single": 20,
+        "post-2016-single": 10
+      }
+    },
+    "Mary's Harbour": {
+      "province_territory": "NL",
+      "hdd": 6106,
+      "weather_location": "MARY'S HARBOUR",
+      "population": 312,
+      "housing_requirements": {
+        "2002-2016-single": 55,
+        "2002-2016-row-mid": 3,
+        "2002-2016-row-end": 2
+      }
+    },
+    "Masset": {
+      "province_territory": "BC",
+      "hdd": 3571,
+      "weather_location": "ROSE SPIT",
+      "population": 838,
+      "housing_requirements": {
+        "pre-2002-single": 185,
+        "2002-2016-single": 50,
+        "pre-2002-semi": 105,
+        "2002-2016-row-mid": 3,
+        "2002-2016-row-end": 2
+      }
+    },
+    "McCallum": {
+      "province_territory": "NL",
+      "hdd": 4373,
+      "weather_location": "ST-LAWRENCE",
+      "population": 45,
+      "housing_requirements": {
+        "2002-2016-single": 20
+      }
+    },
+    "Nahanni Butte": {
+      "province_territory": "NT",
+      "hdd": 6972,
+      "weather_location": "YOHIN",
+      "population": 81,
+      "housing_requirements": {
+        "2002-2016-single": 30
+      }
+    },
+    "Nain": {
+      "province_territory": "NL",
+      "hdd": 6296,
+      "weather_location": "CARTWRIGHT",
+      "population": 847,
+      "housing_requirements": {
+        "pre-2002-single": 165,
+        "2002-2016-single": 45
+      }
+    },
+    "Natuashish 2": {
+      "province_territory": "NL",
+      "hdd": 6296,
+      "weather_location": "CARTWRIGHT",
+      "population": 856,
+      "housing_requirements": {
+        "2002-2016-single": 150,
+        "2002-2016-semi": 10
+      }
+    },
+    "Naujaat": {
+      "province_territory": "NU",
+      "hdd": 11047,
+      "weather_location": "KUGAARUK CLIMATE",
+      "population": 1225,
+      "housing_requirements": {
+        "2002-2016-single": 110,
+        "2002-2016-semi": 15,
+        "2002-2016-row-mid": 45,
+        "2002-2016-row-end": 30
+      }
+    },
+    "Neskantaga": {
+      "province_territory": "ON",
+      "hdd": 6805,
+      "weather_location": "LANSDOWNE HOUSE",
+      "population": 244,
+      "housing_requirements": {
+        "2002-2016-single": 70
+      }
+    },
+    "Norman's Bay": {
+      "province_territory": "NL",
+      "hdd": 6106,
+      "weather_location": "MARY'S HARBOUR",
+      "population": 15,
+      "housing_requirements": {
+        "pre-2002-single": 5
+      }
+    },
+    "Oba": {
+      "province_territory": "ON",
+      "hdd": 6217,
+      "weather_location": "NAGAGAMI",
+      "population": 5,
+      "housing_requirements": {
+        "2002-2016-single": 1
+      }
+    },
+    "Obedjiwan": {
+      "province_territory": "QC",
+      "hdd": 6296,
+      "weather_location": "CHAMOUCHOUANE",
+      "population": 1991,
+      "housing_requirements": {
+        "pre-2002-single": 275,
+        "2002-2016-single": 60,
+        "2002-2016-semi": 40,
+        "post-2016-semi": 35
+      }
+    },
+    "Ogoki": {
+      "province_territory": "ON",
+      "hdd": 6805,
+      "weather_location": "LANSDOWNE HOUSE",
+      "population": 243,
+      "housing_requirements": {
+        "2002-2016-single": 55
+      }
+    },
+    "Old Crow": {
+      "province_territory": "YT",
+      "hdd": 9247,
+      "weather_location": "OLD CROW",
+      "population": 236,
+      "housing_requirements": {
+        "pre-2002-single": 105,
+        "post-2016-single": 5
+      }
+    },
+    "Old Masset": {
+      "province_territory": "BC",
+      "hdd": 3571,
+      "weather_location": "ROSE SPIT",
+      "population": 475,
+      "housing_requirements": {
+        "pre-2002-single": 111
+      }
+    },
+    "Pangnirtung": {
+      "province_territory": "NU",
+      "hdd": 9299,
+      "weather_location": "PANGNIRTUNG",
+      "population": 1608,
+      "housing_requirements": {
+        "pre-2002-single": 190,
+        "2002-2016-single": 10,
+        "pre-2002-semi": 40,
+        "2002-2016-semi": 30,
+        "pre-2002-row-mid": 51,
+        "2002-2016-row-mid": 24,
+        "pre-2002-row-end": 34,
+        "2002-2016-row-end": 16
+      }
+    },
+    "Paulatuk": {
+      "province_territory": "NT",
+      "hdd": 9642,
+      "weather_location": "PAULATUK",
+      "population": 298,
+      "housing_requirements": {
+        "pre-2002-single": 40,
+        "pre-2002-semi": 5,
+        "2002-2016-semi": 25,
+        "2002-2016-row-mid": 6,
+        "2002-2016-row-end": 4
+      }
+    },
+    "Peawanuck": {
+      "province_territory": "ON",
+      "hdd": 7794,
+      "weather_location": "PEAWANUCK",
+      "population": 247,
+      "housing_requirements": {
+        "pre-2002-single": 65,
+        "post-2016-single": 10,
+        "2002-2016-semi": 5,
+        "post-2016-semi": 5,
+        "pre-2002-row-mid": 3,
+        "pre-2002-row-end": 2
+      }
+    },
+    "Pond Inlet": {
+      "province_territory": "NU",
+      "hdd": 11304,
+      "weather_location": "POND INLET",
+      "population": 1555,
+      "housing_requirements": {
+        "pre-2002-single": 135,
+        "2002-2016-single": 40,
+        "pre-2002-semi": 35,
+        "2002-2016-semi": 15,
+        "post-2016-semi": 5,
+        "pre-2002-row-mid": 27,
+        "2002-2016-row-mid": 39,
+        "post-2016-row-mid": 12,
+        "pre-2002-row-end": 18,
+        "2002-2016-row-end": 26,
+        "post-2016-row-end": 8
+      }
+    },
+    "Port Clements": {
+      "province_territory": "BC",
+      "hdd": 3571,
+      "weather_location": "ROSE SPIT",
+      "population": 340,
+      "housing_requirements": {
+        "pre-2002-single": 150
+      }
+    },
+    "Port Hope Simpson": {
+      "province_territory": "NL",
+      "hdd": 6106,
+      "weather_location": "MARY'S HARBOUR",
+      "population": 403,
+      "housing_requirements": {
+        "pre-2002-single": 150,
+        "2002-2016-semi": 5
+      }
+    },
+    "Postville": {
+      "province_territory": "NL",
+      "hdd": 6296,
+      "weather_location": "CARTWRIGHT",
+      "population": 188,
+      "housing_requirements": {
+        "pre-2002-single": 60,
+        "2002-2016-single": 10
+      }
+    },
+    "Puvirnituq": {
+      "province_territory": "QC",
+      "hdd": 8283,
+      "weather_location": "INUKJUAK",
+      "population": 2129,
+      "housing_requirements": {
+        "pre-2002-single": 95,
+        "2002-2016-single": 75,
+        "pre-2002-semi": 80,
+        "2002-2016-semi": 165,
+        "post-2016-semi": 40
+      }
+    },
+    "Qikiqtarjuaq": {
+      "province_territory": "NU",
+      "hdd": 10088,
+      "weather_location": "QIKIQTARJUAQ CLIMATE",
+      "population": 593,
+      "housing_requirements": {
+        "pre-2002-single": 80,
+        "pre-2002-semi": 15,
+        "2002-2016-semi": 15,
+        "post-2016-semi": 5,
+        "pre-2002-row-mid": 18,
+        "2002-2016-row-mid": 9,
+        "pre-2002-row-end": 12,
+        "2002-2016-row-end": 6
+      }
+    },
+    "Quaqtaq": {
+      "province_territory": "QC",
+      "hdd": 9483,
+      "weather_location": "IQALUIT",
+      "population": 453,
+      "housing_requirements": {
+        "pre-2002-single": 40,
+        "2002-2016-single": 10,
+        "pre-2002-semi": 20,
+        "2002-2016-semi": 25,
+        "post-2016-semi": 15
+      }
+    },
+    "Ramea": {
+      "province_territory": "NL",
+      "hdd": 4629,
+      "weather_location": "BURGEO",
+      "population": 388,
+      "housing_requirements": {
+        "pre-2002-single": 205
+      }
+    },
+    "Rankin Inlet": {
+      "province_territory": "NU",
+      "hdd": 9999,
+      "weather_location": "RANKIN INLET",
+      "population": 2975,
+      "housing_requirements": {
+        "pre-2002-single": 330,
+        "2002-2016-single": 45,
+        "pre-2002-semi": 60,
+        "pre-2002-row-mid": 51,
+        "2002-2016-row-mid": 84,
+        "pre-2002-row-end": 34,
+        "2002-2016-row-end": 56
+      }
+    },
+    "Resolute": {
+      "province_territory": "NU",
+      "hdd": 11759,
+      "weather_location": "RESOLUTE BAY",
+      "population": 183,
+      "housing_requirements": {
+        "pre-2002-single": 45,
+        "2002-2016-single": 5,
+        "pre-2002-semi": 5,
+        "2002-2016-semi": 5,
+        "2002-2016-row-mid": 3,
+        "2002-2016-row-end": 2
+      }
+    },
+    "Rigolet": {
+      "province_territory": "NL",
+      "hdd": 6296,
+      "weather_location": "CARTWRIGHT",
+      "population": 327,
+      "housing_requirements": {
+        "pre-2002-single": 100,
+        "2002-2016-single": 15,
+        "post-2016-single": 10
+      }
+    },
+    "Sachs Harbour": {
+      "province_territory": "NT",
+      "hdd": 10671,
+      "weather_location": "SACHS HARBOUR CLIMATE",
+      "population": 104,
+      "housing_requirements": {
+        "pre-2002-single": 30,
+        "2002-2016-semi": 5
+      }
+    },
+    "Salluit": {
+      "province_territory": "QC",
+      "hdd": 9258,
+      "weather_location": "CAPE DORSET CLIMATE",
+      "population": 1580,
+      "housing_requirements": {
+        "pre-2002-single": 130,
+        "pre-2002-semi": 40,
+        "2002-2016-semi": 105,
+        "post-2016-semi": 65
+      }
+    },
+    "Sambaa K'e": {
+      "province_territory": "NT",
+      "hdd": 7285,
+      "weather_location": "FORT PROVIDENCE",
+      "population": 97,
+      "housing_requirements": {
+        "2002-2016-single": 35
+      }
+    },
+    "Sanikiluaq": {
+      "province_territory": "NU",
+      "hdd": 7577,
+      "weather_location": "KUUJJUARAPIK",
+      "population": 1010,
+      "housing_requirements": {
+        "pre-2002-single": 35,
+        "2002-2016-single": 75,
+        "pre-2002-semi": 20,
+        "2002-2016-semi": 5,
+        "2002-2016-row-mid": 27,
+        "post-2016-row-mid": 30,
+        "2002-2016-row-end": 18,
+        "post-2016-row-end": 20
+      }
+    },
+    "Shamattawa": {
+      "province_territory": "MB",
+      "hdd": 7728,
+      "weather_location": "GILLAM",
+      "population": 1425,
+      "housing_requirements": {
+        "pre-2002-single": 115,
+        "2002-2016-single": 25,
+        "pre-2002-row-mid": 9,
+        "2002-2016-row-mid": 9,
+        "pre-2002-row-end": 6,
+        "2002-2016-row-end": 6
+      }
+    },
+    "St Lewis": {
+      "province_territory": "NL",
+      "hdd": 6106,
+      "weather_location": "MARY'S HARBOUR",
+      "population": 181,
+      "housing_requirements": {
+        "2002-2016-single": 39,
+        "2002-2016-row-mid": 2,
+        "2002-2016-row-end": 1
+      }
+    },
+    "St. Brendan's": {
+      "province_territory": "NL",
+      "hdd": 4649,
+      "weather_location": "BONAVISTA",
+      "population": 125,
+      "housing_requirements": {
+        "pre-2002-single": 70
+      }
+    },
+    "Sultan": {
+      "province_territory": "ON",
+      "hdd": 5826,
+      "weather_location": "TIMMINS",
+      "population": 45,
+      "housing_requirements": {
+        "2002-2016-single": 25
+      }
+    },
+    "Summer Beaver": {
+      "province_territory": "ON",
+      "hdd": 6805,
+      "weather_location": "LANSDOWNE HOUSE",
+      "population": 355,
+      "housing_requirements": {
+        "2002-2016-single": 75,
+        "2002-2016-semi": 5,
+        "post-2016-semi": 5,
+        "post-2016-row-mid": 3,
+        "post-2016-row-end": 2
+      }
+    },
+    "Tadoule Lake": {
+      "province_territory": "MB",
+      "hdd": 8407,
+      "weather_location": "TADOULE LAKE",
+      "population": 324,
+      "housing_requirements": {
+        "pre-2002-single": 85,
+        "pre-2002-semi": 10,
+        "pre-2002-row-mid": 12,
+        "pre-2002-row-end": 8
+      }
+    },
+    "Taloyoak": {
+      "province_territory": "NU",
+      "hdd": 11338,
+      "weather_location": "TALOYOAK",
+      "population": 934,
+      "housing_requirements": {
+        "pre-2002-single": 105,
+        "pre-2002-semi": 10,
+        "2002-2016-semi": 10,
+        "pre-2002-row-mid": 15,
+        "2002-2016-row-mid": 27,
+        "pre-2002-row-end": 10,
+        "2002-2016-row-end": 18
+      }
+    },
+    "Tasiujaq": {
+      "province_territory": "QC",
+      "hdd": 8022,
+      "weather_location": "KUUJJUAQ",
+      "population": 420,
+      "housing_requirements": {
+        "pre-2002-single": 15,
+        "2002-2016-single": 15,
+        "pre-2002-semi": 25,
+        "2002-2016-semi": 25,
+        "post-2016-semi": 20
+      }
+    },
+    "Telegraph Creek": {
+      "province_territory": "BC",
+      "hdd": 6732,
+      "weather_location": "DEASE LAKE",
+      "population": 244,
+      "housing_requirements": {
+        "pre-2002-single": 10,
+        "2002-2016-single": 5
+      }
+    },
+    "Tlatlasikwala": {
+      "province_territory": "BC",
+      "hdd": 3379,
+      "weather_location": "SARTINE ISLAND",
+      "population": 65,
+      "housing_requirements": {
+        "pre-2002-single": 15
+      }
+    },
+    "Toad River Area": {
+      "province_territory": "BC",
+      "hdd": 6572,
+      "weather_location": "FORT NELSON",
+      "population": 40,
+      "housing_requirements": {
+        "pre-2002-single": 2,
+        "2002-2016-single": 5,
+        "post-2016-row-mid": 1,
+        "post-2016-row-end": 1
+      }
+    },
+    "Tsay Keh Dene": {
+      "province_territory": "BC",
+      "hdd": 6572,
+      "weather_location": "FORT NELSON",
+      "population": 229,
+      "housing_requirements": {
+        "post-2016-single": 75
+      }
+    },
+    "Tsiigehtchic": {
+      "province_territory": "NT",
+      "hdd": 8716,
+      "weather_location": "LITTLE CHICAGO",
+      "population": 138,
+      "housing_requirements": {
+        "pre-2002-single": 40,
+        "2002-2016-semi": 10,
+        "post-2016-semi": 5
+      }
+    },
+    "Tuktoyaktuk": {
+      "province_territory": "NT",
+      "hdd": 9665,
+      "weather_location": "TUKTOYAKTUK",
+      "population": 937,
+      "housing_requirements": {
+        "pre-2002-single": 160,
+        "pre-2002-semi": 45,
+        "pre-2002-row-mid": 21,
+        "2002-2016-row-mid": 9,
+        "pre-2002-row-end": 14,
+        "2002-2016-row-end": 6
+      }
+    },
+    "Tulita": {
+      "province_territory": "NT",
+      "hdd": 8231,
+      "weather_location": "NORMAN WELLS",
+      "population": 396,
+      "housing_requirements": {
+        "pre-2002-single": 75,
+        "2002-2016-single": 15,
+        "pre-2002-semi": 15,
+        "2002-2016-semi": 15,
+        "pre-2002-row-mid": 3,
+        "pre-2002-row-end": 2
+      }
+    },
+    "Uchucklesaht": {
+      "province_territory": "BC",
+      "hdd": 2942,
+      "weather_location": "SHERINGHAM POINT",
+      "population": 313,
+      "housing_requirements": {
+        "pre-2002-single": 44,
+        "2002-2016-single": 14,
+        "2002-2016-row-mid": 9,
+        "2002-2016-row-end": 6
+      }
+    },
+    "Ulukhaktok": {
+      "province_territory": "NT",
+      "hdd": 10339,
+      "weather_location": "HOLMAN",
+      "population": 408,
+      "housing_requirements": {
+        "2002-2016-single": 90,
+        "2002-2016-semi": 20,
+        "2002-2016-row-mid": 12,
+        "2002-2016-row-end": 8
+      }
+    },
+    "Umiujaq": {
+      "province_territory": "QC",
+      "hdd": 7577,
+      "weather_location": "KUUJJUARAPIK",
+      "population": 541,
+      "housing_requirements": {
+        "pre-2002-single": 10,
+        "pre-2002-semi": 65,
+        "2002-2016-semi": 30,
+        "post-2016-semi": 35,
+        "post-2016-row-mid": 3,
+        "post-2016-row-end": 2
+      }
+    },
+    "Watson Lake": {
+      "province_territory": "YK",
+      "hdd": 7199,
+      "weather_location": "WATSON LAKE",
+      "population": 1133,
+      "housing_requirements": {
+        "pre-2002-single": 300,
+        "post-2016-single": 85,
+        "pre-2002-semi": 20,
+        "2002-2016-semi": 5,
+        "pre-2002-row-mid": 3,
+        "pre-2002-row-end": 2
+      }
+    },
+    "Webequie": {
+      "province_territory": "ON",
+      "hdd": 6805,
+      "weather_location": "LANSDOWNE HOUSE",
+      "population": 723,
+      "housing_requirements": {
+        "pre-2002-single": 130,
+        "2002-2016-single": 10,
+        "2002-2016-semi": 5,
+        "post-2016-semi": 20,
+        "post-2016-row-mid": 3,
+        "post-2016-row-end": 2
+      }
+    },
+    "WekweÃ¨tÃ¬": {
+      "province_territory": "NT",
+      "hdd": 8513,
+      "weather_location": "LOWER CARP LAKE",
+      "population": 109,
+      "housing_requirements": {
+        "2002-2016-single": 25,
+        "2002-2016-semi": 5
+      }
+    },
+    "Whale Cove": {
+      "province_territory": "NU",
+      "hdd": 9999,
+      "weather_location": "RANKIN INLET",
+      "population": 470,
+      "housing_requirements": {
+        "pre-2002-single": 55,
+        "2002-2016-single": 5,
+        "pre-2002-semi": 15,
+        "2002-2016-semi": 15,
+        "pre-2002-row-mid": 6,
+        "2002-2016-row-mid": 6,
+        "post-2016-row-mid": 3,
+        "pre-2002-row-end": 4,
+        "2002-2016-row-end": 4,
+        "post-2016-row-end": 2
+      }
+    },
+    "Whapmagoostui": {
+      "province_territory": "QC",
+      "hdd": 7577,
+      "weather_location": "KUUJJUARAPIK",
+      "population": 1022,
+      "housing_requirements": {
+        "pre-2002-single": 105,
+        "2002-2016-single": 40,
+        "pre-2002-semi": 40,
+        "2002-2016-semi": 20,
+        "2002-2016-row-mid": 3,
+        "2002-2016-row-end": 2
+      }
+    },
+    "Whati": {
+      "province_territory": "NT",
+      "hdd": 8111,
+      "weather_location": "LAC LA MARTRE",
+      "population": 543,
+      "housing_requirements": {
+        "2002-2016-single": 115,
+        "2002-2016-semi": 10,
+        "post-2016-semi": 5
+      }
+    },
+    "Whitesand": {
+      "province_territory": "ON",
+      "hdd": 6462,
+      "weather_location": "ARMSTRONG",
+      "population": 297,
+      "housing_requirements": {
+        "2002-2016-single": 60,
+        "2002-2016-semi": 10,
+        "post-2016-semi": 5,
+        "2002-2016-row-mid": 18,
+        "2002-2016-row-end": 12
+      }
+    },
+    "Wrigley": {
+      "province_territory": "NT",
+      "hdd": 8602,
+      "weather_location": "DÃ‰LINE",
+      "population": 117,
+      "housing_requirements": {
+        "pre-2002-single": 35
+      }
+    },
+    "Xeni Gwet'in First Nation": {
+      "province_territory": "BC",
+      "hdd": 5572,
+      "weather_location": "PUNTZI MOUNTAIN",
+      "population": 468,
+      "housing_requirements": {
+        "2002-2016-single": 91,
+        "post-2016-semi": 18
+      }
+    }
+  },
+  "weather_regions": {
+    "BONILLA ISLAND": {
+      "code": "1",
+      "english": "BRITISH COLUMBIA",
+      "french": "COLOMBIE-BRITANNIQUE"
+    },
+    "DEASE LAKE": {
+      "code": "1",
+      "english": "BRITISH COLUMBIA",
+      "french": "COLOMBIE-BRITANNIQUE"
+    },
+    "ESTEVAN POINT": {
+      "code": "1",
+      "english": "BRITISH COLUMBIA",
+      "french": "COLOMBIE-BRITANNIQUE"
+    },
+    "FORT NELSON": {
+      "code": "1",
+      "english": "BRITISH COLUMBIA",
+      "french": "COLOMBIE-BRITANNIQUE"
+    },
+    "PORT HARDY": {
+      "code": "1",
+      "english": "BRITISH COLUMBIA",
+      "french": "COLOMBIE-BRITANNIQUE"
+    },
+    "PRINCE GEORGE": {
+      "code": "1",
+      "english": "BRITISH COLUMBIA",
+      "french": "COLOMBIE-BRITANNIQUE"
+    },
+    "PUNTZI MOUNTAIN": {
+      "code": "1",
+      "english": "BRITISH COLUMBIA",
+      "french": "COLOMBIE-BRITANNIQUE"
+    },
+    "ROSE SPIT": {
+      "code": "1",
+      "english": "BRITISH COLUMBIA",
+      "french": "COLOMBIE-BRITANNIQUE"
+    },
+    "SALMON ARM": {
+      "code": "1",
+      "english": "BRITISH COLUMBIA",
+      "french": "COLOMBIE-BRITANNIQUE"
+    },
+    "SARTINE ISLAND": {
+      "code": "1",
+      "english": "BRITISH COLUMBIA",
+      "french": "COLOMBIE-BRITANNIQUE"
+    },
+    "SHERINGHAM POINT": {
+      "code": "1",
+      "english": "BRITISH COLUMBIA",
+      "french": "COLOMBIE-BRITANNIQUE"
+    },
+    "COLLINS BAY": {
+      "code": "3",
+      "english": "SASKATCHEWAN",
+      "french": "SASKATCHEWAN"
+    },
+    "MARY'S HARBOUR": {
+      "code": "5",
+      "english": "NEWFOUNDLAND AND LABRADOR",
+      "french": "TERRE-NEUVE-ET-LABRADOR"
+    },
+    "BONAVISTA": {
+      "code": "5",
+      "english": "NEWFOUNDLAND AND LABRADOR",
+      "french": "TERRE-NEUVE-ET-LABRADOR"
+    },
+    "BURGEO": {
+      "code": "5",
+      "english": "NEWFOUNDLAND AND LABRADOR",
+      "french": "TERRE-NEUVE-ET-LABRADOR"
+    },
+    "CARTWRIGHT": {
+      "code": "5",
+      "english": "NEWFOUNDLAND AND LABRADOR",
+      "french": "TERRE-NEUVE-ET-LABRADOR"
+    },
+    "ST-LAWRENCE": {
+      "code": "5",
+      "english": "NEWFOUNDLAND AND LABRADOR",
+      "french": "TERRE-NEUVE-ET-LABRADOR"
+    },
+    "CHAMOUCHOUANE": {
+      "code": "6",
+      "english": "QUEBEC",
+      "french": "QUÃ‰BEC"
+    },
+    "INUKJUAK": {
+      "code": "6",
+      "english": "QUEBEC",
+      "french": "QUÃ‰BEC"
+    },
+    "KUUJJUAQ": {
+      "code": "6",
+      "english": "QUEBEC",
+      "french": "QUÃ‰BEC"
+    },
+    "KUUJJUARAPIK": {
+      "code": "6",
+      "english": "QUEBEC",
+      "french": "QUÃ‰BEC"
+    },
+    "NATASHQUAN": {
+      "code": "6",
+      "english": "QUEBEC",
+      "french": "QUÃ‰BEC"
+    },
+    "VAL-D'OR": {
+      "code": "6",
+      "english": "QUEBEC",
+      "french": "QUÃ‰BEC"
+    },
+    "ÃŽLES DE LA MADELEINE": {
+      "code": "6",
+      "english": "QUEBEC",
+      "french": "QUÃ‰BEC"
+    },
+    "ARMSTRONG": {
+      "code": "7",
+      "english": "ONTARIO",
+      "french": "ONTARIO"
+    },
+    "LANSDOWNE HOUSE": {
+      "code": "7",
+      "english": "ONTARIO",
+      "french": "ONTARIO"
+    },
+    "NAGAGAMI": {
+      "code": "7",
+      "english": "ONTARIO",
+      "french": "ONTARIO"
+    },
+    "PEAWANUCK": {
+      "code": "7",
+      "english": "ONTARIO",
+      "french": "ONTARIO"
+    },
+    "TIMMINS": {
+      "code": "7",
+      "english": "ONTARIO",
+      "french": "ONTARIO"
+    },
+    "GILLAM": {
+      "code": "8",
+      "english": "MANITOBA",
+      "french": "MANITOBA"
+    },
+    "TADOULE LAKE": {
+      "code": "8",
+      "english": "MANITOBA",
+      "french": "MANITOBA"
+    },
+    "BURWASH": {
+      "code": "11",
+      "english": "YUKON",
+      "french": "YUKON"
+    },
+    "OLD CROW": {
+      "code": "11",
+      "english": "YUKON",
+      "french": "YUKON"
+    },
+    "WATSON LAKE": {
+      "code": "11",
+      "english": "YUKON",
+      "french": "YUKON"
+    },
+    "DÃ‰LINE": {
+      "code": "12",
+      "english": "NORTHWEST TERRITORIES",
+      "french": "TERRITOIRES DU NORD-OUEST"
+    },
+    "FORT GOOD HOPE": {
+      "code": "12",
+      "english": "NORTHWEST TERRITORIES",
+      "french": "TERRITOIRES DU NORD-OUEST"
+    },
+    "FORT LIARD": {
+      "code": "12",
+      "english": "NORTHWEST TERRITORIES",
+      "french": "TERRITOIRES DU NORD-OUEST"
+    },
+    "FORT PROVIDENCE": {
+      "code": "12",
+      "english": "NORTHWEST TERRITORIES",
+      "french": "TERRITOIRES DU NORD-OUEST"
+    },
+    "FORT SIMPSON": {
+      "code": "12",
+      "english": "NORTHWEST TERRITORIES",
+      "french": "TERRITOIRES DU NORD-OUEST"
+    },
+    "FORT SMITH": {
+      "code": "12",
+      "english": "NORTHWEST TERRITORIES",
+      "french": "TERRITOIRES DU NORD-OUEST"
+    },
+    "HOLMAN": {
+      "code": "12",
+      "english": "NORTHWEST TERRITORIES",
+      "french": "TERRITOIRES DU NORD-OUEST"
+    },
+    "LAC LA MARTRE": {
+      "code": "12",
+      "english": "NORTHWEST TERRITORIES",
+      "french": "TERRITOIRES DU NORD-OUEST"
+    },
+    "LITTLE CHICAGO": {
+      "code": "12",
+      "english": "NORTHWEST TERRITORIES",
+      "french": "TERRITOIRES DU NORD-OUEST"
+    },
+    "LOWER CARP LAKE": {
+      "code": "12",
+      "english": "NORTHWEST TERRITORIES",
+      "french": "TERRITOIRES DU NORD-OUEST"
+    },
+    "LUTSELK'E": {
+      "code": "12",
+      "english": "NORTHWEST TERRITORIES",
+      "french": "TERRITOIRES DU NORD-OUEST"
+    },
+    "NORMAN WELLS": {
+      "code": "12",
+      "english": "NORTHWEST TERRITORIES",
+      "french": "TERRITOIRES DU NORD-OUEST"
+    },
+    "PAULATUK": {
+      "code": "12",
+      "english": "NORTHWEST TERRITORIES",
+      "french": "TERRITOIRES DU NORD-OUEST"
+    },
+    "SACHS HARBOUR CLIMATE": {
+      "code": "12",
+      "english": "NORTHWEST TERRITORIES",
+      "french": "TERRITOIRES DU NORD-OUEST"
+    },
+    "TUKTOYAKTUK": {
+      "code": "12",
+      "english": "NORTHWEST TERRITORIES",
+      "french": "TERRITOIRES DU NORD-OUEST"
+    },
+    "YOHIN": {
+      "code": "12",
+      "english": "NORTHWEST TERRITORIES",
+      "french": "TERRITOIRES DU NORD-OUEST"
+    },
+    "ARCTIC BAY": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "ARVIAT CLIMATE": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "BAKER LAKE": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "CAMBRIDGE BAY": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "CAPE DORSET CLIMATE": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "CLYDE RIVER CLIMATE": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "CORAL HARBOUR": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "EUREKA": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "GJOA HAVEN CLIMATE": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "HALL BEACH": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "IQALUIT": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "KUGAARUK CLIMATE": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "KUGLUKTUK": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "PANGNIRTUNG": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "POND INLET": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "QIKIQTARJUAQ CLIMATE": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "RANKIN INLET": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "RESOLUTE BAY": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    },
+    "TALOYOAK": {
+      "code": "13",
+      "english": "NUNAVUT",
+      "french": "NUNAVUT"
+    }
+  }
+}

@@ -4,7 +4,7 @@ This module exposes a small REST API for running the community workflow in
 background and polling for status.
 
 How to run:
-    python -m uvicorn src.app.main:app --host 0.0.0.0
+    python -m uvicorn app.main:app --host 0.0.0.0
 
 Key behavior:
     - Single-run-at-a-time: this API enforces at most one active run per process.
@@ -29,6 +29,7 @@ Endpoints:
 """
 
 import json
+import os
 import re
 import threading
 from typing import Dict, List, Literal, Optional
@@ -61,11 +62,13 @@ app = FastAPI(
 RunState = Literal["queued", "running", "completed", "failed"]
 
 
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 
@@ -183,7 +186,7 @@ def health():
     ),
 )
 def get_communities():
-    """List all available communities with metadata from CSV files."""
+    """List all available communities with metadata from JSON file."""
     try:
         communities_data = get_all_communities()
         return [CommunityInfo(**comm) for comm in communities_data]

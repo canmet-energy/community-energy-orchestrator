@@ -28,7 +28,7 @@ process-community "Old Crow"
 
 Alternatively, run the Python module directly:
 ```bash
-python3 src/workflow/process_community_workflow.py "Old Crow"
+python3 backend/workflow/process_community_workflow.py "Old Crow"
 ```
 
 **Windows PowerShell Users:** If processing communities with French characters, ensure UTF-8 is configured (see [Installation Guide](INSTALLATION.md#step-4-activate-the-virtual-environment)).
@@ -119,7 +119,7 @@ Linux/macOS:
 process-community "Old Crow"
 
 # Or use Python directly
-python3 src/workflow/process_community_workflow.py "Old Crow"
+python3 backend/workflow/process_community_workflow.py "Old Crow"
 ```
 
 Windows (PowerShell):
@@ -136,7 +136,7 @@ Notes:
 - Community names with spaces must be quoted.
 - The workflow deletes `communities/<Community Name>/` at the start of each run.
 
-### API (`src/app/main.py`)
+### API (`backend/app/main.py`)
 Runs the FastAPI server so you can start a workflow run via HTTP and poll for status.
 
 
@@ -145,13 +145,13 @@ Start the server:
 Linux/macOS:
 
 ```bash
-python3 -m uvicorn src.app.main:app --host 0.0.0.0
+python3 -m uvicorn app.main:app --host 0.0.0.0
 ```
 
 Windows (PowerShell):
 
 ```powershell
-python -m uvicorn src.app.main:app --host 0.0.0.0
+python -m uvicorn app.main:app --host 0.0.0.0
 ```
 
 Open the interactive docs:
@@ -162,7 +162,6 @@ Notes:
 - The API server keeps running until you stop it with `Ctrl+C`.
 - Run state is stored in memory (restarting the server clears run history).
 - The API enforces a single active run per server process.
-- **Import path:** Use `src.app.main:app` in dev environments. Docker uses `app.main:app` (see [Docker Guide](DOCKER.md)).
 
 ## Frontend
 
@@ -182,7 +181,7 @@ Requires Node.js 18+ and the API running on port 8000.
 
 ```bash
 # Start the API first (in one terminal)
-python -m uvicorn src.app.main:app --host 0.0.0.0
+python -m uvicorn app.main:app --host 0.0.0.0
 
 # Start the frontend (in another terminal)
 cd frontend
@@ -196,9 +195,9 @@ Then open http://localhost:5173
 
 These modules are called internally by the workflow but can also be run directly for debugging:
 
-- `src/workflow/calculate_community_analysis.py`: aggregates timeseries into community outputs
-- `src/workflow/change_weather_location_regex.py`: updates weather reference in `.H2K` files
-- `src/workflow/debug_outputs.py`: validates outputs and writes debug logs
+- `backend/workflow/calculate_community_analysis.py`: aggregates timeseries into community outputs
+- `backend/workflow/change_weather_location_regex.py`: updates weather reference in `.H2K` files
+- `backend/workflow/debug_outputs.py`: validates outputs and writes debug logs
 
 **Note:** Most users should just use `process-community` which runs the complete workflow.
 
@@ -219,7 +218,7 @@ Linux/macOS:
 process-community "Rankin Inlet"
 
 # Or using Python directly
-python3 src/workflow/process_community_workflow.py "Rankin Inlet"
+python3 backend/workflow/process_community_workflow.py "Rankin Inlet"
 ```
 
 Windows (PowerShell):
@@ -229,7 +228,7 @@ Windows (PowerShell):
 process-community "Rankin Inlet"
 
 # Or using Python directly
-python src\workflow\process_community_workflow.py "Rankin Inlet"
+python backend\workflow\process_community_workflow.py "Rankin Inlet"
 ```
 
 ### 3) Re-run a community
@@ -238,13 +237,13 @@ The workflow is designed to be re-runnable; it clears the specified community di
 Linux/macOS:
 
 ```bash
-python3 src/workflow/process_community_workflow.py "Old Crow"
+python3 backend/workflow/process_community_workflow.py "Old Crow"
 ```
 
 Windows (PowerShell):
 
 ```powershell
-python src\workflow\process_community_workflow.py "Old Crow"
+python backend\workflow\process_community_workflow.py "Old Crow"
 ```
 
 ## Outputs
@@ -278,7 +277,7 @@ os-setup --help
 ```
 
 Reminder:
-- `src/source-archetypes/` is a local input folder you have to download.
+- `data/source-archetypes/` is a local input folder you have to download.
 
 ### Windows PowerShell encoding errors
 

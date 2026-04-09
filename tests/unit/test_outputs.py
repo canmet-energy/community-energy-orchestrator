@@ -1,4 +1,4 @@
-"""Unit tests for workflow outputs module."""
+﻿"""Unit tests for workflow outputs module."""
 
 import io
 import tempfile
@@ -107,3 +107,4 @@ def test_create_timeseries_zip_not_found(mock_community_structure):
     """Test error when creating ZIP for non-existent community."""
     with pytest.raises(FileNotFoundError):
         outputs.create_timeseries_zip("NonExistentCommunity")
+

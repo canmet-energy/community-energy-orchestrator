@@ -1,4 +1,4 @@
-"""Integration tests for change_weather_code function."""
+﻿"""Integration tests for change_weather_code function."""
 
 import tempfile
 from pathlib import Path
@@ -103,17 +103,17 @@ def test_change_weather_code_invalid_location(tmp_path, capsys):
 
 def test_change_weather_code_preserves_encoding(tmp_path):
     """Test that special characters in location names are preserved."""
-    # Use DÉLINE which has special character (uses real CSV files)
+    # Use DÃ‰LINE which has special character (uses real CSV files)
     h2k_file = tmp_path / "test.h2k"
     h2k_file.write_text(SAMPLE_H2K_CONTENT, encoding="utf-8")
 
-    result = weather.change_weather_code(h2k_file, location="DÉLINE", debug=False)
+    result = weather.change_weather_code(h2k_file, location="DÃ‰LINE", debug=False)
 
     assert result is True
 
     # Read back and verify special character preserved
     content = h2k_file.read_text(encoding="utf-8")
-    assert "DÉLINE" in content
+    assert "DÃ‰LINE" in content
 
 
 def test_change_weather_code_idempotent(tmp_path):
@@ -150,3 +150,4 @@ def test_change_weather_code_debug_mode(tmp_path, capsys):
     captured = capsys.readouterr()
     assert "Found location" in captured.out or "IQALUIT" in captured.out
     assert "Successfully updated" in captured.out
+

@@ -1,4 +1,4 @@
-"""Unit tests for community analysis data processing functions.
+﻿"""Unit tests for community analysis data processing functions.
 
 Tests focus on data loading and transformation logic.
 Integration tests cover the full aggregation workflow.
@@ -202,3 +202,4 @@ kBtu,kWh,kWh,kWh
         assert df["Heating_Electricity_GJ"].iloc[1] == pytest.approx(30 * config.KWH_TO_GJ)
     finally:
         Path(temp_path).unlink()
+

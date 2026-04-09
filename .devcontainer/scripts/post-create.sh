@@ -8,9 +8,6 @@ set -euo pipefail
 echo "==> Fixing workspace file ownership..."
 sudo chown -R vscode:vscode .
 
-echo "==> Installing uv package manager..."
-sudo pip install --no-cache-dir uv
-
 echo "==> Installing Python dependencies (editable, with dev tools)..."
 sudo uv pip install --system -e ".[dev]"
 

@@ -15,9 +15,9 @@ Complete guide for building and running the Community Energy Orchestrator using 
 2. Navigate to `data/h2k_files/existing-stock`
 3. Download folder: `retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities`
 4. Rename it to `source-archetypes`
-5. Place it in the `src/` directory of this repo
+5. Place it in the `data/` directory of this repo
 
-**Verify:** Check that `src/source-archetypes/2001-2015-single_EX-0001.H2K` exists.
+**Verify:** Check that `data/source-archetypes/2002-2016-single/2002-2016-single_EX-0001.H2K` exists.
 
 ## Building the Image
 
@@ -37,10 +37,9 @@ The Dockerfile:
 3. Installs `uv` package manager for fast, reproducible dependency installation
 4. Installs all Python dependencies (using your `uv.lock` if present)
 5. Installs OpenStudio/EnergyPlus via `os-setup`
-6. Copies CSV data files
+6. Copies JSON configuration files
 7. Creates runtime directories
 
-> **Import paths in Docker:** The CMD uses `app.main:app` because packages are installed as top-level modules (`app`, `workflow`). In dev environments, use `src.app.main:app` instead (editable install).
 
 ### Common Build Issues
 
@@ -258,7 +257,7 @@ docker logs community-energy-api
 docker exec -it community-energy-api os-setup --test-installation
 
 # Check if source-archetypes were copied
-docker exec -it community-energy-api ls -la src/source-archetypes/
+docker exec -it community-energy-api ls -la data/source-archetypes/
 ```
 
 Run a test community:

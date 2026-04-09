@@ -7,7 +7,7 @@ Validates timeseries outputs from h2k-hpxml conversion.
 import os
 import sys
 
-from workflow.core import communities_dir
+from workflow.paths import communities_dir
 from workflow.requirements import get_community_requirements
 
 # Enable UTF-8 mode for Windows compatibility with special characters
@@ -38,7 +38,7 @@ def debug_timeseries_outputs(community_name):
     output_base = communities_dir() / community_name / "archetypes" / "output"
     debug_log_path = communities_dir() / community_name / "analysis" / "output_debug.log"
 
-    # Load housing requirements from CSV (e.g., {"pre-2000-single": 5, "2001-2015-semi": 3, ...})
+    # Load housing requirements from JSON (e.g., {"pre-2002-single": 5, "2002-2016-semi": 3, ...})
     requirements = get_community_requirements(community_name)
 
     # Create parent directory if needed
@@ -52,7 +52,7 @@ def debug_timeseries_outputs(community_name):
     if output_base.exists():
         # Count how many output files were actually generated for each type
         for era_type in requirements:
-            # Look for directories like: pre-2000-single_1/run/results_timeseries.csv
+            # Look for directories like: pre-2002-single_1/run/results_timeseries.csv
             # The glob pattern matches any directory starting with era_type followed by underscore
             matches = [p for p in output_base.glob(f"{era_type}_*/run/results_timeseries.csv")]
             found_counts[era_type] = len(matches)

@@ -22,7 +22,7 @@ Linux/macOS:
 process-community "Old Crow"
 
 # Or directly
-python3 src/workflow/process_community_workflow.py "Old Crow"
+python3 backend/workflow/process_community_workflow.py "Old Crow"
 ```
 
 Windows (PowerShell):
@@ -32,7 +32,7 @@ Windows (PowerShell):
 process-community "Old Crow"
 
 # Or directly
-python src\workflow\process_community_workflow.py "Old Crow"
+python backend\workflow\process_community_workflow.py "Old Crow"
 ```
 
 > **Windows PowerShell:** Communities with French characters (Gamètì, Déline) require UTF-8 setup. Run once:
@@ -47,20 +47,18 @@ python src\workflow\process_community_workflow.py "Old Crow"
 Linux/macOS:
 
 ```bash
-python3 -m uvicorn src.app.main:app --host 0.0.0.0
+python3 -m uvicorn app.main:app --host 0.0.0.0
 ```
 
 Windows (PowerShell):
 
 ```powershell
-python -m uvicorn src.app.main:app --host 0.0.0.0
+python -m uvicorn app.main:app --host 0.0.0.0
 ```
 
 Then open the Swagger UI at:
 
 - http://localhost:8000/docs
-
-> **Note:** Dev environments use `src.app.main:app`. Docker uses `app.main:app` (see [Docker Guide](docs/DOCKER.md)).
 
 3) **Web Frontend** (React + Vite) for visualizing results in a browser
 
@@ -111,14 +109,14 @@ Then open:
 
 **Note:** Docker installation automatically handles all dependencies (Python, uv, OpenStudio, EnergyPlus) inside the container. You only need Docker installed on your system.
 
-**Important:** The archetype library (`src/source-archetypes/`) is not baked into the Docker image — it's mounted as a volume at runtime via docker-compose. You need it before running `docker-compose up`, not before building.
+**Important:** The archetype library (`data/source-archetypes/`) is not baked into the Docker image — it's mounted as a volume at runtime via docker-compose. You need it before running `docker-compose up`, not before building.
 
 ## Repository Layout
-- `src/workflow/process_community_workflow.py`: end-to-end workflow driver
-- `src/workflow/service.py`: public API for workflow operations
-- `src/source-archetypes/`: Hot2000 `.H2K` archetype library (local/downloaded, mounted into container)
+- `backend/workflow/process_community_workflow.py`: end-to-end workflow driver
+- `backend/workflow/service.py`: public API for workflow operations
+- `data/source-archetypes/`: Hot2000 `.H2K` archetype library organized in subdirectories by type (local/downloaded, mounted into container)
 - `communities/<Community Name>/`: per-run working directory and outputs (generated locally)
-- `csv/`: community requirements + weather mapping inputs
+- `data/json/`: community requirements + weather mapping configuration
 
 ## CLI Command
 
@@ -128,7 +126,7 @@ After installation with `uv sync`, run the workflow:
 process-community "Old Crow"
 ```
 
-This is equivalent to `python3 src/workflow/process_community_workflow.py "Old Crow"` but cleaner.
+This is equivalent to `python3 backend/workflow/process_community_workflow.py "Old Crow"` but cleaner.
 
 See [User Guide](docs/USER_GUIDE.md) for details.
 
@@ -163,13 +161,13 @@ os-setup --test-installation
 # Go to https://github.com/canmet-energy/housing-archetypes.git
 # Navigate to data/h2k_files/existing-stock
 # Download the folder: retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities
-# Rename it to 'source-archetypes' and place it in the src/ directory
+# Rename it to 'source-archetypes' and place it in the data/ directory
 
 # 7) Run a community
-python3 src/workflow/process_community_workflow.py "Old Crow"
+python3 backend/workflow/process_community_workflow.py "Old Crow"
 
 # Optional: run the API instead
-# python3 -m uvicorn src.app.main:app --host 0.0.0.0
+# python3 -m uvicorn app.main:app --host 0.0.0.0
 ```
 
 ### Windows (PowerShell)
@@ -204,13 +202,13 @@ os-setup --test-installation
 # Go to https://github.com/canmet-energy/housing-archetypes.git
 # Navigate to data/h2k_files/existing-stock
 # Download the folder: retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities
-# Rename it to 'source-archetypes' and place it in the src\ directory
+# Rename it to 'source-archetypes' and place it in the data\ directory
 
 # 7) Run a community
-python src\workflow\process_community_workflow.py "Old Crow"
+python backend\workflow\process_community_workflow.py "Old Crow"
 
 # Optional: run the API instead
-# python -m uvicorn src.app.main:app --host 0.0.0.0
+# python -m uvicorn app.main:app --host 0.0.0.0
 ```
 
 For first-time setup on a new machine (OpenStudio/EnergyPlus dependencies), follow: [Installation Guide](docs/INSTALLATION.md)
@@ -226,13 +224,13 @@ See the full list of communities [here](docs/COMMUNITIES.md).
 Linux/macOS:
 
 ```bash
-python3 src/workflow/process_community_workflow.py "Rankin Inlet"
+python3 backend/workflow/process_community_workflow.py "Rankin Inlet"
 ```
 
 Windows (PowerShell):
 
 ```powershell
-python src\workflow\process_community_workflow.py "Rankin Inlet"
+python backend\workflow\process_community_workflow.py "Rankin Inlet"
 ```
 
 ### Where outputs go

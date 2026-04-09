@@ -35,11 +35,11 @@ cd community-energy-orchestrator
 2. Navigate to `data/h2k_files/existing-stock`
 3. Download the folder `retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities`
 4. Rename the downloaded folder to `source-archetypes`
-5. Place it in the `src/` directory of this repository
+5. Place it in the `data/` directory of this repository
 
-The final path should be: `src/source-archetypes/` containing `.H2K` files.
+The final path should be: `data/source-archetypes/` containing subdirectories organized by archetype type (e.g., `pre-2002-single/`, `2002-2016-single/`), each with `.H2K` files.
 
-**Verification:** Check that `src/source-archetypes/2001-2015-single_EX-0001.H2K` exists.
+**Verification:** Check that `data/source-archetypes/2002-2016-single/2002-2016-single_EX-0001.H2K` exists.
 
 ### Step 4) Build the Docker image
 
@@ -48,7 +48,7 @@ docker build -t community-energy-orchestrator .
 ```
 
 This will:
-- Install Python 3.10 and uv package manager
+- Install Python 3.10 and uv
 - Install all dependencies (matching your uv.lock)
 - Install OpenStudio/EnergyPlus automatically
 - Set up the complete environment
@@ -78,7 +78,8 @@ Then open:
 This repo depends on the `h2k-hpxml` converter working on your machine.
 
 Notes: 
-- This orchestrator uses `pyproject.toml` and `uv` for dependency management
+- This orchestrator uses `uv` for Python installation and dependency management — you do **not** need to install Python separately
+- `uv` requires no admin rights and works on Windows, macOS, and Linux
 
 - The converter library supports Python 3.10–3.12.
 
@@ -91,17 +92,27 @@ git clone https://github.com/canmet-energy/community-energy-orchestrator.git
 cd community-energy-orchestrator
 ```
 
-### Step 2) Install uv (if not already installed)
+### Step 2) Install uv
+
+`uv` is a fast Python package manager that also installs Python for you — no admin rights needed.
+
+Linux/macOS:
 
 ```bash
-pip install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Note: `uv` can also be installed via other methods (pipx, curl, etc.). See https://github.com/astral-sh/uv for alternatives.
+Windows (PowerShell):
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+After installing, restart your terminal so `uv` is on your PATH.
 
 ### Step 3) Sync dependencies
 
-This will create a virtual environment automatically and install all dependencies:
+This will automatically download the correct Python version (3.10–3.12) and install all dependencies in one step:
 
 ```bash
 uv sync
@@ -203,7 +214,7 @@ h2k-demo
 
 This workflow expects a local Hot2000 archetype library at:
 
-- `src/source-archetypes/`
+- `data/source-archetypes/`
 
 This folder is intentionally treated as a local input.
 
@@ -213,9 +224,9 @@ This folder is intentionally treated as a local input.
 2. Navigate to `data/h2k_files/existing-stock`
 3. Download the folder `retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities`
 4. Rename the downloaded folder to `source-archetypes`
-5. Place it in the `src/` directory of this repository
+5. Place it in the `data/` directory of this repository
 
-The final path should be: `src/source-archetypes/` containing `.H2K` files.
+The final path should be: `data/source-archetypes/` containing subdirectories organized by archetype type (e.g., `pre-2002-single/`, `2002-2016-single/`), each with `.H2K` files.
 
 ### Step 7) Run a community
 
@@ -228,7 +239,7 @@ Linux/macOS:
 process-community "Old Crow"
 
 # Or using Python directly
-python3 src/workflow/process_community_workflow.py "Old Crow"
+python3 backend/workflow/process_community_workflow.py "Old Crow"
 ```
 
 Windows (PowerShell):
@@ -238,7 +249,7 @@ Windows (PowerShell):
 process-community "Old Crow"
 
 # Or using Python directly
-python src\workflow\process_community_workflow.py "Old Crow"
+python backend\workflow\process_community_workflow.py "Old Crow"
 ```
 
 Optional: run the API instead of the CLI workflow:
@@ -246,20 +257,18 @@ Optional: run the API instead of the CLI workflow:
 Linux/macOS:
 
 ```bash
-python3 -m uvicorn src.app.main:app --host 0.0.0.0
+python3 -m uvicorn app.main:app --host 0.0.0.0
 ```
 
 Windows (PowerShell):
 
 ```powershell
-python -m uvicorn src.app.main:app --host 0.0.0.0
+python -m uvicorn app.main:app --host 0.0.0.0
 ```
 
 Then open:
 
 - http://localhost:8000/docs
-
-> **Note:** This uses `src.app.main:app` because of the editable install. Docker environments use `app.main:app` instead.
 
 ### Step 7b) Run the frontend (optional)
 

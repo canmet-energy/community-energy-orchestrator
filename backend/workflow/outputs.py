@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 
 from workflow.config import ENERGY_CATEGORIES
-from workflow.core import communities_dir
+from workflow.paths import communities_dir
 
 
 def _community_file(community_name: str, *subpath: str) -> Path:

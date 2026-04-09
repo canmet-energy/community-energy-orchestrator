@@ -1,4 +1,4 @@
-"""Integration tests for Docker container functionality."""
+﻿"""Integration tests for Docker container functionality."""
 
 import json
 import os
@@ -50,7 +50,7 @@ def test_docker_compose_builds_successfully():
 @pytest.mark.slow
 @pytest.mark.skipif(
     os.path.exists("/.dockerenv") or os.environ.get("REMOTE_CONTAINERS") is not None,
-    reason="Skipped inside dev containers — starting the API container exhausts memory",
+    reason="Skipped inside dev containers â€” starting the API container exhausts memory",
 )
 def test_docker_container_starts_and_responds():
     """Test that container starts and health endpoint responds correctly.
@@ -185,7 +185,8 @@ def test_docker_volume_mounts_exist():
     assert "./logs" in config or "/app/logs" in config, "logs volume mount not found in config"
 
     # Check source-archetypes volume exists (required for workflow to function)
-    # Path structure: ./src/source-archetypes:/app/src/source-archetypes
+    # Path structure: ./data/source-archetypes:/app/data/source-archetypes
     assert (
-        "./src/source-archetypes" in config or "/app/src/source-archetypes" in config
+        "./data/source-archetypes" in config or "/app/data/source-archetypes" in config
     ), "source-archetypes volume mount not found in config"
+

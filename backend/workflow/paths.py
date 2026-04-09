@@ -1,4 +1,4 @@
-"""Core path utilities for the workflow package."""
+"""Path utilities for the workflow package."""
 
 import os
 from pathlib import Path
@@ -16,11 +16,11 @@ def project_root() -> Path:
         return candidate
     # Fall back to current working directory (matches WORKDIR in Docker)
     cwd = Path.cwd()
-    if (cwd / "pyproject.toml").exists() or (cwd / "csv").is_dir():
+    if (cwd / "pyproject.toml").exists():
         return cwd
     raise RuntimeError(
         "Cannot determine project root. Set the APP_ROOT environment variable "
-        "to the directory containing csv/, communities/, etc."
+        "to the directory containing data/, communities/, etc."
     )
 
 
@@ -28,8 +28,12 @@ def communities_dir() -> Path:
     return project_root() / "communities"
 
 
-def csv_dir() -> Path:
-    return project_root() / "csv"
+def data_dir() -> Path:
+    return project_root() / "data"
+
+
+def json_dir() -> Path:
+    return project_root() / "data" / "json"
 
 
 def logs_dir() -> Path:
@@ -37,4 +41,4 @@ def logs_dir() -> Path:
 
 
 def source_archetypes_dir() -> Path:
-    return project_root() / "src" / "source-archetypes"
+    return project_root() / "data" / "source-archetypes"

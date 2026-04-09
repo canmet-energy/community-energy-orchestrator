@@ -130,21 +130,21 @@ ENERGY_CATEGORIES: dict[str, dict[str, Any]] = {
 }
 
 # Archetype patterns for matching housing types
+# Maps requirement types to regex patterns for file matching
 ARCHETYPE_TYPE_PATTERNS = {
-    "pre-2000-single": [r"pre-2000-single_.*\.H2K$"],
-    "2001-2015-single": [r"2001-2015-single_.*\.H2K$"],
+    "pre-2002-single": [r"pre-2002-single_.*\.H2K$"],
+    "2002-2016-single": [r"2002-2016-single_.*\.H2K$"],
     "post-2016-single": [r"post-2016-single_.*\.H2K$"],
-    "pre-2000-semi": [r"pre-2000-semi_.*\.H2K$", r"pre-2000-double_.*\.H2K$"],
-    "2001-2015-semi": [r"2001-2015-semi_.*\.H2K$", r"2001-2015-double_.*\.H2K$"],
+    "pre-2002-semi": [r"pre-2002-semi_.*\.H2K$", r"pre-2002-double_.*\.H2K$"],
+    "2002-2016-semi": [r"2002-2016-semi_.*\.H2K$", r"2002-2016-double_.*\.H2K$"],
     "post-2016-semi": [r"post-2016-semi_.*\.H2K$", r"post-2016-double_.*\.H2K$"],
-    "pre-2000-row-mid": [r"pre-2000-row-mid_.*\.H2K$", r"pre-2000-row-middle_.*\.H2K$"],
-    "2001-2015-row-mid": [r"2001-2015-row-mid_.*\.H2K$", r"2001-2015-row-middle_.*\.H2K$"],
+    "pre-2002-row-mid": [r"pre-2002-row-mid_.*\.H2K$", r"pre-2002-row-middle_.*\.H2K$"],
+    "2002-2016-row-mid": [r"2002-2016-row-mid_.*\.H2K$", r"2002-2016-row-middle_.*\.H2K$"],
     "post-2016-row-mid": [r"post-2016-row-mid_.*\.H2K$", r"post-2016-row-middle_.*\.H2K$"],
-    "pre-2000-row-end": [r"pre-2000-row-end_.*\.H2K$"],
-    "2001-2015-row-end": [r"2001-2015-row-end_.*\.H2K$"],
+    "pre-2002-row-end": [r"pre-2002-row-end_.*\.H2K$"],
+    "2002-2016-row-end": [r"2002-2016-row-end_.*\.H2K$"],
     "post-2016-row-end": [r"post-2016-row-end_.*\.H2K$"],
 }
-
 
 def get_max_workers():
     """

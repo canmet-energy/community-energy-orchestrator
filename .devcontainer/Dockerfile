@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/base:ubuntu-22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies required by OpenStudio/EnergyPlus + Python + pip
+# Install system dependencies required by OpenStudio/EnergyPlus + Python
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     ca-certificates \
@@ -15,10 +15,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.10 \
     python3.10-venv \
     python3.10-dev \
-    python3-pip \
     && ln -sf /usr/bin/python3.10 /usr/local/bin/python \
     && ln -sf /usr/bin/python3.10 /usr/local/bin/python3 \
     && rm -rf /var/lib/apt/lists/*
+
+# Install uv package manager (no pip required)
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && ln -sf /root/.local/bin/uv /usr/local/bin/uv
 
 # Without this, the -k flag on curl and strict-ssl=false on npm are used as fallbacks.
 ARG GIT_API_TOKEN='nothing'

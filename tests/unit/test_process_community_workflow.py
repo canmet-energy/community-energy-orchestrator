@@ -1,4 +1,4 @@
-"""Unit tests for workflow processing functions.
+﻿"""Unit tests for workflow processing functions.
 
 Tests focus on critical business logic and data handling functions.
 Integration tests (in tests/integration/) cover end-to-end workflows.
@@ -54,7 +54,7 @@ def test_create_manifest_includes_requirements(monkeypatch, tmp_path):
     monkeypatch.setattr(workflow, "communities_dir", lambda: tmp_path)
     monkeypatch.setattr(workflow, "get_weather_location", lambda x: "MOCK_WEATHER_STATION")
 
-    requirements = {"pre-2000-single": 5, "2001-2015-semi": 3, "post-2016-row-mid": 2}
+    requirements = {"pre-2002-single": 5, "2002-2016-semi": 3, "post-2016-row-mid": 2}
     manifest_path = workflow.create_manifest("TestCommunity", requirements)
 
     assert manifest_path.exists()
@@ -63,8 +63,8 @@ def test_create_manifest_includes_requirements(monkeypatch, tmp_path):
     # Validate structure and content
     assert "# TestCommunity" in content
     assert "MOCK_WEATHER_STATION" in content
-    assert "### Pre-2000" in content
-    assert "### 2001-2015" in content
+    assert "### Pre-2002" in content
+    assert "### 2002-2016" in content
     assert "### Post-2016" in content
     assert "Single Detached: 5" in content
     assert "Semi-Detached: 3" in content
@@ -96,14 +96,14 @@ def test_duplicate_missing_timeseries_creates_files():
 
         # Create one source file
         source_content = "Time,Heating,Cooling\n1,100,50\n2,110,55\n"
-        source_file = timeseries_dir / "pre-2000-single_EX-0001-results_timeseries.csv"
+        source_file = timeseries_dir / "pre-2002-single_EX-0001-results_timeseries.csv"
         source_file.write_text(source_content, encoding="utf-8")
 
         # Request 3 files (need 2 more duplicates)
-        count = workflow.duplicate_missing_timeseries(str(timeseries_dir), "pre-2000-single", 3)
+        count = workflow.duplicate_missing_timeseries(str(timeseries_dir), "pre-2002-single", 3)
 
         assert count == 3
-        files = list(timeseries_dir.glob("pre-2000-single*-results_timeseries.csv"))
+        files = list(timeseries_dir.glob("pre-2002-single*-results_timeseries.csv"))
         assert len(files) == 3
 
         # Verify duplicates have correct naming and content
@@ -120,13 +120,13 @@ def test_duplicate_missing_timeseries_with_sufficient_files():
 
         # Create 3 source files
         for i in range(1, 4):
-            file_path = timeseries_dir / f"pre-2000-single_EX-000{i}-results_timeseries.csv"
+            file_path = timeseries_dir / f"pre-2002-single_EX-000{i}-results_timeseries.csv"
             file_path.write_text(f"Time,Heating\n1,{100+i}\n", encoding="utf-8")
 
-        count = workflow.duplicate_missing_timeseries(str(timeseries_dir), "pre-2000-single", 3)
+        count = workflow.duplicate_missing_timeseries(str(timeseries_dir), "pre-2002-single", 3)
 
         assert count == 3
-        files = list(timeseries_dir.glob("pre-2000-single*-results_timeseries.csv"))
+        files = list(timeseries_dir.glob("pre-2002-single*-results_timeseries.csv"))
         assert len(files) == 3
 
         # Verify no duplicates were created
@@ -139,7 +139,7 @@ def test_duplicate_missing_timeseries_no_source_files(capsys):
     with tempfile.TemporaryDirectory() as tmpdir:
         timeseries_dir = Path(tmpdir)
 
-        count = workflow.duplicate_missing_timeseries(str(timeseries_dir), "pre-2000-single", 3)
+        count = workflow.duplicate_missing_timeseries(str(timeseries_dir), "pre-2002-single", 3)
 
         assert count == 0
         captured = capsys.readouterr()
@@ -158,7 +158,7 @@ def test_copy_archetype_files_validates_source_directory(monkeypatch, tmp_path):
     nonexistent_dir = tmp_path / "nonexistent-archetypes"
     monkeypatch.setattr(workflow, "source_archetypes_dir", lambda: nonexistent_dir)
 
-    requirements = {"pre-2000-single": 1}
+    requirements = {"pre-2002-single": 1}
 
     with pytest.raises(FileNotFoundError, match="Source archetypes directory not found"):
         workflow.copy_archetype_files("TestCommunity", requirements)
@@ -169,6 +169,8 @@ def test_copy_archetype_files_applies_n_plus_20_percent_rule(monkeypatch, tmp_pa
     # Setup directories
     source_dir = tmp_path / "source-archetypes"
     source_dir.mkdir()
+    # Create subdirectory for archetype type
+    (source_dir / "pre-2002-single").mkdir()
     comm_dir = tmp_path / "communities"
     comm_dir.mkdir()
 
@@ -177,11 +179,11 @@ def test_copy_archetype_files_applies_n_plus_20_percent_rule(monkeypatch, tmp_pa
     monkeypatch.setattr(workflow, "logs_dir", lambda: tmp_path / "logs")
     monkeypatch.setattr(workflow, "get_max_workers", lambda: 1)
 
-    # Create more than enough source files
+    # Create more than enough source files in the subdirectory
     for i in range(1, 21):
-        (source_dir / f"pre-2000-single_EX-{i:04d}.H2K").write_text("test content")
+        (source_dir / "pre-2002-single" / f"pre-2002-single_EX-{i:04d}.H2K").write_text("test content")
 
-    requirements = {"pre-2000-single": 10}
+    requirements = {"pre-2002-single": 10}
 
     # For 10 required, expect ceil(10 * 1.2) = 12 files copied
     workflow.copy_archetype_files("TestCommunity", requirements)
@@ -194,6 +196,7 @@ def test_copy_archetype_files_handles_zero_requirements(monkeypatch, tmp_path, c
     """Test that copy_archetype_files skips zero-count requirements."""
     source_dir = tmp_path / "source-archetypes"
     source_dir.mkdir()
+    (source_dir / "pre-2002-single").mkdir()
     comm_dir = tmp_path / "communities"
     comm_dir.mkdir()
 
@@ -202,9 +205,9 @@ def test_copy_archetype_files_handles_zero_requirements(monkeypatch, tmp_path, c
     monkeypatch.setattr(workflow, "logs_dir", lambda: tmp_path / "logs")
 
     # Create some source files
-    (source_dir / "pre-2000-single_EX-0001.H2K").write_text("test")
+    (source_dir / "pre-2002-single" / "pre-2002-single_EX-0001.H2K").write_text("test")
 
-    requirements = {"pre-2000-single": 0, "2001-2015-semi": 0}
+    requirements = {"pre-2002-single": 0, "2002-2016-semi": 0}
 
     workflow.copy_archetype_files("TestCommunity", requirements)
 
@@ -233,9 +236,11 @@ def test_copy_archetype_files_handles_empty_requirements(monkeypatch, tmp_path, 
 
 
 def test_copy_archetype_files_warns_when_no_matching_files(monkeypatch, tmp_path, capsys):
-    """Test that copy_archetype_files warns when no files match the pattern."""
+    """Test that copy_archetype_files warns when subdirectory doesn't exist."""
     source_dir = tmp_path / "source-archetypes"
     source_dir.mkdir()
+    # Create a different subdirectory
+    (source_dir / "2002-2016-single").mkdir()
     comm_dir = tmp_path / "communities"
     comm_dir.mkdir()
 
@@ -244,22 +249,23 @@ def test_copy_archetype_files_warns_when_no_matching_files(monkeypatch, tmp_path
     monkeypatch.setattr(workflow, "logs_dir", lambda: tmp_path / "logs")
     monkeypatch.setattr(workflow, "get_max_workers", lambda: 1)
 
-    # Create files that DON'T match the requirement pattern
-    (source_dir / "2001-2015-single_EX-0001.H2K").write_text("test")
+    # Create files in a different subdirectory
+    (source_dir / "2002-2016-single" / "2002-2016-single_EX-0001.H2K").write_text("test")
 
-    # Request files that don't exist
-    requirements = {"pre-2000-single": 5}
+    # Request files from a subdirectory that doesn't exist
+    requirements = {"pre-2002-single": 5}
 
     workflow.copy_archetype_files("TestCommunity", requirements)
 
     captured = capsys.readouterr()
-    assert "[WARNING] No archetype files found for 'pre-2000-single'" in captured.out
+    assert "[WARNING] Subdirectory not found" in captured.out
 
 
 def test_copy_archetype_files_handles_insufficient_files(monkeypatch, tmp_path, capsys):
     """Test behavior when not enough source files exist to meet N+20% rule."""
     source_dir = tmp_path / "source-archetypes"
     source_dir.mkdir()
+    (source_dir / "pre-2002-single").mkdir()
     comm_dir = tmp_path / "communities"
     comm_dir.mkdir()
 
@@ -268,12 +274,12 @@ def test_copy_archetype_files_handles_insufficient_files(monkeypatch, tmp_path, 
     monkeypatch.setattr(workflow, "logs_dir", lambda: tmp_path / "logs")
     monkeypatch.setattr(workflow, "get_max_workers", lambda: 1)
 
-    # Create only 5 source files
+    # Create only 5 source files in subdirectory
     for i in range(1, 6):
-        (source_dir / f"pre-2000-single_EX-{i:04d}.H2K").write_text("test content")
+        (source_dir / "pre-2002-single" / f"pre-2002-single_EX-{i:04d}.H2K").write_text("test content")
 
     # Request 10 (would need 12 with +20% rule, but only 5 exist)
-    requirements = {"pre-2000-single": 10}
+    requirements = {"pre-2002-single": 10}
 
     workflow.copy_archetype_files("TestCommunity", requirements)
 
@@ -360,7 +366,7 @@ def test_collect_timeseries_parallel_collects_files(tmp_path):
 
     # Create mock building directories with results
     for i in range(1, 4):
-        building_dir = output_dir / f"pre-2000-single_EX-{i:04d}"
+        building_dir = output_dir / f"pre-2002-single_EX-{i:04d}"
         run_dir = building_dir / "run"
         run_dir.mkdir(parents=True)
         (run_dir / "results_timeseries.csv").write_text(f"Time,Energy\n1,{100+i}\n")
@@ -379,16 +385,17 @@ def test_collect_timeseries_parallel_handles_missing_results(tmp_path):
     timeseries_dir.mkdir()
 
     # Create building with run directory but no results file
-    building_dir = output_dir / "pre-2000-single_EX-0001"
+    building_dir = output_dir / "pre-2002-single_EX-0001"
     run_dir = building_dir / "run"
     run_dir.mkdir(parents=True)
     # No results_timeseries.csv file created
 
     # Create building without run directory
-    (output_dir / "pre-2000-single_EX-0002").mkdir(parents=True)
+    (output_dir / "pre-2002-single_EX-0002").mkdir(parents=True)
 
     collected = workflow.collect_timeseries_parallel(output_dir, timeseries_dir)
 
     assert collected == 0
     timeseries_files = list(timeseries_dir.glob("*-results_timeseries.csv"))
     assert len(timeseries_files) == 0
+

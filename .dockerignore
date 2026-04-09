@@ -118,4 +118,4 @@ Thumbs.db
 # ============================================
 # Data scrubbing scripts (not needed in prod)
 # ============================================
-src/data scrubbing/
+tools/data-scrubbing/

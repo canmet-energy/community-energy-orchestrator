@@ -32,7 +32,7 @@ from workflow.config import (
     get_analysis_random_seed,
     get_max_workers,
 )
-from workflow.core import communities_dir, csv_dir
+from workflow.paths import communities_dir
 from workflow.requirements import get_community_info, get_community_requirements
 
 
@@ -287,7 +287,7 @@ def select_and_sum_timeseries(community_name):
         use_deterministic_order = True
 
     print(f"Processing community: {community_name}")
-    # Get requirements from CSV file
+    # Get requirements from JSON file
     print(f"Looking for community: '{community_name}' in requirements file")
     requirements = get_community_requirements(community_name)
 
@@ -337,7 +337,7 @@ def select_and_sum_timeseries(community_name):
 
         for file_path in glob.glob(str(timeseries_dir / "*-results_timeseries.csv")):
             filename = Path(file_path).name
-            # Extract building type from filename (e.g., "2001-2015-single" from "2001-2015-single_EX-0001-results_timeseries.csv")
+            # Extract building type from filename (e.g., "2002-2016-single" from "2002-2016-single_EX-0001-results_timeseries.csv")
             if "_" in filename:
                 building_type = filename.split("_")[0]
                 if building_type not in building_types:
@@ -591,16 +591,9 @@ def select_and_sum_timeseries(community_name):
 def cli():
     """CLI entry point for calculating community analysis."""
     try:
-        custom_rq_file_path = csv_dir() / "communities-number-of-houses.csv"
         parser = argparse.ArgumentParser(description="Calculate community total energy use.")
         parser.add_argument(
             "community_name", type=str, help="Name of the community (e.g., BONILLA-ISLAND)"
-        )
-        parser.add_argument(
-            "--requirements",
-            type=str,
-            help="Path to custom requirements file",
-            default=str(custom_rq_file_path),
         )
 
         args = parser.parse_args()

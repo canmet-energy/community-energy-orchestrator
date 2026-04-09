@@ -11,7 +11,7 @@ requires-python = ">=3.10,<3.13"
 authors = [
     {name = "Community Energy Team"}
 ]
-license = {text = "MIT"}
+license = {text = "AGPL-3.0-or-later"}
 keywords = ["energy", "modeling", "community", "orchestrator", "FastAPI"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -39,7 +39,6 @@ dev = [
     "pytest-asyncio>=0.21.0",
     "black>=23.0.0",
     "pylint>=2.17.0",
-    "flake8>=6.0.0",
     "mypy>=1.4.0",
     "isort>=5.12.0",
     "safety>=2.3.0",
@@ -64,7 +63,7 @@ Repository = "https://github.com/canmet-energy/community-energy-orchestrator"
 Issues = "https://github.com/canmet-energy/community-energy-orchestrator/issues"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["backend"]
 include = ["*"]
 
 [tool.black]
@@ -118,7 +117,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src"]
+source = ["backend"]
 omit = [
     "*/tests/*",
     "*/__pycache__/*",
@@ -157,9 +156,3 @@ module = [
     "h2k_hpxml.*",
 ]
 ignore_missing_imports = true
-
-[dependency-groups]
-dev = [
-    "httpx>=0.28.1",
-    "pytest-cov>=7.0.0",
-]

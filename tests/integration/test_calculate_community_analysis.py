@@ -1,6 +1,6 @@
-"""Integration tests for community analysis aggregation and statistics.
+﻿"""Integration tests for community analysis aggregation and statistics.
 
-Tests focus on the full data pipeline: file selection → aggregation → statistics → output.
+Tests focus on the full data pipeline: file selection â†’ aggregation â†’ statistics â†’ output.
 Unit tests cover individual data transformation functions.
 """
 
@@ -24,7 +24,7 @@ pytestmark = pytest.mark.integration
 def test_aggregates_multiple_timeseries_files(monkeypatch, tmp_path):
     """Test that select_and_sum_timeseries correctly aggregates data from multiple files.
 
-    Integration point: File selection → Parallel processing → Aggregation → Statistics
+    Integration point: File selection â†’ Parallel processing â†’ Aggregation â†’ Statistics
     """
     from workflow import calculate_community_analysis as calc
 
@@ -34,7 +34,7 @@ def test_aggregates_multiple_timeseries_files(monkeypatch, tmp_path):
     timeseries_dir.mkdir(parents=True)
 
     # Mock requirements - need 3 of one type
-    requirements = {"2001-2015-single": 3}
+    requirements = {"2002-2016-single": 3}
 
     # Create 3 timeseries files with varying data across rows
     for i in range(3):
@@ -50,7 +50,7 @@ def test_aggregates_multiple_timeseries_files(monkeypatch, tmp_path):
             rows.append(f"2024-01-01 {hour:02d}:00:00,{load},{elec},{oil}")
 
         csv_content = "\n".join(rows)
-        file_path = timeseries_dir / f"2001-2015-single_EX-{i:04d}-results_timeseries.csv"
+        file_path = timeseries_dir / f"2002-2016-single_EX-{i:04d}-results_timeseries.csv"
         file_path.write_text(csv_content, encoding="utf-8")
 
     # Mock dependencies
@@ -72,9 +72,9 @@ def test_aggregates_multiple_timeseries_files(monkeypatch, tmp_path):
     df = pd.read_csv(output_csv)
     assert len(df) == 24, "Should have 24 rows"
 
-    # Verify first row: sum of (100 + 110 + 120) = 330 kBTU → GJ for load
+    # Verify first row: sum of (100 + 110 + 120) = 330 kBTU â†’ GJ for load
     expected_load_first = 330 * config.KBTU_TO_GJ
-    expected_elec_first = (10 + 11 + 12) * config.KWH_TO_GJ  # Electricity kWh → GJ
+    expected_elec_first = (10 + 11 + 12) * config.KWH_TO_GJ  # Electricity kWh â†’ GJ
     expected_oil_first = (5 + 6 + 7) * config.KBTU_TO_GJ
 
     assert df["Heating_Load_GJ"].iloc[0] == pytest.approx(expected_load_first, rel=0.01)
@@ -102,7 +102,7 @@ def test_aggregates_multiple_timeseries_files(monkeypatch, tmp_path):
 def test_handles_insufficient_files_by_duplicating(monkeypatch, tmp_path, capsys):
     """Test that when not enough files exist, function duplicates files to meet requirements.
 
-    Integration point: File selection → Duplication logic → Aggregation
+    Integration point: File selection â†’ Duplication logic â†’ Aggregation
     """
     from workflow import calculate_community_analysis as calc
 
@@ -111,7 +111,7 @@ def test_handles_insufficient_files_by_duplicating(monkeypatch, tmp_path, capsys
     timeseries_dir.mkdir(parents=True)
 
     # Require 5 files but only provide 2
-    requirements = {"pre-2000-single": 5}
+    requirements = {"pre-2002-single": 5}
 
     # Create only 2 unique files with different values
     for i in range(2):
@@ -122,7 +122,7 @@ def test_handles_insufficient_files_by_duplicating(monkeypatch, tmp_path, capsys
         for hour in range(24):
             rows.append(f"2024-01-01 {hour:02d}:00:00,{100 + i * 10},{10 + i}")
         csv_content = "\n".join(rows)
-        file_path = timeseries_dir / f"pre-2000-single_EX-{i:04d}-results_timeseries.csv"
+        file_path = timeseries_dir / f"pre-2002-single_EX-{i:04d}-results_timeseries.csv"
         file_path.write_text(csv_content, encoding="utf-8")
 
     monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
@@ -140,7 +140,7 @@ def test_handles_insufficient_files_by_duplicating(monkeypatch, tmp_path, capsys
     # Result should be MORE than just 2 files but deterministic pattern depends on duplication
     df = pd.read_csv(output_csv)
     load_first_row = df["Heating_Load_GJ"].iloc[0]
-    # With duplication, should be more than 2 files: 2×100 = 200 kBTU minimum
+    # With duplication, should be more than 2 files: 2Ã—100 = 200 kBTU minimum
     min_expected = 200 * config.KBTU_TO_GJ
     assert load_first_row > min_expected, "Should use more than 2 files via duplication"
 
@@ -152,7 +152,7 @@ def test_handles_insufficient_files_by_duplicating(monkeypatch, tmp_path, capsys
 def test_handles_multiple_building_types(monkeypatch, tmp_path):
     """Test aggregation with multiple building types (eras and types).
 
-    Integration point: Multi-type file selection → Mixed aggregation
+    Integration point: Multi-type file selection â†’ Mixed aggregation
     """
     from workflow import calculate_community_analysis as calc
 
@@ -162,8 +162,8 @@ def test_handles_multiple_building_types(monkeypatch, tmp_path):
 
     # Multiple building types
     requirements = {
-        "pre-2000-single": 2,
-        "2001-2015-semi": 1,
+        "pre-2002-single": 2,
+        "2002-2016-semi": 1,
     }
 
     # Create files for each type
@@ -175,7 +175,7 @@ def test_handles_multiple_building_types(monkeypatch, tmp_path):
         for hour in range(24):
             rows.append(f"2024-01-01 {hour:02d}:00:00,100,10")
         csv_content = "\n".join(rows)
-        file_path = timeseries_dir / f"pre-2000-single_EX-{i:04d}-results_timeseries.csv"
+        file_path = timeseries_dir / f"pre-2002-single_EX-{i:04d}-results_timeseries.csv"
         file_path.write_text(csv_content, encoding="utf-8")
 
     rows = [
@@ -185,7 +185,7 @@ def test_handles_multiple_building_types(monkeypatch, tmp_path):
     for hour in range(24):
         rows.append(f"2024-01-01 {hour:02d}:00:00,50,5")
     csv_content = "\n".join(rows)
-    file_path = timeseries_dir / "2001-2015-semi_EX-0001-results_timeseries.csv"
+    file_path = timeseries_dir / "2002-2016-semi_EX-0001-results_timeseries.csv"
     file_path.write_text(csv_content, encoding="utf-8")
 
     monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
@@ -209,7 +209,7 @@ def test_handles_multiple_building_types(monkeypatch, tmp_path):
 def test_handles_double_files_for_semi_requirements(monkeypatch, tmp_path):
     """Test that 'semi' requirements also match 'double' files (same era).
 
-    Integration point: File pattern matching → Semi/double equivalence
+    Integration point: File pattern matching â†’ Semi/double equivalence
     """
     from workflow import calculate_community_analysis as calc
 
@@ -217,7 +217,7 @@ def test_handles_double_files_for_semi_requirements(monkeypatch, tmp_path):
     timeseries_dir = tmp_path / community_name / "timeseries"
     timeseries_dir.mkdir(parents=True)
 
-    requirements = {"2001-2015-semi": 2}
+    requirements = {"2002-2016-semi": 2}
 
     # Create 1 semi file and 1 double file (both should match)
     rows = [
@@ -228,10 +228,10 @@ def test_handles_double_files_for_semi_requirements(monkeypatch, tmp_path):
         rows.append(f"2024-01-01 {hour:02d}:00:00,100,10")
     csv_content = "\n".join(rows)
 
-    semi_file = timeseries_dir / "2001-2015-semi_EX-0001-results_timeseries.csv"
+    semi_file = timeseries_dir / "2002-2016-semi_EX-0001-results_timeseries.csv"
     semi_file.write_text(csv_content, encoding="utf-8")
 
-    double_file = timeseries_dir / "2001-2015-double_EX-0001-results_timeseries.csv"
+    double_file = timeseries_dir / "2002-2016-double_EX-0001-results_timeseries.csv"
     double_file.write_text(csv_content, encoding="utf-8")
 
     monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
@@ -254,7 +254,7 @@ def test_handles_double_files_for_semi_requirements(monkeypatch, tmp_path):
 def test_calculates_correct_statistics(monkeypatch, tmp_path):
     """Test that statistics (total, max, avg) are calculated correctly.
 
-    Integration point: Aggregation → Statistics calculation → Markdown output
+    Integration point: Aggregation â†’ Statistics calculation â†’ Markdown output
     """
     from workflow import calculate_community_analysis as calc
 
@@ -262,7 +262,7 @@ def test_calculates_correct_statistics(monkeypatch, tmp_path):
     timeseries_dir = tmp_path / community_name / "timeseries"
     timeseries_dir.mkdir(parents=True)
 
-    requirements = {"2001-2015-single": 1}
+    requirements = {"2002-2016-single": 1}
 
     # Create file with simple, known values for easy verification
     rows = [
@@ -276,7 +276,7 @@ def test_calculates_correct_statistics(monkeypatch, tmp_path):
     rows.append("2024-01-01 03:00:00,100,10,5")  # Hour 3
 
     csv_content = "\n".join(rows)
-    file_path = timeseries_dir / "2001-2015-single_EX-0001-results_timeseries.csv"
+    file_path = timeseries_dir / "2002-2016-single_EX-0001-results_timeseries.csv"
     file_path.write_text(csv_content, encoding="utf-8")
 
     monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
@@ -339,7 +339,7 @@ def test_calculates_correct_statistics(monkeypatch, tmp_path):
 def test_fails_when_no_files_can_be_processed(monkeypatch, tmp_path):
     """Test that function raises error when no valid files can be processed.
 
-    Integration point: Error handling → Validation
+    Integration point: Error handling â†’ Validation
     """
     from workflow import calculate_community_analysis as calc
 
@@ -347,13 +347,13 @@ def test_fails_when_no_files_can_be_processed(monkeypatch, tmp_path):
     timeseries_dir = tmp_path / community_name / "timeseries"
     timeseries_dir.mkdir(parents=True)
 
-    requirements = {"2001-2015-single": 1}
+    requirements = {"2002-2016-single": 1}
 
     # Create a malformed file (missing required columns) - just 2 rows for error test
     csv_content = """Wrong,Columns,Here
 1,2,3
 """
-    file_path = timeseries_dir / "2001-2015-single_EX-0001-results_timeseries.csv"
+    file_path = timeseries_dir / "2002-2016-single_EX-0001-results_timeseries.csv"
     file_path.write_text(csv_content, encoding="utf-8")
 
     monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
@@ -365,9 +365,9 @@ def test_fails_when_no_files_can_be_processed(monkeypatch, tmp_path):
 
 
 def test_uses_all_available_files_when_no_requirements(monkeypatch, tmp_path):
-    """Test that when no CSV requirements exist, function uses all available files.
+    """Test that when no JSON requirements exist, function uses all available files.
 
-    Integration point: Fallback mode → Dynamic requirements
+    Integration point: Fallback mode â†’ Dynamic requirements
     """
     from workflow import calculate_community_analysis as calc
 
@@ -379,7 +379,7 @@ def test_uses_all_available_files_when_no_requirements(monkeypatch, tmp_path):
     monkeypatch.setattr(calc, "get_community_requirements", lambda x: {})
 
     # Create various files
-    for building_type in ["pre-2000-single", "2001-2015-semi"]:
+    for building_type in ["pre-2002-single", "2002-2016-semi"]:
         for i in range(2):
             rows = [
                 "Time,Load: Heating: Delivered,End Use: Electricity: Heating",
@@ -410,7 +410,7 @@ def test_uses_all_available_files_when_no_requirements(monkeypatch, tmp_path):
 def test_parallel_processing_produces_deterministic_results(monkeypatch, tmp_path):
     """Test that parallel processing produces consistent, deterministic results.
 
-    Integration point: ProcessPoolExecutor → Data aggregation consistency
+    Integration point: ProcessPoolExecutor â†’ Data aggregation consistency
     """
     from workflow import calculate_community_analysis as calc
 
@@ -418,7 +418,7 @@ def test_parallel_processing_produces_deterministic_results(monkeypatch, tmp_pat
     timeseries_dir = tmp_path / community_name / "timeseries"
     timeseries_dir.mkdir(parents=True)
 
-    requirements = {"2001-2015-single": 5}
+    requirements = {"2002-2016-single": 5}
 
     # Create multiple files with different data
     for i in range(5):
@@ -429,7 +429,7 @@ def test_parallel_processing_produces_deterministic_results(monkeypatch, tmp_pat
         for hour in range(24):
             rows.append(f"2024-01-01 {hour:02d}:00:00,{100 + i * 10},{10 + i},0,0")
         csv_content = "\n".join(rows)
-        file_path = timeseries_dir / f"2001-2015-single_EX-{i:04d}-results_timeseries.csv"
+        file_path = timeseries_dir / f"2002-2016-single_EX-{i:04d}-results_timeseries.csv"
         file_path.write_text(csv_content, encoding="utf-8")
 
     monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
@@ -462,7 +462,7 @@ def test_parallel_processing_produces_deterministic_results(monkeypatch, tmp_pat
 def test_semi_requirements_do_not_match_wrong_era_double_files(monkeypatch, tmp_path, capsys):
     """Test that 'semi' requirements do NOT match 'double' files from different eras.
 
-    Integration point: File pattern matching → Era validation (negative test)
+    Integration point: File pattern matching â†’ Era validation (negative test)
     """
     from workflow import calculate_community_analysis as calc
 
@@ -470,10 +470,10 @@ def test_semi_requirements_do_not_match_wrong_era_double_files(monkeypatch, tmp_
     timeseries_dir = tmp_path / community_name / "timeseries"
     timeseries_dir.mkdir(parents=True)
 
-    # Require 2001-2015-semi but provide only pre-2000-double (wrong era)
-    requirements = {"2001-2015-semi": 2}
+    # Require 2002-2016-semi but provide only pre-2002-double (wrong era)
+    requirements = {"2002-2016-semi": 2}
 
-    # Create pre-2000-double files (should NOT match 2001-2015-semi requirement)
+    # Create pre-2002-double files (should NOT match 2002-2016-semi requirement)
     rows = [
         "Time,Load: Heating: Delivered,End Use: Electricity: Heating",
         "time,kBtu,kBtu",  # Units row
@@ -482,9 +482,9 @@ def test_semi_requirements_do_not_match_wrong_era_double_files(monkeypatch, tmp_
         rows.append(f"2024-01-01 {hour:02d}:00:00,100,10")
     csv_content = "\n".join(rows)
 
-    wrong_era_file_1 = timeseries_dir / "pre-2000-double_EX-0001-results_timeseries.csv"
+    wrong_era_file_1 = timeseries_dir / "pre-2002-double_EX-0001-results_timeseries.csv"
     wrong_era_file_1.write_text(csv_content, encoding="utf-8")
-    wrong_era_file_2 = timeseries_dir / "pre-2000-double_EX-0002-results_timeseries.csv"
+    wrong_era_file_2 = timeseries_dir / "pre-2002-double_EX-0002-results_timeseries.csv"
     wrong_era_file_2.write_text(csv_content, encoding="utf-8")
 
     monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
@@ -498,7 +498,7 @@ def test_semi_requirements_do_not_match_wrong_era_double_files(monkeypatch, tmp_
     # Verify that it printed errors about no files found
     captured = capsys.readouterr()
     assert (
-        "ERROR: No available files for 2001-2015-semi" in captured.out
+        "ERROR: No available files for 2002-2016-semi" in captured.out
         or "0 files found" in captured.out
     )
 
@@ -506,7 +506,7 @@ def test_semi_requirements_do_not_match_wrong_era_double_files(monkeypatch, tmp_
 def test_handles_production_size_files_with_8761_rows(monkeypatch, tmp_path):
     """Test that function correctly handles production-size files with 8761 rows.
 
-    Integration point: Row count validation → Production data handling
+    Integration point: Row count validation â†’ Production data handling
 
     Note: This is the only test using 8761 rows to verify production file handling.
     All other tests use 24 rows for speed and clarity.
@@ -517,9 +517,9 @@ def test_handles_production_size_files_with_8761_rows(monkeypatch, tmp_path):
     timeseries_dir = tmp_path / community_name / "timeseries"
     timeseries_dir.mkdir(parents=True)
 
-    requirements = {"2001-2015-single": 2}
+    requirements = {"2002-2016-single": 2}
 
-    # Create 2 production-size files (8760 rows = 365 days × 24 hours)
+    # Create 2 production-size files (8760 rows = 365 days Ã— 24 hours)
     for i in range(2):
         rows = [
             "Time,Load: Heating: Delivered,End Use: Electricity: Heating",
@@ -528,7 +528,7 @@ def test_handles_production_size_files_with_8761_rows(monkeypatch, tmp_path):
         for hour in range(8760):
             rows.append(f"2024-01-01 {hour % 24:02d}:00:00,100,10")
         csv_content = "\n".join(rows)
-        file_path = timeseries_dir / f"2001-2015-single_EX-{i:04d}-results_timeseries.csv"
+        file_path = timeseries_dir / f"2002-2016-single_EX-{i:04d}-results_timeseries.csv"
         file_path.write_text(csv_content, encoding="utf-8")
 
     monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
@@ -547,9 +547,10 @@ def test_handles_production_size_files_with_8761_rows(monkeypatch, tmp_path):
     # Verify correct row count
     assert len(df) == 8760, "Should have 8760 rows for production files"
 
-    # Verify aggregation: 2 files × 100 kBTU = 200 kBTU per row
+    # Verify aggregation: 2 files Ã— 100 kBTU = 200 kBTU per row
     expected_load = 200 * config.KBTU_TO_GJ
     assert df["Heating_Load_GJ"].iloc[0] == pytest.approx(expected_load, rel=0.01)
 
     # Verify last row also correct
     assert df["Heating_Load_GJ"].iloc[-1] == pytest.approx(expected_load, rel=0.01)
+

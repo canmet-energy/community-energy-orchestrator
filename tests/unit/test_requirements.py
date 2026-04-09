@@ -1,4 +1,4 @@
-import re
+﻿import re
 
 import pytest
 
@@ -21,7 +21,7 @@ def test_get_community_requirements(sample_data):
     assert requirements != {}, "Expected non-empty requirements for the community"
 
     # Define valid patterns for strict validation
-    valid_eras = ["pre-2000", "2001-2015", "post-2016"]
+    valid_eras = ["pre-2002", "2002-2016", "post-2016"]
     valid_types = ["single", "semi", "row-mid", "row-end"]
 
     # Compile regex for strict format validation: "era-type" (nothing before or after)
@@ -112,37 +112,38 @@ def test_get_weather_location_case_insensitive():
     assert isinstance(loc2, str), "Second result should be a string"
 
 
-def test_get_community_requirements_missing_csv_raises_error(monkeypatch, tmp_path):
-    """Test that missing CSV file raises FileNotFoundError.
+def test_get_community_requirements_missing_json_raises_error(monkeypatch, tmp_path):
+    """Test that missing JSON file raises FileNotFoundError.
 
-    This validates error handling when the requirements CSV is not found,
+    This validates error handling when the communities JSON is not found,
     which could happen if the file is deleted or the path is misconfigured.
 
-    Note: Uses monkeypatch to patch where csv_dir is USED (in workflow.requirements),
-    not where it's defined (in workflow.core).
+    Note: Uses monkeypatch to patch where json_dir is USED (in workflow.requirements),
+    not where it's defined (in workflow.paths).
     """
     import workflow.requirements
 
     # Point to non-existent directory - patch where it's used, not where it's defined
-    monkeypatch.setattr(workflow.requirements, "csv_dir", lambda: tmp_path / "nonexistent")
+    monkeypatch.setattr(workflow.requirements, "json_dir", lambda: tmp_path / "nonexistent")
 
-    with pytest.raises(FileNotFoundError, match="Requirements CSV not found"):
+    with pytest.raises(FileNotFoundError, match="Communities JSON not found"):
         req.get_community_requirements("TestCommunity")
 
 
-def test_get_weather_location_missing_csv_raises_error(monkeypatch, tmp_path):
-    """Test that missing weather CSV file raises FileNotFoundError.
+def test_get_weather_location_missing_json_raises_error(monkeypatch, tmp_path):
+    """Test that missing JSON file raises FileNotFoundError.
 
-    This validates error handling when the weather locations CSV is not found,
+    This validates error handling when the communities JSON is not found,
     which could happen if the file is deleted or the path is misconfigured.
 
-    Note: Uses monkeypatch to patch where csv_dir is USED (in workflow.requirements),
-    not where it's defined (in workflow.core).
+    Note: Uses monkeypatch to patch where json_dir is USED (in workflow.requirements),
+    not where it's defined (in workflow.paths).
     """
     import workflow.requirements
 
     # Point to non-existent directory - patch where it's used, not where it's defined
-    monkeypatch.setattr(workflow.requirements, "csv_dir", lambda: tmp_path / "nonexistent")
+    monkeypatch.setattr(workflow.requirements, "json_dir", lambda: tmp_path / "nonexistent")
 
-    with pytest.raises(FileNotFoundError, match="Weather locations CSV not found"):
+    with pytest.raises(FileNotFoundError, match="Communities JSON not found"):
         req.get_weather_location("TestCommunity")
+

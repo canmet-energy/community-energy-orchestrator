@@ -23,19 +23,19 @@ dev-check: format
 	@echo "Running All Checks (dev mode)..."
 	@echo "========================================"
 	@PYLINT_EXIT=0; \
-	uv run pylint src/ || PYLINT_EXIT=$$?; \
+	uv run pylint backend/ || PYLINT_EXIT=$$?; \
 	echo ""; \
 	echo "========================================"; \
 	echo "Running mypy..."; \
 	echo "========================================"; \
 	MYPY_EXIT=0; \
-	uv run mypy src/ || MYPY_EXIT=$$?; \
+	uv run mypy backend/ || MYPY_EXIT=$$?; \
 	echo ""; \
 	echo "========================================"; \
 	echo "Running Tests..."; \
 	echo "========================================"; \
 	TEST_EXIT=0; \
-	uv run pytest tests/unit/ -m unit --cov=src/ --cov-report=term-missing || TEST_EXIT=$$?; \
+	uv run pytest tests/unit/ -m unit --cov=backend/ --cov-report=term-missing || TEST_EXIT=$$?; \
 	uv run pytest tests/integration/ -m integration || TEST_EXIT=$$?; \
 	echo ""; \
 	echo "========================================"; \
@@ -72,34 +72,34 @@ check-all: lint test
 # Run all linters including format checks (for CI/CD or manual checking)
 lint:
 	@echo "Running black..."
-	uv run black --check src/ tests/
+	uv run black --check backend/ tests/
 	@echo "Running isort..."
-	uv run isort --check-only src/ tests/
+	uv run isort --check-only backend/ tests/
 	@echo "Running pylint..."
-	uv run pylint src/
+	uv run pylint backend/
 	@echo "Running mypy..."
-	uv run mypy src/
+	uv run mypy backend/
 
 # Run only static analysis (pylint + mypy), skipping format checks
 static-analysis:
 	@echo "Running pylint..."
-	uv run pylint src/
+	uv run pylint backend/
 	@echo "Running mypy..."
-	uv run mypy src/
+	uv run mypy backend/
 
 # Run tests with coverage (matching CI/CD)
 test:
 	@echo "Running unit tests..."
-	uv run pytest tests/unit/ -m unit --cov=src/ --cov-report=term-missing
+	uv run pytest tests/unit/ -m unit --cov=backend/ --cov-report=term-missing
 	@echo "Running integration tests..."
 	uv run pytest tests/integration/ -m integration
 
 # Auto-format code
 format:
 	@echo "Formatting with black..."
-	uv run black src/ tests/
+	uv run black backend/ tests/
 	@echo "Sorting imports with isort..."
-	uv run isort src/ tests/
+	uv run isort backend/ tests/
 
 # Clean up generated files
 clean:

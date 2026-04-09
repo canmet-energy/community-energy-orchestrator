@@ -138,7 +138,7 @@ def process_xml_file(
     root = tree.getroot()
 
     # ProgramInformation
-    pi = find(root, "HouseFile/ProgramInformation")
+    pi = find(root, "ProgramInformation")
     file_node = find(pi, "File")
     weather_region_english = find(find(find(pi, "Weather"), "Region"), "English")
     weather_region_english_text = (
@@ -229,7 +229,7 @@ def process_xml_file(
     delete_if_exists(pi, "Information")
 
     # Program options & Vermiculite, and ERS conditional input removal
-    prog = find(root, "HouseFile/Program")
+    prog = find(root, "Program")
     options = find(prog, "Options")
     delete_if_exists(options, "HouseholdOperatingConditions")
 

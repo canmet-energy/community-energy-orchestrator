@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main, dev, review ]
   pull_request:
-    branches: [ main, dev ]
+    branches: [ main, dev, review ]
 
 jobs:
   lint:
@@ -26,18 +26,18 @@ jobs:
         run: uv sync --all-extras
       
       - name: Lint with black
-        run: uv run black --check src/ tests/
+        run: uv run black --check backend/ tests/
       
       - name: Lint with pylint
-        run: uv run pylint src/
+        run: uv run pylint backend/
         continue-on-error: true
       
       - name: Type check with mypy
-        run: uv run mypy src/
+        run: uv run mypy backend/
         continue-on-error: true
       
       - name: Check imports with isort
-        run: uv run isort --check-only src/ tests/
+        run: uv run isort --check-only backend/ tests/
         continue-on-error: true
 
   test:
@@ -63,7 +63,7 @@ jobs:
         run: uv sync --all-extras
       
       - name: Run unit tests with coverage
-        run: uv run pytest tests/unit/ -m unit --cov=src/ --cov-report=xml --cov-report=term-missing --cov-report=html
+        run: uv run pytest tests/unit/ -m unit --cov=backend/ --cov-report=xml --cov-report=term-missing --cov-report=html
       
       - name: Run integration tests
         run: uv run pytest tests/integration/ -m integration
@@ -115,5 +115,5 @@ jobs:
         continue-on-error: true
       
       - name: Run bandit security scan
-        run: uv run bandit -r src/ -f json -o bandit-report.json
+        run: uv run bandit -r backend/ -f json -o bandit-report.json
         continue-on-error: true

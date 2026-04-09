@@ -68,22 +68,31 @@ COPY data/json/ ./data/json/
 # Or download into the container after starting
 
 # Create non-root user for security (UID 1000 for compatibility with host volume mounts)
-# Use --create-home so appuser owns /app and can write to ~/.local, ~/.config, etc.
-RUN groupadd -g 1000 appuser && useradd -u 1000 -g appuser -d /app --no-create-home appuser \
+RUN groupadd -g 1000 appuser && useradd -u 1000 -g appuser -d /app --no-create-home appuser
+
+# Create runtime directories for outputs and logs (before chown so they get correct ownership)
+RUN mkdir -p output logs communities \
     && chown -R appuser:appuser /app
 
-# Create runtime directories for outputs and logs
-RUN mkdir -p output logs communities
+# Copy entrypoint script that fixes volume mount permissions at runtime
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Install OpenStudio/EnergyPlus as appuser so binaries land in /app/.local/share/
 USER appuser
-RUN bash -c '. /usr/local/bin/certctl && certctl_load && \
-    os-setup --install-quiet && os-setup --check-only'
+RUN os-setup --install-quiet && os-setup --check-only
+
+# Entrypoint fixes volume mount permissions, then drops to appuser via setpriv
+ENTRYPOINT ["entrypoint.sh"]
 
 # Set Python to run in unbuffered mode (better for Docker logs)
 ENV PYTHONUNBUFFERED=1
 
-# Set APP_ROOT so installed package can find data/, communities/, etc.
+# Ensure UTF-8 locale for correct handling of French community names (e.g. Gamètì)
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
+# Set APP_ROOT so installed package can find csv/, communities/, etc.
 ENV APP_ROOT=/app
 
 # Expose the default FastAPI port

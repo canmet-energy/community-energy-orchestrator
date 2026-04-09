@@ -1,7 +1,6 @@
 ﻿import re
 
 import pytest
-
 import workflow.requirements as req
 
 pytestmark = pytest.mark.unit
@@ -146,4 +145,3 @@ def test_get_weather_location_missing_json_raises_error(monkeypatch, tmp_path):
 
     with pytest.raises(FileNotFoundError, match="Communities JSON not found"):
         req.get_weather_location("TestCommunity")
-

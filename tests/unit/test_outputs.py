@@ -6,7 +6,6 @@ import zipfile
 from pathlib import Path
 
 import pytest
-
 import workflow.outputs as outputs
 
 pytestmark = pytest.mark.unit
@@ -107,4 +106,3 @@ def test_create_timeseries_zip_not_found(mock_community_structure):
     """Test error when creating ZIP for non-existent community."""
     with pytest.raises(FileNotFoundError):
         outputs.create_timeseries_zip("NonExistentCommunity")
-

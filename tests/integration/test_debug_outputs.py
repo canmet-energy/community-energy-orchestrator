@@ -7,7 +7,6 @@ import tempfile
 from pathlib import Path
 
 import pytest
-
 import workflow.debug_outputs as debug
 
 pytestmark = pytest.mark.integration
@@ -174,4 +173,3 @@ def test_debug_timeseries_outputs_overwrites_existing_log(monkeypatch, tmp_path)
 # Note: debug_weather_h2k tests removed as location code validation
 # was removed from the workflow (March 2026). Weather location changes
 # now only modify Region/English and Location/English fields.
-

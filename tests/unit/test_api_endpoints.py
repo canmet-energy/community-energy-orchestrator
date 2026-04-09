@@ -670,4 +670,3 @@ def test_download_dwelling_timeseries_returns_zip(client, tmp_path):
         workflow.outputs.communities_dir = original_communities_dir
         with app.main._lock:
             app.main._runs.clear()
-

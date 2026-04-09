@@ -1,7 +1,6 @@
 ﻿import os
 
 import pytest
-
 import workflow.config as cfg
 
 pytestmark = pytest.mark.unit
@@ -184,7 +183,7 @@ def test_archetype_valid_era_patterns():
     # Valid eras should match the subdirectory names in data/source-archetypes
     valid_eras = ["pre-2002", "2002-2016", "post-2016"]
     valid_types = ["single", "semi", "row-mid", "row-end"]
-    
+
     # All combinations should be valid archetype types
     for era in valid_eras:
         for house_type in valid_types:
@@ -215,4 +214,3 @@ def test_archetype_subdirectory_structure():
     for archetype_type in expected_types:
         assert isinstance(archetype_type, str)
         assert "-" in archetype_type  # Should contain era-type separator
-

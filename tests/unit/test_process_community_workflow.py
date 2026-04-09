@@ -10,7 +10,6 @@ import tempfile
 from pathlib import Path
 
 import pytest
-
 import workflow.process_community_workflow as workflow
 
 pytestmark = pytest.mark.unit
@@ -181,7 +180,9 @@ def test_copy_archetype_files_applies_n_plus_20_percent_rule(monkeypatch, tmp_pa
 
     # Create more than enough source files in the subdirectory
     for i in range(1, 21):
-        (source_dir / "pre-2002-single" / f"pre-2002-single_EX-{i:04d}.H2K").write_text("test content")
+        (source_dir / "pre-2002-single" / f"pre-2002-single_EX-{i:04d}.H2K").write_text(
+            "test content"
+        )
 
     requirements = {"pre-2002-single": 10}
 
@@ -276,7 +277,9 @@ def test_copy_archetype_files_handles_insufficient_files(monkeypatch, tmp_path, 
 
     # Create only 5 source files in subdirectory
     for i in range(1, 6):
-        (source_dir / "pre-2002-single" / f"pre-2002-single_EX-{i:04d}.H2K").write_text("test content")
+        (source_dir / "pre-2002-single" / f"pre-2002-single_EX-{i:04d}.H2K").write_text(
+            "test content"
+        )
 
     # Request 10 (would need 12 with +20% rule, but only 5 exist)
     requirements = {"pre-2002-single": 10}
@@ -398,4 +401,3 @@ def test_collect_timeseries_parallel_handles_missing_results(tmp_path):
     assert collected == 0
     timeseries_files = list(timeseries_dir.glob("*-results_timeseries.csv"))
     assert len(timeseries_files) == 0
-

@@ -39,7 +39,6 @@ from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
-
 from workflow.outputs import (
     create_timeseries_zip,
     get_analysis_json_path,

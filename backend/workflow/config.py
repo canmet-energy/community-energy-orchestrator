@@ -146,6 +146,7 @@ ARCHETYPE_TYPE_PATTERNS = {
     "post-2016-row-end": [r"post-2016-row-end_.*\.H2K$"],
 }
 
+
 def get_max_workers():
     """
     Calculate optimal worker count for parallel operations.

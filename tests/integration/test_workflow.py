@@ -7,7 +7,6 @@ Unit tests cover individual function behavior; integration tests verify coordina
 import time
 
 import pytest
-
 import workflow.requirements as req
 from workflow.paths import communities_dir
 
@@ -321,4 +320,3 @@ def test_workflow_error_propagates_to_api(client, monkeypatch):
     with app.main._lock:
         app.main._current_run_id = None
         app.main._runs.clear()
-

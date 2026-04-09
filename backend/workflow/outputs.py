@@ -5,7 +5,6 @@ import zipfile
 from pathlib import Path
 
 import pandas as pd
-
 from workflow.config import ENERGY_CATEGORIES
 from workflow.paths import communities_dir
 

@@ -29,8 +29,8 @@ from workflow.config import (
     get_archetype_selection_seed,
     get_max_workers,
 )
-from workflow.paths import communities_dir, logs_dir, source_archetypes_dir
 from workflow.debug_outputs import main as debug_main
+from workflow.paths import communities_dir, logs_dir, source_archetypes_dir
 from workflow.requirements import (
     get_community_requirements,
     get_weather_location,
@@ -204,7 +204,7 @@ def copy_archetype_files(community_name, requirements):
                 continue
             # Enforce N+20% rule (always round up for safety)
             num_to_copy = math.ceil(count * 1.2) if count > 0 else 0
-            
+
             # Subdirectory name matches the requirement type
             subdir_path = archetypes_source / req_type
             if not subdir_path.exists() or not subdir_path.is_dir():
@@ -212,13 +212,12 @@ def copy_archetype_files(community_name, requirements):
                 print(msg)
                 debug_log.write(msg + "\n")
                 continue
-            
+
             # Get all H2K files from the subdirectory
             # Since files are organized by type in subdirectories, we trust all files in the directory
             try:
                 h2k_files = [
-                    f.name for f in subdir_path.iterdir() 
-                    if f.is_file() and f.name.endswith(".H2K")
+                    f.name for f in subdir_path.iterdir() if f.is_file() and f.name.endswith(".H2K")
                 ]
             except Exception as e:
                 msg = f"[ERROR] Failed to list files in {subdir_path}: {e}"
@@ -231,7 +230,7 @@ def copy_archetype_files(community_name, requirements):
                 print(msg)
                 debug_log.write(msg + "\n")
                 continue
-            
+
             # Sort for deterministic ordering, then shuffle with seed for random selection
             h2k_files = sorted(h2k_files)
             rng.shuffle(h2k_files)

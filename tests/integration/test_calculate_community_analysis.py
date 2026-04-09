@@ -9,7 +9,6 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-
 import workflow.calculate_community_analysis as analysis
 import workflow.config as config
 
@@ -553,4 +552,3 @@ def test_handles_production_size_files_with_8761_rows(monkeypatch, tmp_path):
 
     # Verify last row also correct
     assert df["Heating_Load_GJ"].iloc[-1] == pytest.approx(expected_load, rel=0.01)
-

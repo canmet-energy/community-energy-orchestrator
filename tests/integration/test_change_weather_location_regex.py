@@ -4,7 +4,6 @@ import tempfile
 from pathlib import Path
 
 import pytest
-
 import workflow.change_weather_location_regex as weather
 
 pytestmark = pytest.mark.integration
@@ -150,4 +149,3 @@ def test_change_weather_code_debug_mode(tmp_path, capsys):
     captured = capsys.readouterr()
     assert "Found location" in captured.out or "IQALUIT" in captured.out
     assert "Successfully updated" in captured.out
-

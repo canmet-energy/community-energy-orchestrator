@@ -9,7 +9,6 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-
 import workflow.calculate_community_analysis as analysis
 import workflow.config as config
 
@@ -202,4 +201,3 @@ kBtu,kWh,kWh,kWh
         assert df["Heating_Electricity_GJ"].iloc[1] == pytest.approx(30 * config.KWH_TO_GJ)
     finally:
         Path(temp_path).unlink()
-

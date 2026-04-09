@@ -34,16 +34,16 @@ def _load_communities_json():
     json_path = json_dir() / "communities.json"
     if not json_path.exists():
         raise FileNotFoundError(f"Communities JSON not found: {json_path}")
-    
+
     with open(json_path, encoding="utf-8-sig") as f:
         data = json.load(f)
-    
+
     # Validate structure
     if "communities" not in data:
         raise ValueError(
             f"Invalid JSON structure in {json_path}. Expected top-level 'communities' key."
         )
-    
+
     return data
 
 
@@ -60,15 +60,13 @@ def get_community_requirements(community_name):
     """
     data = _load_communities_json()
     communities = data["communities"]
-    
+
     # Normalize community name for consistent lookup
     normalized_name = normalize_community_name(community_name)
     community_data = communities.get(normalized_name)
-    
+
     if not community_data:
-        print(
-            f"[INFO] Community '{community_name}' not found in JSON. Using graceful fallback."
-        )
+        print(f"[INFO] Community '{community_name}' not found in JSON. Using graceful fallback.")
         return {}
 
     return community_data.get("housing_requirements", {})
@@ -86,11 +84,11 @@ def get_weather_location(community_name):
     """
     data = _load_communities_json()
     communities = data["communities"]
-    
+
     # Normalize community name for consistent lookup
     normalized_name = normalize_community_name(community_name)
     community_data = communities.get(normalized_name)
-    
+
     if community_data:
         return community_data.get("weather_location", "")
     return ""
@@ -126,6 +124,7 @@ def get_all_communities():
 
     return communities
 
+
 def get_community_info(community_name):
     """
     Get metadata for a single community from JSON file.
@@ -140,11 +139,11 @@ def get_community_info(community_name):
     """
     data = _load_communities_json()
     communities = data["communities"]
-    
+
     # Normalize community name for consistent lookup
     normalized_name = normalize_community_name(community_name)
     community_data = communities.get(normalized_name)
-    
+
     if not community_data:
         return None
 

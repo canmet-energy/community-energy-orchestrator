@@ -4,7 +4,6 @@ import tempfile
 from pathlib import Path
 
 import pytest
-
 import workflow.change_weather_location_regex as weather
 from workflow.requirements import get_weather_region
 
@@ -42,4 +41,3 @@ def test_get_region_for_location_case_insensitive():
 
     # All should return same values
     assert region1 == region2 == region3
-

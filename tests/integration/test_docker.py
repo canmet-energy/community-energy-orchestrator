@@ -189,4 +189,3 @@ def test_docker_volume_mounts_exist():
     assert (
         "./data/source-archetypes" in config or "/app/data/source-archetypes" in config
     ), "source-archetypes volume mount not found in config"
-

@@ -22,7 +22,7 @@ pytestmark = pytest.mark.unit
 
 def test_create_community_directories_structure(monkeypatch, tmp_path):
     """Test that create_community_directories creates expected structure."""
-    monkeypatch.setattr(workflow, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(workflow, "output_dir", lambda: tmp_path)
 
     base_path = workflow.create_community_directories("TestCommunity")
 
@@ -35,7 +35,7 @@ def test_create_community_directories_structure(monkeypatch, tmp_path):
 
 def test_create_community_directories_idempotent(monkeypatch, tmp_path):
     """Test that creating directories twice doesn't fail (idempotent)."""
-    monkeypatch.setattr(workflow, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(workflow, "output_dir", lambda: tmp_path)
 
     base_path1 = workflow.create_community_directories("TestCommunity")
     base_path2 = workflow.create_community_directories("TestCommunity")
@@ -50,7 +50,7 @@ def test_create_community_directories_idempotent(monkeypatch, tmp_path):
 
 def test_create_manifest_includes_requirements(monkeypatch, tmp_path):
     """Test that manifest file contains all required sections and data."""
-    monkeypatch.setattr(workflow, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(workflow, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(workflow, "get_weather_location", lambda x: "MOCK_WEATHER_STATION")
 
     requirements = {"pre-2002-single": 5, "2002-2016-semi": 3, "post-2016-row-mid": 2}
@@ -73,7 +73,7 @@ def test_create_manifest_includes_requirements(monkeypatch, tmp_path):
 
 def test_create_manifest_with_empty_requirements(monkeypatch, tmp_path):
     """Test manifest creation with empty requirements dict."""
-    monkeypatch.setattr(workflow, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(workflow, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(workflow, "get_weather_location", lambda x: "TEST_LOCATION")
 
     manifest_path = workflow.create_manifest("TestCommunity", {})
@@ -153,7 +153,7 @@ def test_duplicate_missing_timeseries_no_source_files(capsys):
 
 def test_copy_archetype_files_validates_source_directory(monkeypatch, tmp_path):
     """Test that copy_archetype_files fails gracefully with missing source directory."""
-    monkeypatch.setattr(workflow, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(workflow, "output_dir", lambda: tmp_path)
     nonexistent_dir = tmp_path / "nonexistent-archetypes"
     monkeypatch.setattr(workflow, "source_archetypes_dir", lambda: nonexistent_dir)
 
@@ -170,11 +170,11 @@ def test_copy_archetype_files_applies_n_plus_20_percent_rule(monkeypatch, tmp_pa
     source_dir.mkdir()
     # Create subdirectory for archetype type
     (source_dir / "pre-2002-single").mkdir()
-    comm_dir = tmp_path / "communities"
+    comm_dir = tmp_path / "output"
     comm_dir.mkdir()
 
     monkeypatch.setattr(workflow, "source_archetypes_dir", lambda: source_dir)
-    monkeypatch.setattr(workflow, "communities_dir", lambda: comm_dir)
+    monkeypatch.setattr(workflow, "output_dir", lambda: comm_dir)
     monkeypatch.setattr(workflow, "logs_dir", lambda: tmp_path / "logs")
     monkeypatch.setattr(workflow, "get_max_workers", lambda: 1)
 
@@ -198,11 +198,11 @@ def test_copy_archetype_files_handles_zero_requirements(monkeypatch, tmp_path, c
     source_dir = tmp_path / "source-archetypes"
     source_dir.mkdir()
     (source_dir / "pre-2002-single").mkdir()
-    comm_dir = tmp_path / "communities"
+    comm_dir = tmp_path / "output"
     comm_dir.mkdir()
 
     monkeypatch.setattr(workflow, "source_archetypes_dir", lambda: source_dir)
-    monkeypatch.setattr(workflow, "communities_dir", lambda: comm_dir)
+    monkeypatch.setattr(workflow, "output_dir", lambda: comm_dir)
     monkeypatch.setattr(workflow, "logs_dir", lambda: tmp_path / "logs")
 
     # Create some source files
@@ -223,11 +223,11 @@ def test_copy_archetype_files_handles_empty_requirements(monkeypatch, tmp_path, 
     """Test that copy_archetype_files handles empty requirements dict."""
     source_dir = tmp_path / "source-archetypes"
     source_dir.mkdir()
-    comm_dir = tmp_path / "communities"
+    comm_dir = tmp_path / "output"
     comm_dir.mkdir()
 
     monkeypatch.setattr(workflow, "source_archetypes_dir", lambda: source_dir)
-    monkeypatch.setattr(workflow, "communities_dir", lambda: comm_dir)
+    monkeypatch.setattr(workflow, "output_dir", lambda: comm_dir)
     monkeypatch.setattr(workflow, "logs_dir", lambda: tmp_path / "logs")
 
     workflow.copy_archetype_files("TestCommunity", {})
@@ -242,11 +242,11 @@ def test_copy_archetype_files_warns_when_no_matching_files(monkeypatch, tmp_path
     source_dir.mkdir()
     # Create a different subdirectory
     (source_dir / "2002-2016-single").mkdir()
-    comm_dir = tmp_path / "communities"
+    comm_dir = tmp_path / "output"
     comm_dir.mkdir()
 
     monkeypatch.setattr(workflow, "source_archetypes_dir", lambda: source_dir)
-    monkeypatch.setattr(workflow, "communities_dir", lambda: comm_dir)
+    monkeypatch.setattr(workflow, "output_dir", lambda: comm_dir)
     monkeypatch.setattr(workflow, "logs_dir", lambda: tmp_path / "logs")
     monkeypatch.setattr(workflow, "get_max_workers", lambda: 1)
 
@@ -267,11 +267,11 @@ def test_copy_archetype_files_handles_insufficient_files(monkeypatch, tmp_path, 
     source_dir = tmp_path / "source-archetypes"
     source_dir.mkdir()
     (source_dir / "pre-2002-single").mkdir()
-    comm_dir = tmp_path / "communities"
+    comm_dir = tmp_path / "output"
     comm_dir.mkdir()
 
     monkeypatch.setattr(workflow, "source_archetypes_dir", lambda: source_dir)
-    monkeypatch.setattr(workflow, "communities_dir", lambda: comm_dir)
+    monkeypatch.setattr(workflow, "output_dir", lambda: comm_dir)
     monkeypatch.setattr(workflow, "logs_dir", lambda: tmp_path / "logs")
     monkeypatch.setattr(workflow, "get_max_workers", lambda: 1)
 
@@ -298,10 +298,10 @@ def test_copy_archetype_files_handles_insufficient_files(monkeypatch, tmp_path, 
 
 def test_update_weather_location_with_no_files(monkeypatch, tmp_path, capsys):
     """Test that update_weather_location handles missing H2K files gracefully."""
-    comm_dir = tmp_path / "communities"
+    comm_dir = tmp_path / "output"
     (comm_dir / "TestCommunity" / "archetypes").mkdir(parents=True)
 
-    monkeypatch.setattr(workflow, "communities_dir", lambda: comm_dir)
+    monkeypatch.setattr(workflow, "output_dir", lambda: comm_dir)
     monkeypatch.setattr(workflow, "get_weather_location", lambda x: "TEST_LOCATION")
 
     workflow.update_weather_location("TestCommunity")
@@ -313,7 +313,7 @@ def test_update_weather_location_with_no_files(monkeypatch, tmp_path, capsys):
 
 def test_update_weather_location_processes_files(monkeypatch, tmp_path, capsys):
     """Test that update_weather_location attempts to process all H2K files."""
-    comm_dir = tmp_path / "communities"
+    comm_dir = tmp_path / "output"
     archetype_dir = comm_dir / "TestCommunity" / "archetypes"
     archetype_dir.mkdir(parents=True)
 
@@ -321,7 +321,7 @@ def test_update_weather_location_processes_files(monkeypatch, tmp_path, capsys):
     for i in range(1, 4):
         (archetype_dir / f"test-{i}.H2K").write_text("dummy content")
 
-    monkeypatch.setattr(workflow, "communities_dir", lambda: comm_dir)
+    monkeypatch.setattr(workflow, "output_dir", lambda: comm_dir)
     monkeypatch.setattr(workflow, "get_weather_location", lambda x: "TEST_LOCATION")
     monkeypatch.setattr(workflow, "get_max_workers", lambda: 1)
 

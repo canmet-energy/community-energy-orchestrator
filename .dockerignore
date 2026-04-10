@@ -28,6 +28,12 @@ share/python-wheels/
 # ============================================
 venv/
 .venv/
+
+# ============================================
+# Generated output directories (created at runtime)
+# ============================================
+output/
+logs/
 env/
 ENV/
 
@@ -71,11 +77,10 @@ LICENSE
 # ============================================
 # Runtime outputs (generated in container)
 # ============================================
-# NOTE: communities/ and output/ are created at runtime
+# NOTE: output/ is created at runtime
 # If you need to preserve them, use volume mounts
 logs/
 output/
-communities/
 
 # ============================================
 # Dev container and Docker files

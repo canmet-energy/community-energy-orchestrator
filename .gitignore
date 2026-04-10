@@ -30,7 +30,7 @@ MANIFEST
 **/source-archetypes
 
 # Expected outputs
-**/communities/**
+**/output/**
 **/output/**
 output/
 Seeded Community Runs/

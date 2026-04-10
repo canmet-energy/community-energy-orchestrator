@@ -57,7 +57,7 @@ This will:
 
 ```bash
 # Recommended: Start both API and frontend
-docker-compose up
+docker compose up
 
 # OR run the API only
 docker run -p 8000:8000 community-energy-orchestrator
@@ -83,7 +83,7 @@ Notes:
 
 - The converter library supports Python 3.10–3.12.
 
-- `communities/` is generated locally by the workflow and is not committed.
+- `output/` is generated locally by the workflow and is not committed.
 
 ### Step 1) Clone the repo
 

@@ -115,7 +115,7 @@ Then open:
 - `backend/workflow/process_community_workflow.py`: end-to-end workflow driver
 - `backend/workflow/service.py`: public API for workflow operations
 - `data/source-archetypes/`: Hot2000 `.H2K` archetype library organized in subdirectories by type (local/downloaded, mounted into container)
-- `communities/<Community Name>/`: per-run working directory and outputs (generated locally)
+- `output/<Community Name>/`: per-run working directory and outputs (generated locally)
 - `data/json/`: community requirements + weather mapping configuration
 
 ## CLI Command
@@ -236,11 +236,11 @@ python backend\workflow\process_community_workflow.py "Rankin Inlet"
 ### Where outputs go
 After a run, you’ll typically see:
 
-- `communities/<Community Name>/archetypes/`: weather-updated `.H2K` models used for simulation
-- `communities/<Community Name>/timeseries/`: per-building `*-results_timeseries.csv`
-- `communities/<Community Name>/analysis/`: aggregated outputs (community totals, logs, etc.)
+- `output/<Community Name>/archetypes/`: weather-updated `.H2K` models used for simulation
+- `output/<Community Name>/timeseries/`: per-building `*-results_timeseries.csv`
+- `output/<Community Name>/analysis/`: aggregated outputs (community totals, logs, etc.)
 
-Note: the workflow currently deletes the existing `communities/<Community Name>/` directory at the start of each run to ensure a clean rebuild.
+Note: the workflow currently deletes the existing `output/<Community Name>/` directory at the start of each run to ensure a clean rebuild.
 
 ## Contributing
 

@@ -57,7 +57,6 @@ Linux/macOS:
 
 ```bash
 docker run -p 8000:8000 \
-  -v $(pwd)/communities:/app/communities \
   -v $(pwd)/output:/app/output \
   -v $(pwd)/logs:/app/logs \
   community-energy-orchestrator
@@ -67,7 +66,6 @@ Windows (PowerShell):
 
 ```powershell
 docker run -p 8000:8000 `
-  -v ${PWD}/communities:/app/communities `
   -v ${PWD}/output:/app/output `
   -v ${PWD}/logs:/app/logs `
   community-energy-orchestrator
@@ -88,7 +86,7 @@ docker run -it community-energy-orchestrator \
 
 # With volume mounts to save outputs
 docker run -it \
-  -v $(pwd)/communities:/app/communities \
+  -v $(pwd)/output:/app/output \
   -v $(pwd)/logs:/app/logs \
   community-energy-orchestrator \
   process-community "Old Crow"
@@ -103,7 +101,7 @@ docker run -it community-energy-orchestrator `
 
 # With volume mounts to save outputs
 docker run -it `
-  -v ${PWD}/communities:/app/communities `
+  -v ${PWD}/output:/app/output `
   -v ${PWD}/logs:/app/logs `
   community-energy-orchestrator `
   process-community "Old Crow"
@@ -134,7 +132,7 @@ python src\workflow\process_community_workflow.py "Old Crow"
 
 Notes:
 - Community names with spaces must be quoted.
-- The workflow deletes `communities/<Community Name>/` at the start of each run.
+- The workflow deletes `output/<Community Name>/` at the start of each run.
 
 ### API (`backend/app/main.py`)
 Runs the FastAPI server so you can start a workflow run via HTTP and poll for status.
@@ -207,7 +205,7 @@ These modules are called internally by the workflow but can also be run directly
 
 See [Communities](COMMUNITIES.md) for the full list:
 
-Note: `communities/` is generated locally by the workflow (and may not exist until you run a community).
+Note: `output/` is generated locally by the workflow (and may not exist until you run a community).
 
 ### 2) Run a community
 
@@ -250,10 +248,10 @@ python backend\workflow\process_community_workflow.py "Old Crow"
 
 After a successful run, outputs live under:
 
-- `communities/<Community Name>/archetypes/`: weather-updated `.H2K` files used for simulation
-- `communities/<Community Name>/archetypes/output/`: converter outputs (may be deleted at end of workflow)
-- `communities/<Community Name>/timeseries/`: per-building `*-results_timeseries.csv`
-- `communities/<Community Name>/analysis/`: aggregated outputs and logs
+- `output/<Community Name>/archetypes/`: weather-updated `.H2K` files used for simulation
+- `output/<Community Name>/archetypes/output/`: converter outputs (may be deleted at end of workflow)
+- `output/<Community Name>/timeseries/`: per-building `*-results_timeseries.csv`
+- `output/<Community Name>/analysis/`: aggregated outputs and logs
 
 Useful logs:
 - `logs/archetype_copy_debug.log`: what requirements were read + how many archetypes matched/copied
@@ -263,7 +261,7 @@ Useful logs:
 ### Slow runs
 If runs suddenly become much slower, common causes are:
 
-- Too many archetypes were copied into `communities/<Community Name>/archetypes/`, which increases the number of simulations.
+- Too many archetypes were copied into `output/<Community Name>/archetypes/`, which increases the number of simulations.
 - OpenStudio/EnergyPlus setup is missing or misconfigured (leading to retries or failures).
 
 Check `logs/archetype_copy_debug.log` to confirm how many archetypes were copied for each requirement.

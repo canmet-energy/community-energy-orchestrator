@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 from workflow.config import ENERGY_CATEGORIES
-from workflow.paths import communities_dir
+from workflow.paths import output_dir
 
 
 def _community_file(community_name: str, *subpath: str) -> Path:
@@ -23,7 +23,7 @@ def _community_file(community_name: str, *subpath: str) -> Path:
     Raises:
         FileNotFoundError: If the resolved path doesn't exist
     """
-    path = communities_dir() / community_name / Path(*subpath)
+    path = output_dir() / community_name / Path(*subpath)
 
     if not path.exists():
         raise FileNotFoundError(f"Not found: {path}")

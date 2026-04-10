@@ -67,7 +67,7 @@ backend/
     requirements.py                      # Reads community requirements from JSON
     outputs.py                           # Output file management (paths, ZIP creation)
     config.py                            # Environment-based configuration
-    paths.py                             # Shared paths (communities_dir, json_dir, etc.)
+    paths.py                             # Shared paths (output_dir, json_dir, etc.)
     debug_outputs.py                     # Output validation and debug logs
 tests/
   conftest.py                            # Shared fixtures
@@ -79,7 +79,7 @@ data/
   source-archetypes/                     # H2K archetype library (gitignored)
 tools/
   data-scrubbing/                        # Data preparation scripts
-communities/                             # Generated per-run (gitignored)
+output/                                  # Generated per-run (gitignored)
 docs/                                    # User-facing documentation
 ```
 
@@ -135,7 +135,7 @@ Test files follow the pattern `test_<module_name>.py`, mirroring the source modu
 ### Writing Tests
 
 - Keep tests focused — one behavior per test.
-- Use `monkeypatch` to mock `communities_dir()` and other path functions so tests don't depend on real data.
+- Use `monkeypatch` to mock `output_dir()` and other path functions so tests don't depend on real data.
 - Use `tmp_path` (pytest built-in) for tests that create files.
 - Mark tests with `@pytest.mark.unit` or `@pytest.mark.integration`.
 
@@ -148,7 +148,7 @@ pytestmark = pytest.mark.unit
 
 
 def test_my_function(tmp_path, monkeypatch):
-    monkeypatch.setattr("workflow.paths.communities_dir", lambda: tmp_path)
+    monkeypatch.setattr("workflow.paths.output_dir", lambda: tmp_path)
     # ... test logic
 ```
 

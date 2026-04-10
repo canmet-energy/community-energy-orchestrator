@@ -1,8 +1,9 @@
 {
 	"name": "Community Energy Orchestrator",
-	"dockerComposeFile": "docker-compose.yml",
-	"service": "api",
-	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+	"build": {
+		"dockerfile": "./Dockerfile",
+		"context": ".."
+	},
 	"containerUser": "vscode",
 	"remoteUser": "vscode",
 	"containerEnv": {

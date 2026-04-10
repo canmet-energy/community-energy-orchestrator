@@ -265,9 +265,9 @@ def test_get_analysis_returns_markdown_when_file_exists(client, tmp_path):
     import app.main
     import workflow.outputs
 
-    # Patch communities_dir where it's used (workflow.outputs)
-    original_communities_dir = workflow.outputs.communities_dir
-    workflow.outputs.communities_dir = lambda: tmp_path
+    # Patch output_dir where it's used (workflow.outputs)
+    original_output_dir = workflow.outputs.output_dir
+    workflow.outputs.output_dir = lambda: tmp_path
 
     # Manually create a completed run
     run_id = "test-run-completed"
@@ -296,7 +296,7 @@ def test_get_analysis_returns_markdown_when_file_exists(client, tmp_path):
         assert data["markdown"] == analysis_content
     finally:
         # Cleanup
-        workflow.outputs.communities_dir = original_communities_dir
+        workflow.outputs.output_dir = original_output_dir
         with app.main._lock:
             app.main._current_run_id = None
             app.main._runs.clear()
@@ -320,8 +320,8 @@ def test_get_analysis_data_returns_json_when_file_exists(client, tmp_path):
     import app.main
     import workflow.outputs
 
-    original_communities_dir = workflow.outputs.communities_dir
-    workflow.outputs.communities_dir = lambda: tmp_path
+    original_output_dir = workflow.outputs.output_dir
+    workflow.outputs.output_dir = lambda: tmp_path
 
     run_id = "test-run-analysis-data"
     with app.main._lock:
@@ -351,7 +351,7 @@ def test_get_analysis_data_returns_json_when_file_exists(client, tmp_path):
         # Data is now a dict directly (no JSON string)
         assert data["data"] == test_data
     finally:
-        workflow.outputs.communities_dir = original_communities_dir
+        workflow.outputs.output_dir = original_output_dir
         with app.main._lock:
             app.main._current_run_id = None
             app.main._runs.clear()
@@ -373,8 +373,8 @@ def test_download_analysis_md_returns_file(client, tmp_path):
     import app.main
     import workflow.outputs
 
-    original_communities_dir = workflow.outputs.communities_dir
-    workflow.outputs.communities_dir = lambda: tmp_path
+    original_output_dir = workflow.outputs.output_dir
+    workflow.outputs.output_dir = lambda: tmp_path
 
     run_id = "test-run-md-download"
     with app.main._lock:
@@ -397,7 +397,7 @@ def test_download_analysis_md_returns_file(client, tmp_path):
         assert "text/markdown" in response.headers["content-type"]
         assert "TestCommunity_analysis.md" in response.headers.get("content-disposition", "")
     finally:
-        workflow.outputs.communities_dir = original_communities_dir
+        workflow.outputs.output_dir = original_output_dir
         with app.main._lock:
             app.main._runs.clear()
 
@@ -463,9 +463,9 @@ def test_get_daily_load_data_returns_json_when_file_exists(client, tmp_path):
     import app.main
     import workflow.outputs
 
-    # Patch communities_dir
-    original_communities_dir = workflow.outputs.communities_dir
-    workflow.outputs.communities_dir = lambda: tmp_path
+    # Patch output_dir
+    original_output_dir = workflow.outputs.output_dir
+    workflow.outputs.output_dir = lambda: tmp_path
 
     # Manually create a completed run
     run_id = "test-run-daily-load"
@@ -516,7 +516,7 @@ def test_get_daily_load_data_returns_json_when_file_exists(client, tmp_path):
 
     finally:
         # Cleanup
-        workflow.outputs.communities_dir = original_communities_dir
+        workflow.outputs.output_dir = original_output_dir
         with app.main._lock:
             app.main._current_run_id = None
             app.main._runs.clear()
@@ -538,8 +538,8 @@ def test_download_community_total_returns_404_when_file_missing(client, tmp_path
     import app.main
     import workflow.outputs
 
-    original_communities_dir = workflow.outputs.communities_dir
-    workflow.outputs.communities_dir = lambda: tmp_path
+    original_output_dir = workflow.outputs.output_dir
+    workflow.outputs.output_dir = lambda: tmp_path
 
     run_id = "test-run-no-csv"
     with app.main._lock:
@@ -554,7 +554,7 @@ def test_download_community_total_returns_404_when_file_missing(client, tmp_path
         response = client.get(f"/runs/{run_id}/download/community-total")
         assert response.status_code == 404
     finally:
-        workflow.outputs.communities_dir = original_communities_dir
+        workflow.outputs.output_dir = original_output_dir
         with app.main._lock:
             app.main._runs.clear()
 
@@ -564,8 +564,8 @@ def test_download_community_total_returns_csv(client, tmp_path):
     import app.main
     import workflow.outputs
 
-    original_communities_dir = workflow.outputs.communities_dir
-    workflow.outputs.communities_dir = lambda: tmp_path
+    original_output_dir = workflow.outputs.output_dir
+    workflow.outputs.output_dir = lambda: tmp_path
 
     run_id = "test-run-csv"
     with app.main._lock:
@@ -590,7 +590,7 @@ def test_download_community_total_returns_csv(client, tmp_path):
             "content-disposition", ""
         )
     finally:
-        workflow.outputs.communities_dir = original_communities_dir
+        workflow.outputs.output_dir = original_output_dir
         with app.main._lock:
             app.main._runs.clear()
 
@@ -611,8 +611,8 @@ def test_download_dwelling_timeseries_returns_404_when_dir_missing(client, tmp_p
     import app.main
     import workflow.outputs
 
-    original_communities_dir = workflow.outputs.communities_dir
-    workflow.outputs.communities_dir = lambda: tmp_path
+    original_output_dir = workflow.outputs.output_dir
+    workflow.outputs.output_dir = lambda: tmp_path
 
     run_id = "test-run-no-ts"
     with app.main._lock:
@@ -627,7 +627,7 @@ def test_download_dwelling_timeseries_returns_404_when_dir_missing(client, tmp_p
         response = client.get(f"/runs/{run_id}/download/dwelling-timeseries")
         assert response.status_code == 404
     finally:
-        workflow.outputs.communities_dir = original_communities_dir
+        workflow.outputs.output_dir = original_output_dir
         with app.main._lock:
             app.main._runs.clear()
 
@@ -640,8 +640,8 @@ def test_download_dwelling_timeseries_returns_zip(client, tmp_path):
     import app.main
     import workflow.outputs
 
-    original_communities_dir = workflow.outputs.communities_dir
-    workflow.outputs.communities_dir = lambda: tmp_path
+    original_output_dir = workflow.outputs.output_dir
+    workflow.outputs.output_dir = lambda: tmp_path
 
     run_id = "test-run-zip"
     with app.main._lock:
@@ -668,6 +668,6 @@ def test_download_dwelling_timeseries_returns_zip(client, tmp_path):
         zf = zipfile.ZipFile(BytesIO(response.content))
         assert len(zf.namelist()) == 2
     finally:
-        workflow.outputs.communities_dir = original_communities_dir
+        workflow.outputs.output_dir = original_output_dir
         with app.main._lock:
             app.main._runs.clear()

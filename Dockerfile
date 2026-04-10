@@ -71,7 +71,7 @@ COPY data/json/ ./data/json/
 RUN groupadd -g 1000 appuser && useradd -u 1000 -g appuser -d /app --no-create-home appuser
 
 # Create runtime directories for outputs and logs (before chown so they get correct ownership)
-RUN mkdir -p output logs communities \
+RUN mkdir -p output logs \
     && chown -R appuser:appuser /app
 
 # Copy entrypoint script that fixes volume mount permissions at runtime
@@ -92,7 +92,7 @@ ENV PYTHONUNBUFFERED=1
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
-# Set APP_ROOT so installed package can find csv/, communities/, etc.
+# Set APP_ROOT so installed package can find csv/, output/, etc.
 ENV APP_ROOT=/app
 
 # Expose the default FastAPI port

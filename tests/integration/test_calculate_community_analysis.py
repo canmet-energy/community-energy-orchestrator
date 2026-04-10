@@ -53,7 +53,7 @@ def test_aggregates_multiple_timeseries_files(monkeypatch, tmp_path):
         file_path.write_text(csv_content, encoding="utf-8")
 
     # Mock dependencies
-    monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(calc, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(calc, "get_community_requirements", lambda x: requirements)
     monkeypatch.setattr(calc, "EXPECTED_ROWS", 24)  # Mock expected rows for test
 
@@ -124,7 +124,7 @@ def test_handles_insufficient_files_by_duplicating(monkeypatch, tmp_path, capsys
         file_path = timeseries_dir / f"pre-2002-single_EX-{i:04d}-results_timeseries.csv"
         file_path.write_text(csv_content, encoding="utf-8")
 
-    monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(calc, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(calc, "get_community_requirements", lambda x: requirements)
     monkeypatch.setattr(calc, "EXPECTED_ROWS", 24)
 
@@ -187,7 +187,7 @@ def test_handles_multiple_building_types(monkeypatch, tmp_path):
     file_path = timeseries_dir / "2002-2016-semi_EX-0001-results_timeseries.csv"
     file_path.write_text(csv_content, encoding="utf-8")
 
-    monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(calc, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(calc, "get_community_requirements", lambda x: requirements)
     monkeypatch.setattr(calc, "EXPECTED_ROWS", 24)
 
@@ -233,7 +233,7 @@ def test_handles_double_files_for_semi_requirements(monkeypatch, tmp_path):
     double_file = timeseries_dir / "2002-2016-double_EX-0001-results_timeseries.csv"
     double_file.write_text(csv_content, encoding="utf-8")
 
-    monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(calc, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(calc, "get_community_requirements", lambda x: requirements)
     monkeypatch.setattr(calc, "EXPECTED_ROWS", 24)
 
@@ -278,7 +278,7 @@ def test_calculates_correct_statistics(monkeypatch, tmp_path):
     file_path = timeseries_dir / "2002-2016-single_EX-0001-results_timeseries.csv"
     file_path.write_text(csv_content, encoding="utf-8")
 
-    monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(calc, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(calc, "get_community_requirements", lambda x: requirements)
     monkeypatch.setattr(calc, "EXPECTED_ROWS", 4)
 
@@ -355,7 +355,7 @@ def test_fails_when_no_files_can_be_processed(monkeypatch, tmp_path):
     file_path = timeseries_dir / "2002-2016-single_EX-0001-results_timeseries.csv"
     file_path.write_text(csv_content, encoding="utf-8")
 
-    monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(calc, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(calc, "get_community_requirements", lambda x: requirements)
 
     # Should raise ValueError
@@ -390,7 +390,7 @@ def test_uses_all_available_files_when_no_requirements(monkeypatch, tmp_path):
             file_path = timeseries_dir / f"{building_type}_EX-{i:04d}-results_timeseries.csv"
             file_path.write_text(csv_content, encoding="utf-8")
 
-    monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(calc, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(calc, "EXPECTED_ROWS", 24)
 
     # Run aggregation (should use all 4 files)
@@ -431,7 +431,7 @@ def test_parallel_processing_produces_deterministic_results(monkeypatch, tmp_pat
         file_path = timeseries_dir / f"2002-2016-single_EX-{i:04d}-results_timeseries.csv"
         file_path.write_text(csv_content, encoding="utf-8")
 
-    monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(calc, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(calc, "get_community_requirements", lambda x: requirements)
     monkeypatch.setattr(calc, "EXPECTED_ROWS", 24)
 
@@ -486,7 +486,7 @@ def test_semi_requirements_do_not_match_wrong_era_double_files(monkeypatch, tmp_
     wrong_era_file_2 = timeseries_dir / "pre-2002-double_EX-0002-results_timeseries.csv"
     wrong_era_file_2.write_text(csv_content, encoding="utf-8")
 
-    monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(calc, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(calc, "get_community_requirements", lambda x: requirements)
     monkeypatch.setattr(calc, "EXPECTED_ROWS", 24)
 
@@ -530,7 +530,7 @@ def test_handles_production_size_files_with_8761_rows(monkeypatch, tmp_path):
         file_path = timeseries_dir / f"2002-2016-single_EX-{i:04d}-results_timeseries.csv"
         file_path.write_text(csv_content, encoding="utf-8")
 
-    monkeypatch.setattr(calc, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(calc, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(calc, "get_community_requirements", lambda x: requirements)
     # Don't mock EXPECTED_ROWS - use the real value (8760)
 

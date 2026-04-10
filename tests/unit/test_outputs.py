@@ -14,16 +14,16 @@ pytestmark = pytest.mark.unit
 @pytest.fixture
 def mock_community_structure(tmp_path, monkeypatch):
     """Create a mock community directory structure for testing."""
-    # Create a temporary communities directory
-    communities_dir = tmp_path / "communities"
-    communities_dir.mkdir()
+    # Create a temporary output directory
+    output_dir = tmp_path / "output"
+    output_dir.mkdir()
 
-    # Mock the communities_dir function
-    monkeypatch.setattr("workflow.outputs.communities_dir", lambda: communities_dir)
+    # Mock the output_dir function
+    monkeypatch.setattr("workflow.outputs.output_dir", lambda: output_dir)
 
     # Create a sample community with expected structure
     community_name = "TestCommunity"
-    community_dir = communities_dir / community_name
+    community_dir = output_dir / community_name
     analysis_dir = community_dir / "analysis"
     timeseries_dir = community_dir / "timeseries"
 
@@ -36,7 +36,7 @@ def mock_community_structure(tmp_path, monkeypatch):
     (timeseries_dir / "dwelling1-results_timeseries.csv").write_text("Time,Energy\n0,100\n")
     (timeseries_dir / "dwelling2-results_timeseries.csv").write_text("Time,Energy\n0,200\n")
 
-    return {"community_name": community_name, "base_dir": communities_dir}
+    return {"community_name": community_name, "base_dir": output_dir}
 
 
 def test_get_community_total_path(mock_community_structure):

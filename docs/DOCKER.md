@@ -104,14 +104,13 @@ docker-compose down
 
 ### With Persistent Storage
 
-By default, outputs (communities/, logs/, output/) are generated inside the container and lost when the container stops. To persist them:
+By default, outputs (output/ and logs/) are generated inside the container and lost when the container stops. To persist them:
 
 Linux/macOS:
 
 ```bash
 # With docker run
 docker run -p 8000:8000 \
-  -v $(pwd)/communities:/app/communities \
   -v $(pwd)/output:/app/output \
   -v $(pwd)/logs:/app/logs \
   community-energy-orchestrator
@@ -122,7 +121,6 @@ Windows (PowerShell):
 ```powershell
 # With docker run
 docker run -p 8000:8000 `
-  -v ${PWD}/communities:/app/communities `
   -v ${PWD}/output:/app/output `
   -v ${PWD}/logs:/app/logs `
   community-energy-orchestrator
@@ -148,7 +146,7 @@ docker run -it community-energy-orchestrator \
 
 # With persistent outputs
 docker run -it \
-  -v $(pwd)/communities:/app/communities \
+  -v $(pwd)/output:/app/output \
   -v $(pwd)/logs:/app/logs \
   community-energy-orchestrator \
   process-community "Old Crow"
@@ -163,7 +161,7 @@ docker run -it community-energy-orchestrator `
 
 # With persistent outputs
 docker run -it `
-  -v ${PWD}/communities:/app/communities `
+  -v ${PWD}/output:/app/output `
   -v ${PWD}/logs:/app/logs `
   community-energy-orchestrator `
   process-community "Old Crow"

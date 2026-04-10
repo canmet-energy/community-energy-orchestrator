@@ -32,7 +32,7 @@ from workflow.config import (
     get_analysis_random_seed,
     get_max_workers,
 )
-from workflow.paths import communities_dir
+from workflow.paths import output_dir
 from workflow.requirements import get_community_info, get_community_requirements
 
 
@@ -307,7 +307,7 @@ def select_and_sum_timeseries(community_name):
     community_upper = community_name.upper()
     community_upper_hyphen = community_upper.replace(" ", "-")
 
-    base_path = communities_dir()
+    base_path = output_dir()
     timeseries_dirs = [
         base_path / community_name / "timeseries",
         base_path / community_hyphen / "timeseries",
@@ -324,7 +324,7 @@ def select_and_sum_timeseries(community_name):
 
     if timeseries_dir is None:
         raise ValueError(
-            f"Directory not found for {community_name}. Tried various naming formats including hyphen, space, and communities/<community>/timeseries."
+            f"Directory not found for {community_name}. Tried various naming formats including hyphen, space, and output/<community>/timeseries."
         )
 
     print(f"Using timeseries directory: {timeseries_dir}")
@@ -499,7 +499,7 @@ def select_and_sum_timeseries(community_name):
         community_total = community_total[output_columns]
 
         # Save the aggregated CSV
-        base_communities_path = communities_dir()
+        base_communities_path = output_dir()
         community_folder = base_communities_path / community_name
         community_folder.mkdir(parents=True, exist_ok=True)
         (community_folder / "analysis").mkdir(parents=True, exist_ok=True)

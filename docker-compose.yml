@@ -10,7 +10,6 @@ services:
       - "8000:8000"
     volumes:
       # Mount directories to persist outputs on host machine
-      - ./communities:/app/communities
       - ./output:/app/output
       - ./logs:/app/logs
       # Mount source-archetypes (not in git - add manually if needed)

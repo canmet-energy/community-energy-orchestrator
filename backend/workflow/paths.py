@@ -20,12 +20,12 @@ def project_root() -> Path:
         return cwd
     raise RuntimeError(
         "Cannot determine project root. Set the APP_ROOT environment variable "
-        "to the directory containing data/, communities/, etc."
+        "to the directory containing data/, output/, etc."
     )
 
 
-def communities_dir() -> Path:
-    return project_root() / "communities"
+def output_dir() -> Path:
+    return project_root() / "output"
 
 
 def data_dir() -> Path:

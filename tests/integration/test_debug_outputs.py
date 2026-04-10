@@ -43,7 +43,7 @@ def test_debug_timeseries_outputs_all_files_found(monkeypatch, tmp_path):
     (file_dir / "results_timeseries.csv").write_text("dummy data", encoding="utf-8")
 
     # Mock dependencies
-    monkeypatch.setattr(debug, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(debug, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(debug, "get_community_requirements", lambda x: requirements)
 
     # Run the function
@@ -81,7 +81,7 @@ def test_debug_timeseries_outputs_some_files_missing(monkeypatch, tmp_path):
         file_dir.mkdir(parents=True)
         (file_dir / "results_timeseries.csv").write_text("dummy", encoding="utf-8")
 
-    monkeypatch.setattr(debug, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(debug, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(debug, "get_community_requirements", lambda x: requirements)
 
     log_path = debug.debug_timeseries_outputs(community_name)
@@ -99,7 +99,7 @@ def test_debug_timeseries_outputs_no_output_directory(monkeypatch, tmp_path):
 
     requirements = {"pre-2002-single": 2}
 
-    monkeypatch.setattr(debug, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(debug, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(debug, "get_community_requirements", lambda x: requirements)
 
     log_path = debug.debug_timeseries_outputs(community_name)
@@ -119,7 +119,7 @@ def test_debug_timeseries_outputs_empty_output_directory(monkeypatch, tmp_path):
 
     requirements = {"pre-2002-single": 2}
 
-    monkeypatch.setattr(debug, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(debug, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(debug, "get_community_requirements", lambda x: requirements)
 
     log_path = debug.debug_timeseries_outputs(community_name)
@@ -135,7 +135,7 @@ def test_debug_timeseries_outputs_creates_log_directory(monkeypatch, tmp_path):
 
     requirements = {"pre-2002-single": 1}
 
-    monkeypatch.setattr(debug, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(debug, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(debug, "get_community_requirements", lambda x: requirements)
 
     # Don't create analysis directory beforehand
@@ -159,7 +159,7 @@ def test_debug_timeseries_outputs_overwrites_existing_log(monkeypatch, tmp_path)
 
     requirements = {"pre-2002-single": 1}
 
-    monkeypatch.setattr(debug, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(debug, "output_dir", lambda: tmp_path)
     monkeypatch.setattr(debug, "get_community_requirements", lambda x: requirements)
 
     returned_log_path = debug.debug_timeseries_outputs(community_name)

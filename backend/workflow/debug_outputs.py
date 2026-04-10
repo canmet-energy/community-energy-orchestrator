@@ -7,7 +7,7 @@ Validates timeseries outputs from h2k-hpxml conversion.
 import os
 import sys
 
-from workflow.paths import communities_dir
+from workflow.paths import output_dir
 from workflow.requirements import get_community_requirements
 
 # Enable UTF-8 mode for Windows compatibility with special characters
@@ -32,11 +32,11 @@ def debug_timeseries_outputs(community_name):
         Path: Path to the debug log file
 
     Writes to:
-        communities/<community>/analysis/output_debug.log (overwrites)
+        output/<community>/analysis/output_debug.log (overwrites)
     """
     # Define paths for output directory and debug log
-    output_base = communities_dir() / community_name / "archetypes" / "output"
-    debug_log_path = communities_dir() / community_name / "analysis" / "output_debug.log"
+    output_base = output_dir() / community_name / "archetypes" / "output"
+    debug_log_path = output_dir() / community_name / "analysis" / "output_debug.log"
 
     # Load housing requirements from JSON (e.g., {"pre-2002-single": 5, "2002-2016-semi": 3, ...})
     requirements = get_community_requirements(community_name)

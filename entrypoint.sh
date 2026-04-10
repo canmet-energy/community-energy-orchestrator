@@ -8,11 +8,16 @@ set -e
 # If running as root (e.g. docker-compose overrides user), fix permissions
 # and drop to appuser. Otherwise just verify and run directly.
 if [ "$(id -u)" = '0' ]; then
-    for dir in /app/communities /app/output /app/logs /app/data/source-archetypes; do
+    for dir in /app/output /app/logs /app/data/source-archetypes; do
+        # Create directory if it doesn't exist
+        mkdir -p "$dir" 2>/dev/null || true
+        # Fix ownership if not already owned by UID 1000
         if [ -d "$dir" ]; then
-            # Always fix ownership when running as root, regardless of writability
-            # (root can write to root-owned dirs, so [ ! -w ] would be false)
-            chown -R appuser:appuser "$dir" 2>/dev/null || true
+            current_owner=$(stat -c '%u' "$dir" 2>/dev/null || echo "unknown")
+            if [ "$current_owner" != "1000" ]; then
+                echo "Fixing ownership of $dir (owner: $current_owner -> 1000)"
+                chown -R 1000:1000 "$dir" 2>/dev/null || true
+            fi
         fi
     done
     # Drop privileges using setpriv (built into util-linux, no extra dependencies)

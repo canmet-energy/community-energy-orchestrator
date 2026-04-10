@@ -30,7 +30,7 @@ from workflow.config import (
     get_max_workers,
 )
 from workflow.debug_outputs import main as debug_main
-from workflow.paths import communities_dir, logs_dir, source_archetypes_dir
+from workflow.paths import logs_dir, output_dir, source_archetypes_dir
 from workflow.requirements import (
     get_community_requirements,
     get_weather_location,
@@ -50,7 +50,7 @@ def create_manifest(community_name, requirements):
         Path to created manifest file
     """
     manifest_path = (
-        communities_dir() / community_name / "archetypes" / f"{community_name}-manifest.md"
+        output_dir() / community_name / "archetypes" / f"{community_name}-manifest.md"
     )
     # Ensure parent directory exists
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
@@ -154,7 +154,7 @@ def create_community_directories(community_name):
     Returns:
         Path to community base directory
     """
-    base_path = communities_dir() / community_name
+    base_path = output_dir() / community_name
     archetypes_path = base_path / "archetypes"
     timeseries_path = base_path / "timeseries"
     analysis_path = base_path / "analysis"
@@ -187,7 +187,7 @@ def copy_archetype_files(community_name, requirements):
     if not archetypes_source.exists():
         raise FileNotFoundError(f"Source archetypes directory not found: {archetypes_source}")
 
-    base_path = communities_dir() / community_name / "archetypes"
+    base_path = output_dir() / community_name / "archetypes"
     if not base_path.exists():
         base_path.mkdir(parents=True, exist_ok=True)
 
@@ -288,7 +288,7 @@ def update_weather_location(community_name):
     Args:
         community_name: Name of the community
     """
-    base_path = communities_dir() / community_name / "archetypes"
+    base_path = output_dir() / community_name / "archetypes"
     weather_location = get_weather_location(community_name)
 
     h2k_files = list(base_path.glob("*.H2K"))
@@ -384,7 +384,7 @@ def run_hpxml_conversion(community_name, requirements):
     Args:
         community_name: Name of the community
     """
-    base_path = communities_dir() / community_name / "archetypes"
+    base_path = output_dir() / community_name / "archetypes"
     output_path = base_path / "output"
 
     # Create output directory if not already created
@@ -450,17 +450,17 @@ def run_hpxml_conversion(community_name, requirements):
 
     # Collect timeseries files from archetypes/output using parallel processing
     print(f"[HPXML] Collecting timeseries files from output directories...")
-    base_dir = communities_dir() / community_name
-    output_dir = base_dir / "archetypes" / "output"
+    base_dir = output_dir() / community_name
+    hpxml_output_dir = base_dir / "archetypes" / "output"
     timeseries_dir = base_dir / "timeseries"
     timeseries_dir.mkdir(parents=True, exist_ok=True)
 
     # Use parallel collection for performance
-    if output_dir.exists():
-        collected = collect_timeseries_parallel(output_dir, timeseries_dir)
+    if hpxml_output_dir.exists():
+        collected = collect_timeseries_parallel(hpxml_output_dir, timeseries_dir)
 
         # Validate: check for simulations that completed but didn't produce timeseries
-        building_dirs = [d for d in output_dir.iterdir() if d.is_dir()]
+        building_dirs = [d for d in hpxml_output_dir.iterdir() if d.is_dir()]
         completed_sims = sum(1 for d in building_dirs if (d / "run").exists())
         if collected < completed_sims:
             missing_count = completed_sims - collected
@@ -525,11 +525,11 @@ def main(community_name):
 
     # 0. Clean existing community directory to ensure fresh run
     print(f"[WORKFLOW] Step 0: Cleaning previous run data...")
-    cleanup_dir = communities_dir() / community_name
+    cleanup_dir = output_dir() / community_name
 
     # Safety check before deletion
     if cleanup_dir.exists() and cleanup_dir.is_dir():
-        communities_base = communities_dir()
+        communities_base = output_dir()
         try:
             cleanup_dir.resolve().relative_to(communities_base.resolve())
             shutil.rmtree(cleanup_dir)
@@ -584,7 +584,7 @@ def main(community_name):
     try:
         debug_main(community_name)
         print(
-            f"Debug validation complete. Check: communities/{community_name}/analysis/output_debug.log"
+            f"Debug validation complete. Check: output/{community_name}/analysis/output_debug.log"
         )
     except Exception as e:
         print(f"Warning: Debug validation had issues: {e}")
@@ -593,17 +593,17 @@ def main(community_name):
 
     # 8. Remove archetypes/output directory after successful analysis
     print(f"[WORKFLOW] Cleaning up archetypes/output directory...")
-    output_dir = communities_dir() / community_name / "archetypes"
+    archetypes_dir = output_dir() / community_name / "archetypes"
 
     # Safety check before removal
-    if output_dir.exists() and output_dir.is_dir():
-        expected_base = communities_dir() / community_name
+    if archetypes_dir.exists() and archetypes_dir.is_dir():
+        expected_base = output_dir() / community_name
         try:
-            output_dir.resolve().relative_to(expected_base.resolve())
-            shutil.rmtree(output_dir)
-            print(f"Removed directory: {output_dir}")
+            archetypes_dir.resolve().relative_to(expected_base.resolve())
+            shutil.rmtree(archetypes_dir)
+            print(f"Removed directory: {archetypes_dir}")
         except PermissionError as e:
-            print(f"[ERROR] Could not remove {output_dir}: {e}")
+            print(f"[ERROR] Could not remove {archetypes_dir}: {e}")
             print(
                 f"[ERROR] Some files may be open in an editor. Close them and manually delete the output directory."
             )
@@ -611,7 +611,7 @@ def main(community_name):
                 f"Permission denied when cleaning output directory. Close any open files in {community_name}/archetypes."
             ) from e
         except ValueError:
-            print(f"[WARNING] Safety check failed for output directory removal: {output_dir}")
+            print(f"[WARNING] Safety check failed for output directory removal: {archetypes_dir}")
 
     print(f"Workflow for {community_name} completed successfully, you are free to proceed!")
     return 0

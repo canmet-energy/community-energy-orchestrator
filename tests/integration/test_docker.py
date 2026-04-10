@@ -180,9 +180,6 @@ def test_docker_volume_mounts_exist():
 
     # Check that key data persistence volumes are mounted
     assert (
-        "./communities" in config or "/app/communities" in config
-    ), "communities volume mount not found in config"
-    assert (
         "./output" in config or "/app/output" in config
     ), "output volume mount not found in config"
     assert "./logs" in config or "/app/logs" in config, "logs volume mount not found in config"

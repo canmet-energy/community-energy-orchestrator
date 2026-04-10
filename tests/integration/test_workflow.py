@@ -8,7 +8,7 @@ import time
 
 import pytest
 import workflow.requirements as req
-from workflow.paths import communities_dir
+from workflow.paths import output_dir
 
 pytestmark = pytest.mark.integration
 
@@ -145,7 +145,7 @@ def test_workflow_creates_directory_structure(monkeypatch, tmp_path):
     from workflow import process_community_workflow as workflow
 
     # Use tmp_path for isolation
-    monkeypatch.setattr(workflow, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(workflow, "output_dir", lambda: tmp_path)
 
     community_name = "TestCommunity"
 
@@ -165,7 +165,7 @@ def test_workflow_creates_manifest_with_csv_data(monkeypatch, tmp_path, sample_d
     """
     from workflow import process_community_workflow as workflow
 
-    monkeypatch.setattr(workflow, "communities_dir", lambda: tmp_path)
+    monkeypatch.setattr(workflow, "output_dir", lambda: tmp_path)
     # Don't mock get_weather_location - let it read from actual JSON
 
     community_name = sample_data["community_name"]

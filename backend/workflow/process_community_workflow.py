@@ -49,9 +49,7 @@ def create_manifest(community_name, requirements):
     Returns:
         Path to created manifest file
     """
-    manifest_path = (
-        output_dir() / community_name / "archetypes" / f"{community_name}-manifest.md"
-    )
+    manifest_path = output_dir() / community_name / "archetypes" / f"{community_name}-manifest.md"
     # Ensure parent directory exists
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     # Use weather location from JSON

@@ -1,4 +1,4 @@
-﻿{
+{
   "communities": {
     "Aklavik": {
       "province_territory": "NT",
@@ -345,10 +345,10 @@
         "pre-2002-single": 25
       }
     },
-    "DÃ©line": {
+    "Déline": {
       "province_territory": "NT",
       "hdd": 8602,
-      "weather_location": "DÃ‰LINE",
+      "weather_location": "DÉLINE",
       "population": 40,
       "housing_requirements": {
         "pre-2002-single": 110,
@@ -482,7 +482,7 @@
         "2002-2016-row-end": 8
       }
     },
-    "FranÃ§ois": {
+    "François": {
       "province_territory": "NL",
       "hdd": 4629,
       "weather_location": "BURGEO",
@@ -491,7 +491,7 @@
         "2002-2016-single": 30
       }
     },
-    "GamÃ¨tÃ¬": {
+    "Gamètì": {
       "province_territory": "NT",
       "hdd": 8111,
       "weather_location": "LAC LA MARTRE",
@@ -563,10 +563,10 @@
         "post-2016-row-end": 2
       }
     },
-    "Grosse-ÃŽle": {
+    "Grosse-Île": {
       "province_territory": "QC",
       "hdd": 4494,
-      "weather_location": "ÃŽLES DE LA MADELEINE",
+      "weather_location": "ÎLES DE LA MADELEINE",
       "population": 464,
       "housing_requirements": {
         "pre-2002-single": 180,
@@ -907,10 +907,10 @@
         "2002-2016-row-end": 2
       }
     },
-    "Les ÃŽles-a-la-Madeleine": {
+    "Les Îles-a-la-Madeleine": {
       "province_territory": "QC",
       "hdd": 4494,
-      "weather_location": "ÃŽLES DE LA MADELEINE",
+      "weather_location": "ÎLES DE LA MADELEINE",
       "population": 12190,
       "housing_requirements": {
         "pre-2002-single": 4205,
@@ -935,7 +935,7 @@
         "post-2016-single": 15
       }
     },
-    "L'ÃŽle d'Anticosti": {
+    "L'Île d'Anticosti": {
       "province_territory": "QC",
       "hdd": 5757,
       "weather_location": "NATASHQUAN",
@@ -1603,7 +1603,7 @@
         "post-2016-row-end": 2
       }
     },
-    "WekweÃ¨tÃ¬": {
+    "Wekweètì": {
       "province_territory": "NT",
       "hdd": 8513,
       "weather_location": "LOWER CARP LAKE",
@@ -1672,7 +1672,7 @@
     "Wrigley": {
       "province_territory": "NT",
       "hdd": 8602,
-      "weather_location": "DÃ‰LINE",
+      "weather_location": "DÉLINE",
       "population": 117,
       "housing_requirements": {
         "pre-2002-single": 35
@@ -1778,37 +1778,37 @@
     "CHAMOUCHOUANE": {
       "code": "6",
       "english": "QUEBEC",
-      "french": "QUÃ‰BEC"
+      "french": "QUÉBEC"
     },
     "INUKJUAK": {
       "code": "6",
       "english": "QUEBEC",
-      "french": "QUÃ‰BEC"
+      "french": "QUÉBEC"
     },
     "KUUJJUAQ": {
       "code": "6",
       "english": "QUEBEC",
-      "french": "QUÃ‰BEC"
+      "french": "QUÉBEC"
     },
     "KUUJJUARAPIK": {
       "code": "6",
       "english": "QUEBEC",
-      "french": "QUÃ‰BEC"
+      "french": "QUÉBEC"
     },
     "NATASHQUAN": {
       "code": "6",
       "english": "QUEBEC",
-      "french": "QUÃ‰BEC"
+      "french": "QUÉBEC"
     },
     "VAL-D'OR": {
       "code": "6",
       "english": "QUEBEC",
-      "french": "QUÃ‰BEC"
+      "french": "QUÉBEC"
     },
-    "ÃŽLES DE LA MADELEINE": {
+    "ÎLES DE LA MADELEINE": {
       "code": "6",
       "english": "QUEBEC",
-      "french": "QUÃ‰BEC"
+      "french": "QUÉBEC"
     },
     "ARMSTRONG": {
       "code": "7",
@@ -1860,7 +1860,7 @@
       "english": "YUKON",
       "french": "YUKON"
     },
-    "DÃ‰LINE": {
+    "DÉLINE": {
       "code": "12",
       "english": "NORTHWEST TERRITORIES",
       "french": "TERRITOIRES DU NORD-OUEST"

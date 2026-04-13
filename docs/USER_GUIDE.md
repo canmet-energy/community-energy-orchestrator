@@ -1,303 +1,276 @@
 
 # User Guide
 
-Complete guide for running community workflows and understanding outputs.
+This guide covers how to **use** the Community Energy Orchestrator once it is installed. If you still need to set up the tool, see one of:
+
+- [Installation Guide](INSTALLATION.md) — manual setup (recommended for development)
+- [Docker Guide](DOCKER.md) — containerised setup
+
+For a list of all 139 supported communities, see the [Communities Reference](COMMUNITIES.md).
+
+---
 
 ## Table of Contents
-- [Installation](#installation)
-- [Command Reference](#command-reference)
-- [Frontend](#frontend)
-- [Common Workflows](#common-workflows)
-- [Outputs](#outputs)
+
+- [Quick Start](#quick-start)
+- [Using the CLI](#using-the-cli)
+- [Using the API](#using-the-api)
+- [Using the Web Frontend](#using-the-web-frontend)
+- [Understanding Outputs](#understanding-outputs)
+- [Environment Variables](#environment-variables)
 - [Troubleshooting](#troubleshooting)
 
-## Installation
-See the installation guide for full setup instructions:
+---
 
-- [Installation Guide](INSTALLATION.md)
+## Quick Start
 
-## Command Reference
-
-### CLI Commands (Recommended)
-
-After installing the package with `uv sync`, use the main entry point:
+The fastest way to process a community and see results:
 
 ```bash
 process-community "Old Crow"
 ```
 
-Alternatively, run the Python module directly:
-```bash
-python3 backend/workflow/process_community_workflow.py "Old Crow"
-```
+This runs the full workflow: archetype selection → weather update → energy simulation → aggregation. Output files appear in `output/Old Crow/` when the run finishes.
 
-**Windows PowerShell Users:** If processing communities with French characters, ensure UTF-8 is configured (see [Installation Guide](INSTALLATION.md#step-4-activate-the-virtual-environment)).
+> **Windows PowerShell users:** If community names with French characters (e.g. Gamètì, Déline) cause encoding errors, see [Installation Guide — Troubleshooting](INSTALLATION.md#windows-encoding-errors).
 
-### Docker Commands
+---
 
-If you're using Docker:
+## Using the CLI
 
-```bash
-# Build the image (first time only)
-docker build -t community-energy-orchestrator .
+The CLI is the simplest way to process a single community locally.
 
-# Run the API server
-docker run -p 8000:8000 community-energy-orchestrator
-
-# OR use docker-compose (recommended - starts API + frontend)
-docker-compose up
-
-# Stop and clean up
-docker-compose down
-```
-
-With volume mounts to persist outputs on your host machine:
-
-Linux/macOS:
+### Running a Workflow
 
 ```bash
-docker run -p 8000:8000 \
-  -v $(pwd)/output:/app/output \
-  -v $(pwd)/logs:/app/logs \
-  community-energy-orchestrator
+process-community "<Community Name>"
 ```
 
-Windows (PowerShell):
-
-```powershell
-docker run -p 8000:8000 `
-  -v ${PWD}/output:/app/output `
-  -v ${PWD}/logs:/app/logs `
-  community-energy-orchestrator
-```
-
-Access the API at http://localhost:8000/docs
-
-With docker-compose, the frontend is also available at http://localhost:5173
-
-**Note:** The Docker container runs the FastAPI server by default. To run the CLI script (`process_community_workflow.py`), you can:
-
-Linux/macOS:
+For example:
 
 ```bash
-# Run CLI workflow in Docker (interactive mode)
-docker run -it community-energy-orchestrator \
-  process-community "Old Crow"
-
-# With volume mounts to save outputs
-docker run -it \
-  -v $(pwd)/output:/app/output \
-  -v $(pwd)/logs:/app/logs \
-  community-energy-orchestrator \
-  process-community "Old Crow"
-```
-
-Windows (PowerShell):
-
-```powershell
-# Run CLI workflow in Docker (interactive mode)
-docker run -it community-energy-orchestrator `
-  process-community "Old Crow"
-
-# With volume mounts to save outputs
-docker run -it `
-  -v ${PWD}/output:/app/output `
-  -v ${PWD}/logs:/app/logs `
-  community-energy-orchestrator `
-  process-community "Old Crow"
-```
-
-### `process_community_workflow.py` (main entrypoint)
-Runs the full workflow for a single community.
-
-Linux/macOS:
-
-```bash
-# Recommended (after uv sync)
-process-community "Old Crow"
-
-# Or use Python directly
-python3 backend/workflow/process_community_workflow.py "Old Crow"
-```
-
-Windows (PowerShell):
-
-```powershell
-# Recommended (after uv sync)
-process-community "Old Crow"
-
-# Or use Python directly
-python src\workflow\process_community_workflow.py "Old Crow"
-```
-
-Notes:
-- Community names with spaces must be quoted.
-- The workflow deletes `output/<Community Name>/` at the start of each run.
-
-### API (`backend/app/main.py`)
-Runs the FastAPI server so you can start a workflow run via HTTP and poll for status.
-
-
-Start the server:
-
-Linux/macOS:
-
-```bash
-python3 -m uvicorn app.main:app --host 0.0.0.0
-```
-
-Windows (PowerShell):
-
-```powershell
-python -m uvicorn app.main:app --host 0.0.0.0
-```
-
-Open the interactive docs:
-
-- http://localhost:8000/docs
-
-Notes:
-- The API server keeps running until you stop it with `Ctrl+C`.
-- Run state is stored in memory (restarting the server clears run history).
-- The API enforces a single active run per server process.
-
-## Frontend
-
-The web frontend provides a visual interface for selecting communities, running workflows, and viewing energy analysis results with interactive charts.
-
-### Running with Docker Compose (easiest)
-
-```bash
-docker-compose up
-```
-
-The frontend is available at http://localhost:5173 (API starts automatically on port 8000).
-
-### Running locally
-
-Requires Node.js 18+ and the API running on port 8000.
-
-```bash
-# Start the API first (in one terminal)
-python -m uvicorn app.main:app --host 0.0.0.0
-
-# Start the frontend (in another terminal)
-cd frontend
-npm install
-npm run dev
-```
-
-Then open http://localhost:5173
-
-### Supporting scripts
-
-These modules are called internally by the workflow but can also be run directly for debugging:
-
-- `backend/workflow/calculate_community_analysis.py`: aggregates timeseries into community outputs
-- `backend/workflow/change_weather_location_regex.py`: updates weather reference in `.H2K` files
-- `backend/workflow/debug_outputs.py`: validates outputs and writes debug logs
-
-**Note:** Most users should just use `process-community` which runs the complete workflow.
-
-## Common Workflows
-
-### 1) List available communities
-
-See [Communities](COMMUNITIES.md) for the full list:
-
-Note: `output/` is generated locally by the workflow (and may not exist until you run a community).
-
-### 2) Run a community
-
-Linux/macOS:
-
-```bash
-# Using CLI command
 process-community "Rankin Inlet"
-
-# Or using Python directly
-python3 backend/workflow/process_community_workflow.py "Rankin Inlet"
 ```
 
-Windows (PowerShell):
+- Community names **must be quoted** if they contain spaces or special characters.
+- The name must match an entry in `data/json/communities.json` (case-insensitive). Accents must be correct (e.g. `"Gamètì"` not `"Gametì"`).
+- Each run **deletes and recreates** the `output/<Community Name>/` directory, so previous results for that community are replaced.
 
-```powershell
-# Using CLI command
-process-community "Rankin Inlet"
+### Help
 
-# Or using Python directly
-python backend\workflow\process_community_workflow.py "Rankin Inlet"
+```bash
+process-community --help
 ```
 
-### 3) Re-run a community
-The workflow is designed to be re-runnable; it clears the specified community directory on each run.
+### Running Directly with Python
 
-Linux/macOS:
+If you prefer not to use the installed entry point, you can invoke the module directly:
+
+**Linux / macOS:**
 
 ```bash
 python3 backend/workflow/process_community_workflow.py "Old Crow"
 ```
 
-Windows (PowerShell):
+**Windows (PowerShell):**
 
 ```powershell
 python backend\workflow\process_community_workflow.py "Old Crow"
 ```
 
-## Outputs
+---
 
-After a successful run, outputs live under:
+## Using the API
 
-- `output/<Community Name>/archetypes/`: weather-updated `.H2K` files used for simulation
-- `output/<Community Name>/archetypes/output/`: converter outputs (may be deleted at end of workflow)
-- `output/<Community Name>/timeseries/`: per-building `*-results_timeseries.csv`
-- `output/<Community Name>/analysis/`: aggregated outputs and logs
+The REST API lets you start workflow runs over HTTP and poll for results. It is also required for the web frontend.
 
-Useful logs:
-- `logs/archetype_copy_debug.log`: what requirements were read + how many archetypes matched/copied
+### Starting the API Server
+
+**Linux / macOS:**
+
+```bash
+python3 -m uvicorn app.main:app --host 0.0.0.0
+```
+
+**Windows (PowerShell):**
+
+```powershell
+python -m uvicorn app.main:app --host 0.0.0.0
+```
+
+The server starts on port **8000** by default. Stop it with `Ctrl+C`.
+
+> If you are using Docker, the API server starts automatically — see the [Docker Guide](DOCKER.md).
+
+### Interactive API Docs
+
+Once the server is running, open the auto-generated Swagger UI:
+
+- **http://localhost:8000/docs**
+
+You can try out every endpoint directly from the browser.
+
+### Key Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Server health check |
+| `GET` | `/communities` | List all available communities with metadata |
+| `POST` | `/runs` | Start a new workflow run |
+| `GET` | `/runs` | List all runs (current session) |
+| `GET` | `/runs/current` | Get the currently active run |
+| `GET` | `/runs/{run_id}` | Get status of a specific run |
+| `GET` | `/runs/{run_id}/analysis-data` | Aggregated analysis results (JSON) |
+| `GET` | `/runs/{run_id}/daily-load-data` | Daily energy load profile (JSON) |
+| `GET` | `/runs/{run_id}/peak-day-hourly-data` | Hourly profile for the peak demand day (JSON) |
+| `GET` | `/runs/{run_id}/download/community-total` | Download the community total CSV |
+| `GET` | `/runs/{run_id}/download/dwelling-timeseries` | Download all per-dwelling timeseries as a ZIP |
+| `GET` | `/runs/{run_id}/download/analysis-md` | Download the analysis summary (Markdown) |
+
+### Starting a Run via the API
+
+Send a POST request with the community name:
+
+```bash
+curl -X POST http://localhost:8000/runs \
+  -H "Content-Type: application/json" \
+  -d '{"community_name": "Old Crow"}'
+```
+
+The response includes a `run_id`. Poll `GET /runs/{run_id}` until the `status` field changes to `completed` or `failed`.
+
+### Important Notes
+
+- **One run at a time.** The API enforces a single active run per server process. Submitting a second run while one is in progress returns an error.
+- **In-memory state.** Run history is stored in memory. Restarting the server clears all run records (output files on disk are not affected).
+
+---
+
+## Using the Web Frontend
+
+The web frontend provides a visual interface for running workflows and exploring results with interactive charts.
+
+### Starting the Frontend
+
+If you installed with **Docker** ([Docker Guide](DOCKER.md)):
+
+```bash
+docker-compose up
+```
+
+This starts both the API (port 8000) and the frontend (port 5173) together.
+
+If you installed **locally** ([Installation Guide](INSTALLATION.md)):
+
+You need two terminal sessions — one for the API and one for the frontend.
+
+Terminal 1 — start the API:
+
+```bash
+python -m uvicorn app.main:app --host 0.0.0.0
+```
+
+Terminal 2 — start the frontend (requires Node.js 18+):
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Then open **http://localhost:5173** in your browser.
+
+### What the Frontend Shows
+
+1. **Community search** — Search and select from the 139 available communities. Before running a workflow, you can see the community overview: province/territory, population, heating degree-days,  total houses.
+2. **Run a workflow** — Click to start a run and watch its progress in real time.
+3. **Results dashboard** — Once a run completes, the frontend displays:
+   - **Energy breakdown** — Pie chart of energy by fuel source (propane, oil, electricity, natural gas, wood).
+   - **Daily energy profile** — Line chart showing average daily energy and peak daily power across the year.
+   - **Peak day hourly profile** — Hourly load on the day with the highest demand.
+   - Toggle between **Heating** and **Total** energy categories.
+4. **Downloads** — Download the community total CSV, per-dwelling timeseries (ZIP), or the analysis summary (Markdown).
+5. **Run history** — Access results from previous runs in the current session (up to 5).
+6. **Dark mode** — Toggle between light and dark themes.
+
+---
+
+## Understanding Outputs
+
+After a successful run, the output directory for the community contains:
+
+```
+output/<Community Name>/
+├── timeseries/               # Per-dwelling hourly results
+│   └── *-results_timeseries.csv
+└── analysis/                 # Aggregated community results
+    ├── <Community>-community_total.csv   # Hourly totals (8760 rows)
+    ├── <Community>_analysis.json         # Summary statistics (JSON)
+    ├── <Community>_analysis.md           # Human-readable summary
+    └── output_debug.log                  # Validation and debug info
+```
+
+### Key Output Files
+
+**Community total CSV** (`analysis/<Community>-community_total.csv`)
+
+The main result file. Contains 8,760 rows (one per hour of the year) with columns for heating load, and energy consumption by fuel type (propane, oil, electricity, natural gas, wood) — all in gigajoules (GJ).
+
+**Per-dwelling timeseries** (`timeseries/*-results_timeseries.csv`)
+
+Individual hourly simulation results for each dwelling archetype. These are the raw EnergyPlus outputs converted from the H2K models.
+
+### Logs
+
+- `logs/archetype_copy_debug.log` — Records which housing requirements were read from `communities.json` and how many archetypes were matched and copied for each type.
+
+---
+
+## Environment Variables
+
+These optional variables control workflow behaviour:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MAX_PARALLEL_WORKERS` | Auto-detected from CPU count | Number of parallel simulation workers |
+| `ANALYSIS_RANDOM_SEED` | None (random) | Seed for reproducible analysis randomisation |
+| `ARCHETYPE_SELECTION_SEED` | None (random) | Seed for reproducible archetype selection |
+
+Set them before running a command:
+
+```bash
+MAX_PARALLEL_WORKERS=4 process-community "Old Crow"
+```
+
+Or in PowerShell:
+
+```powershell
+$env:MAX_PARALLEL_WORKERS = "4"
+process-community "Old Crow"
+```
+
+---
 
 ## Troubleshooting
 
-### Slow runs
-If runs suddenly become much slower, common causes are:
+### Converter or Simulation Errors
 
-- Too many archetypes were copied into `output/<Community Name>/archetypes/`, which increases the number of simulations.
-- OpenStudio/EnergyPlus setup is missing or misconfigured (leading to retries or failures).
+If you see errors about `h2k-hpxml`, OpenStudio, or EnergyPlus:
 
-Check `logs/archetype_copy_debug.log` to confirm how many archetypes were copied for each requirement.
+1. Confirm the tools are installed: `os-setup --test-installation`
+2. Confirm the archetype library exists: check that `data/source-archetypes/` is populated (see [Installation Guide — Step 6](INSTALLATION.md#step-6-download-the-archetype-library)).
+3. Check the debug log at `output/<Community Name>/analysis/output_debug.log` for details.
 
-### Converter installation issues
-If you see errors about `h2k-hpxml` or OpenStudio, try:
+### Community Name Not Found
 
-```bash
-h2k-hpxml --help
-os-setup --help
-```
+- The name must match an entry in `data/json/communities.json`.
+- Matching is case-insensitive, but accents must be correct (e.g. `"gamètì"` works, `"gametì"` does not).
+- Use `process-community --help` or browse the [Communities Reference](COMMUNITIES.md) for exact names.
 
-Reminder:
-- `data/source-archetypes/` is a local input folder you have to download.
+### Windows PowerShell Encoding Errors
 
-### Windows PowerShell encoding errors
+If communities with French characters (Gamètì, Déline, François) fail with encoding errors, see [Installation Guide — Troubleshooting](INSTALLATION.md#windows-encoding-errors) for the fix.
 
-If communities with special characters (Gamètì, Déline, François) fail with encoding errors:
+### Still not working?
 
-**Cause:** PowerShell defaults to Windows-1252 encoding instead of UTF-8, which prevents Python from correctly processing community names with French accents.
-
-**Solution:** Configure PowerShell to use UTF-8 (this is a one-time setup):
-
-```powershell
-# Add to your PowerShell profile for permanent fix
-notepad $PROFILE
-# Add these lines:
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$env:PYTHONUTF8 = "1"
-# Save and restart PowerShell
-```
-
-Or set temporarily for current session:
-```powershell
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$env:PYTHONUTF8 = "1"
-```
-
-**Alternative:** Use Git Bash instead of PowerShell (Git Bash uses UTF-8 by default).
+Try running the community again. Some failures are transient and resolve on a retry.

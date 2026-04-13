@@ -227,8 +227,8 @@ def test_run_transitions_through_states(client, monkeypatch):
     assert data["status"] == "queued"
 
     # Wait for background task to complete
-    max_wait = 5  # seconds
-    waited = 0
+    max_wait = 5.0  # seconds
+    waited = 0.0
     final_status = None
 
     while waited < max_wait:

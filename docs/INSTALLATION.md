@@ -1,100 +1,23 @@
 
 # Installation Guide
 
-Complete setup instructions for running the community workflow end-to-end.
+Setup instructions for installing the Community Energy Orchestrator directly on your machine.
 
-## Installation Methods
+> **Prefer Docker?** If you'd rather run everything in a container without installing dependencies locally, see the [Docker Guide](DOCKER.md) instead.
 
-Choose one of the following installation methods:
+## Prerequisites
 
-1. **Docker (Recommended for sharing)** - Containerized setup with all dependencies → [Docker Guide](DOCKER.md)
-2. **Manual Setup** - Direct installation on your system with uv
+- **Git** — to clone the repository
+- **uv** — a fast Python package manager that also installs Python for you. No admin rights needed. You do **not** need to install Python separately.
 
----
-
-## Option 1: Docker Installation
-
-If you have Docker installed, this is the fastest way to get started.
-
-### Step 1) Install Docker
-
-If you don't have Docker, install it from https://docs.docker.com/get-docker/
-
-### Step 2) Clone the repo
+## Step 1: Clone the Repository
 
 ```bash
 git clone https://github.com/canmet-energy/community-energy-orchestrator.git
 cd community-energy-orchestrator
 ```
 
-### Step 3) Download the archetype library
-
-**⚠️ REQUIRED:** This directory is needed to process communities.
-
-1. Go to https://github.com/canmet-energy/housing-archetypes.git
-2. Navigate to `data/h2k_files/existing-stock`
-3. Download the folder `retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities`
-4. Rename the downloaded folder to `source-archetypes`
-5. Place it in the `data/` directory of this repository
-
-The final path should be: `data/source-archetypes/` containing subdirectories organized by archetype type (e.g., `pre-2002-single/`, `2002-2016-single/`), each with `.H2K` files.
-
-**Verification:** Check that `data/source-archetypes/2002-2016-single/2002-2016-single_EX-0001.H2K` exists.
-
-### Step 4) Build the Docker image
-
-```bash
-docker build -t community-energy-orchestrator .
-```
-
-This will:
-- Install Python 3.10 and uv
-- Install all dependencies (matching your uv.lock)
-- Install OpenStudio/EnergyPlus automatically
-- Set up the complete environment
-
-### Step 5) Run the container
-
-```bash
-# Recommended: Start both API and frontend
-docker compose up
-
-# OR run the API only
-docker run -p 8000:8000 community-energy-orchestrator
-```
-
-Then open:
-- Frontend: http://localhost:5173
-- API Swagger UI: http://localhost:8000/docs
-
-**Docker vs Dev Container:** The Dockerfile creates a production-ready container for running the API. If you're developing in VS Code with the dev container (`.devcontainer/`), that's for development purposes and includes additional dev tools.
-
----
-
-## Option 2: Manual Setup
-
-## Detailed Setup
-
-This repo depends on the `h2k-hpxml` converter working on your machine.
-
-Notes: 
-- This orchestrator uses `uv` for Python installation and dependency management — you do **not** need to install Python separately
-- `uv` requires no admin rights and works on Windows, macOS, and Linux
-
-- The converter library supports Python 3.10–3.12.
-
-- `output/` is generated locally by the workflow and is not committed.
-
-### Step 1) Clone the repo
-
-```bash
-git clone https://github.com/canmet-energy/community-energy-orchestrator.git
-cd community-energy-orchestrator
-```
-
-### Step 2) Install uv
-
-`uv` is a fast Python package manager that also installs Python for you — no admin rights needed.
+## Step 2: Install uv
 
 Linux/macOS:
 
@@ -110,17 +33,17 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 
 After installing, restart your terminal so `uv` is on your PATH.
 
-### Step 3) Sync dependencies
+## Step 3: Install Dependencies
 
-This will automatically download the correct Python version (3.10–3.12) and install all dependencies in one step:
+This will automatically download the correct Python version (3.10–3.12) and install all dependencies:
 
 ```bash
 uv sync
 ```
 
-**For contributors:** Use `uv sync --all-extras` to include testing and linting tools.
+> **For contributors:** Use `uv sync --all-extras` to include development and testing tools. See the [Development Guide](DEVELOPMENT.md) for details.
 
-### Step 4) Activate the virtual environment
+## Step 4: Activate the Virtual Environment
 
 Linux/macOS:
 
@@ -131,45 +54,12 @@ source .venv/bin/activate
 Windows (PowerShell):
 
 ```powershell
- .venv\Scripts\Activate.ps1
+.venv\Scripts\Activate.ps1
 ```
 
-**Important for Windows PowerShell Users:**
+## Step 5: Install OpenStudio and EnergyPlus
 
-If you'll be processing communities with French characters (Gamètì, Déline, François, etc.), you **must** configure UTF-8 encoding in PowerShell. Without this, you'll get encoding errors when the workflow tries to create directories and files.
-
-```powershell
-# Option 1 (Recommended): Add permanently to your PowerShell profile
-notepad $PROFILE
-# Add these two lines to the file:
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$env:PYTHONUTF8 = "1"
-# Save, close, and restart PowerShell
-
-# Option 2: Set temporarily for current session only
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$env:PYTHONUTF8 = "1"
-```
-
-If `$PROFILE` doesn't exist, create it first:
-```powershell
-New-Item -Path $PROFILE -Type File -Force
-```
-
-**Note:** Git Bash on Windows doesn't need this setup (it uses UTF-8 by default).
-
-Verification:
-
-```bash
-h2k-hpxml --help
-os-setup --help
-```
-
-If commands are "command not found", confirm your venv is active. On Windows, you may need to restart your terminal.
-
-### Step 5) Install and verify OpenStudio/EnergyPlus dependencies
-
-These steps are required for the converter to actually run simulations:
+The simulation engine requires OpenStudio and EnergyPlus. The `os-setup` command (provided by the h2k-hpxml dependency) handles installation automatically.
 
 Linux/macOS:
 
@@ -178,13 +68,12 @@ os-setup --auto-install
 os-setup --test-installation
 ```
 
-If you hit permission errors on Linux, try:
+If you get permission errors on Linux:
 
 ```bash
 sudo os-setup --auto-install
 ```
 
-
 Windows (PowerShell):
 
 ```powershell
@@ -192,116 +81,93 @@ os-setup --auto-install
 os-setup --test-installation
 ```
 
-If commands are still not found on Windows, try:
+If `os-setup` is not found on Windows, try:
 
 ```powershell
 os-setup --add-to-path
 ```
 
-Optional deeper verification:
+## Step 6: Download the Archetype Library
 
-```bash
-os-setup --test-comprehensive
-```
+The workflow requires a local library of Hot2000 archetype files. This library is maintained separately and must be downloaded manually.
 
-Optional: verify the converter end-to-end without the orchestrator:
-
-```bash
-h2k-demo
-```
-
-### Step 6) Provide the archetype library
-
-This workflow expects a local Hot2000 archetype library at:
-
-- `data/source-archetypes/`
-
-This folder is intentionally treated as a local input.
-
-#### Downloading the archetype library:
-
-1. Go to https://github.com/canmet-energy/housing-archetypes.git
+1. Go to the [housing-archetypes](https://github.com/canmet-energy/housing-archetypes) repository
 2. Navigate to `data/h2k_files/existing-stock`
-3. Download the folder `retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities`
+3. Download the folder: `retrofit-archetypes-for-diesel-reduction-modelling-in-remote-communities`
 4. Rename the downloaded folder to `source-archetypes`
 5. Place it in the `data/` directory of this repository
 
-The final path should be: `data/source-archetypes/` containing subdirectories organized by archetype type (e.g., `pre-2002-single/`, `2002-2016-single/`), each with `.H2K` files.
+Your directory structure should look like:
 
-### Step 7) Run a community
+```
+data/
+  source-archetypes/
+    pre-2002-single/
+      pre-2002-single_EX-0001.H2K
+      ...
+    2002-2016-single/
+    post-2016-single/
+    ...
+```
 
-Choose one from [Communities](COMMUNITIES.md):
+**Verification:** Confirm that `data/source-archetypes/2002-2016-single/2002-2016-single_EX-0001.H2K` exists.
 
-Linux/macOS:
+## Step 7: Verify the Installation
+
+Run a small community to confirm everything works:
 
 ```bash
-# Using CLI command (recommended after uv sync)
 process-community "Old Crow"
-
-# Or using Python directly
-python3 backend/workflow/process_community_workflow.py "Old Crow"
 ```
 
-Windows (PowerShell):
+If the workflow completes, your installation is working. See the [User Guide](USER_GUIDE.md) to learn about all the ways to use the tool (CLI, API, frontend) and understand the outputs.
 
-```powershell
-# Using CLI command (recommended after uv sync)
-process-community "Old Crow"
+## Troubleshooting
 
-# Or using Python directly
-python backend\workflow\process_community_workflow.py "Old Crow"
-```
+### "command not found: process-community" or "command not found: os-setup"
 
-Optional: run the API instead of the CLI workflow:
+Make sure your virtual environment is active. On Windows, you may need to restart your terminal after activating the venv.
 
-Linux/macOS:
+### Simulation failures
 
-```bash
-python3 -m uvicorn app.main:app --host 0.0.0.0
-```
-
-Windows (PowerShell):
-
-```powershell
-python -m uvicorn app.main:app --host 0.0.0.0
-```
-
-Then open:
-
-- http://localhost:8000/docs
-
-### Step 7b) Run the frontend (optional)
-
-The web frontend provides a visual interface for running communities and viewing results. It requires the API to be running (Step 7).
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Then open http://localhost:5173
-
-If a run fails during conversion/simulation, start by re-running:
+If a run fails during conversion or simulation:
 
 ```bash
 os-setup --test-installation
 ```
 
-### Step 8) Run tests (optional)
+This will verify that OpenStudio and EnergyPlus are correctly installed and accessible.
 
-To verify your installation is working correctly:
+### Windows encoding errors
 
-```bash
-# Install test dependencies if you haven't already
-uv sync --all-extras
-source .venv/bin/activate  # or .venv\Scripts\Activate.ps1 on Windows
+If communities with special characters (Gamètì, Déline, François) fail with encoding errors, configure UTF-8 encoding in PowerShell:
 
-# Run all tests
-pytest tests/
+**Permanent fix (recommended):**
 
-# Run with coverage (like CI does)
-pytest tests/unit/ -m unit --cov=src/ --cov-report=term-missing
+```powershell
+# Open your PowerShell profile (create it if it doesn't exist)
+if (!(Test-Path -Path $PROFILE)) { New-Item -Path $PROFILE -Type File -Force }
+notepad $PROFILE
 ```
 
-Next: once you're installed, jump straight to the usage and outputs overview in the [User Guide](USER_GUIDE.md).
+Add these two lines to the file, save, and restart PowerShell:
+
+```powershell
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$env:PYTHONUTF8 = "1"
+```
+
+**Temporary fix (current session only):**
+
+```powershell
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$env:PYTHONUTF8 = "1"
+```
+
+> **Alternative:** Git Bash on Windows uses UTF-8 by default and does not need this setup.
+
+## Next Steps
+
+- [User Guide](USER_GUIDE.md) — Learn how to use the CLI, API, and frontend
+- [Docker Guide](DOCKER.md) — Run everything in a container instead
+- [Background](BACKGROUND.md) — Understand what the tool does and how it works

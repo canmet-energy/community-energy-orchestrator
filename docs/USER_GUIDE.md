@@ -127,18 +127,6 @@ You can try out every endpoint directly from the browser.
 | `GET` | `/runs/{run_id}/download/dwelling-timeseries` | Download all per-dwelling timeseries as a ZIP |
 | `GET` | `/runs/{run_id}/download/analysis-md` | Download the analysis summary (Markdown) |
 
-### Starting a Run via the API
-
-Send a POST request with the community name:
-
-```bash
-curl -X POST http://localhost:8000/runs \
-  -H "Content-Type: application/json" \
-  -d '{"community_name": "Old Crow"}'
-```
-
-The response includes a `run_id`. Poll `GET /runs/{run_id}` until the `status` field changes to `completed` or `failed`.
-
 ### Important Notes
 
 - **One run at a time.** The API enforces a single active run per server process. Submitting a second run while one is in progress returns an error.
@@ -155,7 +143,7 @@ The web frontend provides a visual interface for running workflows and exploring
 If you installed with **Docker** ([Docker Guide](DOCKER.md)):
 
 ```bash
-docker-compose up
+docker compose up
 ```
 
 This starts both the API (port 8000) and the frontend (port 5173) together.

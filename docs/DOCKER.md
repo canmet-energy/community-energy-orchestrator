@@ -49,10 +49,10 @@ Starts both the API and the web frontend:
 
 ```bash
 # Start both services
-docker-compose up
+docker compose up
 
 # Or run in the background
-docker-compose up -d
+docker compose up -d
 ```
 
 Then open:
@@ -63,10 +63,10 @@ Docker Compose automatically mounts `output/`, `logs/`, and `data/source-archety
 
 ```bash
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Stop services
-docker-compose down
+docker compose down
 ```
 
 ### Option B: Docker Run (API Only)
@@ -79,54 +79,13 @@ Then open http://localhost:8000/docs.
 
 > **Note:** With `docker run`, outputs are lost when the container stops unless you add volume mounts. See [Persistent Storage](#persistent-storage) below.
 
-## Running the CLI in Docker
-
-The default container command starts the API server. To run the CLI workflow instead:
-
-Linux/macOS:
-
-```bash
-docker run -it \
-  -v $(pwd)/output:/app/output \
-  -v $(pwd)/logs:/app/logs \
-  -v $(pwd)/data/source-archetypes:/app/data/source-archetypes \
-  community-energy-orchestrator \
-  process-community "Old Crow"
-```
-
-Windows (PowerShell):
-
-```powershell
-docker run -it `
-  -v ${PWD}/output:/app/output `
-  -v ${PWD}/logs:/app/logs `
-  -v ${PWD}/data/source-archetypes:/app/data/source-archetypes `
-  community-energy-orchestrator `
-  process-community "Old Crow"
-```
-
-## Environment Variables
-
-Configure the workflow with environment variables:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `MAX_PARALLEL_WORKERS` | Number of parallel simulation processes | Auto-detected from CPU count |
-| `ANALYSIS_RANDOM_SEED` | Seed for reproducible file duplication in analysis | Random |
-| `ARCHETYPE_SELECTION_SEED` | Seed for reproducible archetype selection | Random |
-
-With docker run:
-
-```bash
-docker run -p 8000:8000 \
-  -e MAX_PARALLEL_WORKERS=4 \
-  -e ARCHETYPE_SELECTION_SEED=12345 \
-  community-energy-orchestrator
-```
-
-With docker-compose, uncomment the environment variables in `docker-compose.yml` or create a `.env` file.
+With docker compose, uncomment the environment variables in `docker-compose.yml` or create a `.env` file.
 
 ## Troubleshooting
+
+### `docker compose` not recognized
+
+This guide uses `docker compose` (V2, built into Docker Desktop). If you get `"compose" is not a docker command`, you have the older standalone version. Either upgrade Docker Desktop or replace `docker compose` with `docker-compose` (hyphenated) in the commands below.
 
 ### Build errors
 
@@ -153,18 +112,6 @@ docker exec -it community-energy-api os-setup --test-installation
 
 # Check that source-archetypes are mounted
 docker exec -it community-energy-api ls data/source-archetypes/
-```
-
-### Performance
-
-The container auto-detects CPU count for parallel processing. To limit resources:
-
-```bash
-docker run -p 8000:8000 \
-  --cpus=4 \
-  --memory=8g \
-  -e MAX_PARALLEL_WORKERS=4 \
-  community-energy-orchestrator
 ```
 
 ## Next Steps

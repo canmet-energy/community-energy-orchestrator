@@ -568,7 +568,7 @@ def select_and_sum_timeseries(community_name):
         # Save analysis JSON for frontend visualizations
         analysis_json_file = community_folder / "analysis" / f"{community_name}_analysis.json"
         with open(analysis_json_file, "w", encoding="utf-8") as f:
-            json.dump(analysis_data, f, indent=2)
+            json.dump(analysis_data, f, indent=2, ensure_ascii=False)
         print(f"  - {analysis_json_file} (community folder - JSON)")
 
         # Print summary to console

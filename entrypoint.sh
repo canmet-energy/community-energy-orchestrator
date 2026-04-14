@@ -21,6 +21,8 @@ if [ "$(id -u)" = '0' ]; then
         fi
     done
     # Drop privileges using setpriv (built into util-linux, no extra dependencies)
+    # Set HOME so tools find binaries installed in /app/.local/ (e.g. OpenStudio)
+    export HOME=/app
     exec setpriv --reuid=1000 --regid=1000 --init-groups "$@"
 fi
 

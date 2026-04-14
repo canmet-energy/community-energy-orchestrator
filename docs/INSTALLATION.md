@@ -61,8 +61,6 @@ Windows (PowerShell):
 
 The simulation engine requires OpenStudio and EnergyPlus. The `os-setup` command (provided by the h2k-hpxml dependency) handles installation automatically.
 
-Linux/macOS:
-
 ```bash
 os-setup --auto-install
 os-setup --test-installation
@@ -72,13 +70,6 @@ If you get permission errors on Linux:
 
 ```bash
 sudo os-setup --auto-install
-```
-
-Windows (PowerShell):
-
-```powershell
-os-setup --auto-install
-os-setup --test-installation
 ```
 
 If `os-setup` is not found on Windows, try:
@@ -117,7 +108,7 @@ data/
 Run a small community to confirm everything works:
 
 ```bash
-process-community "Old Crow"
+process-community "Norman's Bay"
 ```
 
 If the workflow completes, your installation is working. See the [User Guide](USER_GUIDE.md) to learn about all the ways to use the tool (CLI, API, frontend) and understand the outputs.
